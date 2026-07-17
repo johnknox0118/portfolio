@@ -1,0 +1,151 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Admin {
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
+}
+
+model Profile {
+  id              Int     @id @default(autoincrement())
+  name            String
+  title           String
+  tagline         String
+  bio             String
+  careerObjective String
+  location        String
+  phone           String
+  email           String
+  linkedin        String
+  github          String
+  instagram       String
+  twitter         String
+  portfolioUrl    String
+  resumeUrl       String
+  cvUrl           String
+  profileImageUrl   String
+  coverImageUrl     String
+  profileImageGrayscale String @default("100")
+  profileImageScale     String @default("1.0")
+  profileImageBorderColor String @default("#00FF9D")
+}
+
+model Education {
+  id          Int    @id @default(autoincrement())
+  degree      String
+  institution String
+  duration    String
+  grade       String
+  description String
+}
+
+model TimelineEvent {
+  id           Int    @id @default(autoincrement())
+  title        String
+  description  String
+  date         String
+  category     String // "experience", "education", "hackathon", "award"
+  icon         String
+  displayOrder Int    @default(0)
+}
+
+model Skill {
+  id           Int    @id @default(autoincrement())
+  name         String
+  logo         String // lucide icon name
+  progress     Int    // 0-100
+  category     String // "programming", "frontend", "backend", "cybersecurity", "networking", "cloud", "databases", "tools", "os"
+  displayOrder Int    @default(0)
+  yearsOfExp   Int    @default(0)
+}
+
+model Project {
+  id              Int    @id @default(autoincrement())
+  title           String
+  description     String
+  role            String
+  timeline        String
+  event           String
+  fullDescription String
+  githubUrl       String
+  liveUrl         String
+  imageUrl        String
+  screenshots     String // Serialized JSON array: ["url1", "url2"]
+  tags            String // Serialized JSON array: ["tag1", "tag2"]
+  logs            String // Serialized JSON array of log messages
+  challenges      String // Serialized JSON array of challenge strings
+  solutions       String // Serialized JSON array of solution strings
+  status          String // "completed", "in-progress"
+  category        String // "cybersecurity", "web", "ml", "embedded", "blockchain"
+}
+
+model Certification {
+  id              Int    @id @default(autoincrement())
+  title           String
+  issuer          String
+  year            String
+  category        String // "certification", "ctf", "award", "course", "recognition"
+  description     String
+  icon            String
+  imageUrl        String
+  credentialId    String
+  verificationUrl String
+  longDescription String
+  grade           String
+  skills          String // Serialized JSON array of skills
+}
+
+model Internship {
+  id                       Int    @id @default(autoincrement())
+  companyName              String
+  role                     String
+  duration                 String
+  description              String
+  skills                   String // Serialized JSON array of skills
+  logoUrl                  String
+  offerLetterUrl           String
+  completionCertificateUrl String
+}
+
+model Achievement {
+  id    Int    @id @default(autoincrement())
+  label String
+  value String
+  icon  String
+}
+
+model GalleryItem {
+  id       Int    @id @default(autoincrement())
+  imageUrl String
+  caption  String
+  category String // "event", "project", "hackathon", "certificate", "personal"
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String
+  message   String
+  createdAt DateTime @default(now())
+  replied   Boolean  @default(false)
+}
+
+model Setting {
+  id             Int    @id @default(autoincrement())
+  theme          String @default("dark")
+  primaryColor   String @default("#00FF9D")
+  secondaryColor String @default("#00C8FF")
+  accentColor    String @default("#00e5ff")
+  loader         String @default("default")
+  analyticsId    String @default("")
+  footerText     String @default("")
+}
