@@ -1,0 +1,407 @@
+{
+  "profile": [
+    {
+      "id": 3,
+      "name": "Johnknox Kalle",
+      "title": "Cybersecurity Architect & Incident Responder",
+      "tagline": "Turning Ideas into Secure Digital Experiences Through Modern Web Development and Cybersecurity.",
+      "bio": "As a dedicated Cybersecurity student and aspiring software developer, I am committed to designing secure, scalable, and efficient digital solutions. I have a growing interest in web development, AI-powered applications, and cloud technologies, and I believe that continuous learning and practical experience are the keys to professional growth. Every project I build reflects my focus on quality, innovation, and problem-solving.",
+      "careerObjective": "To build a successful career in cybersecurity and software development by creating secure, innovative, and scalable digital solutions. I aim to continuously enhance my technical expertise, contribute to impactful projects, and grow as a technology professional while delivering value through creativity, problem-solving, and collaboration.",
+      "location": "Prathyusha Engineering College,Thiruvallur,Tamilnadu.",
+      "phone": "+91 9182597274",
+      "email": "johnknox.kalle@gmail.com",
+      "linkedin": "https://www.linkedin.com/in/john-knox-kalle-309b15301/",
+      "github": "https://github.com/johnknox0118",
+      "instagram": "instagram.com/alex_sec_ops",
+      "twitter": "x.com/johnknox0118",
+      "portfolioUrl": "alex-thorne-security.vercel.app",
+      "resumeUrl": "/uploads/1783846741787_5018_Kalle_Johnknox.pdf",
+      "cvUrl": "/uploads/Alex_Thorne_CV.pdf",
+      "profileImageUrl": "/uploads/1784279217511_johnknox__2_.jpg",
+      "coverImageUrl": "/uploads/matrix_bg.png",
+      "profileImageGrayscale": "20",
+      "profileImageScale": "1.0",
+      "profileImageBorderColor": "#00FF9D"
+    }
+  ],
+  "education": [
+    {
+      "id": 3,
+      "degree": "B.E. in Computer Science (Cyber Security Focus)",
+      "institution": "Prathyusha Engineering College",
+      "duration": "2023 - 2027 (Expected)",
+      "grade": "GPA: 8.3",
+      "description": "Advanced coursework in Cryptography, Advanced Computer Networks, Operating System Kernels, Malware Analysis, and Intrusion Detection Systems. Research assistant in the Secure Systems Lab."
+    },
+    {
+      "id": 4,
+      "degree": "Intermediate ( MPC )",
+      "institution": "VIT Junior College",
+      "duration": "2021-2023",
+      "grade": "CGPA: 8.7/10",
+      "description": "Completed Intermediate education while building a solid understanding of logical reasoning, communication, and fundamental computing concepts, preparing for a career in engineering and information technology."
+    },
+    {
+      "id": 5,
+      "degree": "Secondary School Certificate (SSC)",
+      "institution": "Oxfords High School",
+      "duration": "2020-2021",
+      "grade": "CGPA: 10/10",
+      "description": "Successfully completed Secondary School education with a strong academic foundation in mathematics, science, and analytical thinking. Developed essential problem-solving, communication, and learning skills that laid the groundwork for higher education and a career in technology."
+    }
+  ],
+  "timelineEvent": [
+    {
+      "id": 7,
+      "title": "Malware Analyst Intern",
+      "description": "Assisted in reverse-engineering ransomware families and implementing static/dynamic behavioral analysis reports in sandbox environments.",
+      "date": "June 2025 - Present",
+      "category": "experience",
+      "icon": "ShieldAlert",
+      "displayOrder": 1
+    },
+    {
+      "id": 8,
+      "title": "Security Operations Intern",
+      "description": "Monitored SOC alert queues, triaged network anomalies, and tuned Snort and Suricata IDS rules to minimize false positives.",
+      "date": "June 2024 - Sept 2024",
+      "category": "experience",
+      "icon": "Activity",
+      "displayOrder": 2
+    },
+    {
+      "id": 9,
+      "title": "National Cyber League CTF - Finalist",
+      "description": "Finished in the top 1.5% individually in a pool of 8,000+ national competitors across challenges in cryptography, log analysis, and network auditing.",
+      "date": "April 2025",
+      "category": "award",
+      "icon": "Trophy",
+      "displayOrder": 3
+    }
+  ],
+  "skill": [
+    {
+      "id": 29,
+      "name": "Python",
+      "logo": "code",
+      "progress": 80,
+      "category": "programming",
+      "displayOrder": 0,
+      "yearsOfExp": 3
+    },
+    {
+      "id": 30,
+      "name": "Java",
+      "logo": "Java",
+      "progress": 75,
+      "category": "programming",
+      "displayOrder": 0,
+      "yearsOfExp": 3
+    },
+    {
+      "id": 31,
+      "name": "C Programming",
+      "logo": "file-code",
+      "progress": 70,
+      "category": "programming",
+      "displayOrder": 0,
+      "yearsOfExp": 3
+    },
+    {
+      "id": 32,
+      "name": "HTML5",
+      "logo": "code-xml",
+      "progress": 80,
+      "category": "frontend",
+      "displayOrder": 0,
+      "yearsOfExp": 2
+    },
+    {
+      "id": 33,
+      "name": "JavaScript",
+      "logo": "file-json",
+      "progress": 70,
+      "category": "frontend",
+      "displayOrder": 0,
+      "yearsOfExp": 2
+    },
+    {
+      "id": 34,
+      "name": "SQL",
+      "logo": "database",
+      "progress": 70,
+      "category": "backend",
+      "displayOrder": 0,
+      "yearsOfExp": 2
+    },
+    {
+      "id": 35,
+      "name": "GitHub",
+      "logo": "GitHub",
+      "progress": 70,
+      "category": "os",
+      "displayOrder": 0,
+      "yearsOfExp": 1
+    },
+    {
+      "id": 36,
+      "name": "Cybersecurity",
+      "logo": "Shield",
+      "progress": 80,
+      "category": "cybersecurity",
+      "displayOrder": 0,
+      "yearsOfExp": 2
+    },
+    {
+      "id": 37,
+      "name": "Digital Forensics",
+      "logo": "fingerprint",
+      "progress": 70,
+      "category": "cybersecurity",
+      "displayOrder": 0,
+      "yearsOfExp": 1
+    },
+    {
+      "id": 38,
+      "name": "Team Collaboration",
+      "logo": "users",
+      "progress": 90,
+      "category": "networking",
+      "displayOrder": 0,
+      "yearsOfExp": 3
+    },
+    {
+      "id": 39,
+      "name": "Communication",
+      "logo": "messages-square",
+      "progress": 90,
+      "category": "cybersecurity",
+      "displayOrder": 0,
+      "yearsOfExp": 3
+    },
+    {
+      "id": 40,
+      "name": "Leadership",
+      "logo": "crown",
+      "progress": 80,
+      "category": "cybersecurity",
+      "displayOrder": 0,
+      "yearsOfExp": 3
+    }
+  ],
+  "project": [
+    {
+      "id": 7,
+      "title": "AI Network Intrusion Detection System (AI-NIDS)",
+      "description": "An AI-powered web application that analyzes network traffic and detects malicious activities using machine learning techniques. The system classifies network behavior in real time, helping identify potential cyber threats through an interactive dashboard and predictive analytics. AI-driven NIDS solutions are widely used to improve detection accuracy and automate threat analysis.",
+      "role": "Full-Stack Developer | Machine Learning Engineer | Cybersecurity Researcher",
+      "timeline": "January 2026 – March 2026",
+      "event": "Personal Portfolio Project",
+      "fullDescription": "Developed an AI-powered Network Intrusion Detection System that leverages machine learning to analyze network traffic, detect malicious activities, and provide real-time threat classification through an interactive web dashboard, demonstrating the practical integration of cybersecurity and artificial intelligence.",
+      "githubUrl": "https://github.com/johnknox0118/ai-nids",
+      "liveUrl": "",
+      "imageUrl": "/uploads/1784277682063_Screenshot_2026-07-17_141041.png",
+      "screenshots": "[]",
+      "tags": "[]",
+      "logs": "[]",
+      "challenges": "[]",
+      "solutions": "[]",
+      "status": "completed",
+      "category": "cybersecurity"
+    }
+  ],
+  "certification": [
+    {
+      "id": 7,
+      "title": "GEN-AI Camp Certificate of Completion",
+      "issuer": "AlgoUniversity",
+      "year": "2026",
+      "category": "course",
+      "description": "Successfully completed the GEN-AI Camp under the mentorship of Microsoft Engineer Nipun, gaining practical knowledge in Generative AI, Multimodal AI Systems, and Natural Language Processing (NLP). Strengthened foundational and applied AI skills through hands-on learning.",
+      "icon": "Brain",
+      "imageUrl": "",
+      "credentialId": "",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    },
+    {
+      "id": 8,
+      "title": "Cyber Security Training Program",
+      "issuer": "Codec Technologies",
+      "year": "2026",
+      "category": "certification",
+      "description": "Successfully completed an industry-oriented Cyber Security Training Program, gaining practical knowledge of cybersecurity concepts, security practices, and real-world applications.",
+      "icon": "ShieldCheck",
+      "imageUrl": "",
+      "credentialId": "NCS ID: E19E86-0116588288923",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    },
+    {
+      "id": 9,
+      "title": "Cyber Security Internship",
+      "issuer": "Codec Technologies Pvt. Ltd.",
+      "year": "2026",
+      "category": "certification",
+      "description": "Completed a one-month AICTE & ICAC-approved Cyber Security Internship, gaining hands-on experience in cybersecurity concepts, practical tasks, and industry workflows.",
+      "icon": "Briefcase",
+      "imageUrl": "",
+      "credentialId": "",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    },
+    {
+      "id": 10,
+      "title": "Cyber Security & Ethical Hacking Internship",
+      "issuer": "Maincrafts Technology",
+      "year": "2026",
+      "category": "certification",
+      "description": "Successfully completed an internship focused on Cyber Security and Ethical Hacking, demonstrating professionalism, technical skills, and dedication while contributing to practical cybersecurity projects.",
+      "icon": "Briefcase",
+      "imageUrl": "",
+      "credentialId": "MT7151",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    },
+    {
+      "id": 11,
+      "title": "Cyber Security Internship",
+      "issuer": "VirtualWorks Lab",
+      "year": "2026",
+      "category": "certification",
+      "description": "Completed a 157-hour Cyber Security Internship with an overall Grade A and 95/100 performance score. Successfully developed multiple cybersecurity projects, including a Password Strength Checker, Email Risk Analyzer, File Protection Utility, Login Attempt Control System, and Port Status Checker.",
+      "icon": "Briefcase",
+      "imageUrl": "",
+      "credentialId": "VWX-JUL26TOAUG26-716",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    },
+    {
+      "id": 12,
+      "title": "HTML5 – The Language",
+      "issuer": "Infosys Springboard",
+      "year": "2025",
+      "category": "certification",
+      "description": "Successfully completed the HTML5 – The Language course, strengthening knowledge of HTML5 fundamentals, semantic elements, modern web standards, and responsive web development.",
+      "icon": "Code",
+      "imageUrl": "",
+      "credentialId": "",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    },
+    {
+      "id": 13,
+      "title": "Certificate of Appreciation – Cyber Security",
+      "issuer": "KITECH",
+      "year": "2025",
+      "category": "certification",
+      "description": "Awarded for outstanding performance in Cyber Security, recognizing dedication, consistent learning, and academic excellence in cybersecurity studies.",
+      "icon": "Award",
+      "imageUrl": "",
+      "credentialId": "CEKI2641",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    },
+    {
+      "id": 14,
+      "title": "Generative AI Literacy",
+      "issuer": "FutureSkills Prime – NASSCOM",
+      "year": "2025",
+      "category": "certification",
+      "description": "Completed the Generative AI Literacy program aligned with IT-ITeS Sector Skills Council competency standards, gaining foundational knowledge of Generative AI concepts, applications, and emerging technologies.",
+      "icon": "Brain",
+      "imageUrl": "",
+      "credentialId": "25161080987",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    }
+  ],
+  "internship": [
+    {
+      "id": 3,
+      "companyName": "Secure Networks Corp",
+      "role": "Malware Analyst & Security Intern",
+      "duration": "May 2025 - August 2025",
+      "description": "Analyzed malicious binaries using Ghidra and IDA Pro, drafted threat profiles, and integrated indicators of compromise (IOCs) into security log architectures.",
+      "skills": "[\"Ghidra\",\"Malware Analysis\",\"YARA Rules\",\"Reverse Engineering\"]",
+      "logoUrl": "/placeholder_logo.png",
+      "offerLetterUrl": "/placeholder_offer.pdf",
+      "completionCertificateUrl": "/placeholder_completion.pdf"
+    }
+  ],
+  "achievement": [
+    {
+      "id": 9,
+      "label": "CTFs Competed",
+      "value": "25+",
+      "icon": "Flag"
+    },
+    {
+      "id": 10,
+      "label": "Vulnerabilities Reported",
+      "value": "15",
+      "icon": "ShieldAlert"
+    },
+    {
+      "id": 11,
+      "label": "Security Tools Authored",
+      "value": "8",
+      "icon": "Code"
+    },
+    {
+      "id": 12,
+      "label": "Certifications Verified",
+      "value": "12",
+      "icon": "Award"
+    }
+  ],
+  "galleryItem": [
+    {
+      "id": 5,
+      "imageUrl": "/placeholder_gallery.jpg",
+      "caption": "Secure Systems Hackathon Hack-it 2025",
+      "category": "hackathon"
+    },
+    {
+      "id": 6,
+      "imageUrl": "/placeholder_gallery.jpg",
+      "caption": "Research Presentation at CyberSec-Con",
+      "category": "event"
+    }
+  ],
+  "setting": [
+    {
+      "id": 3,
+      "theme": "dark",
+      "primaryColor": "#00FF9D",
+      "secondaryColor": "#00C8FF",
+      "accentColor": "#00e5ff",
+      "loader": "cyber",
+      "analyticsId": "G-XXXXXXXXXX",
+      "footerText": "Secure Systems & Resilient Infrastructure"
+    }
+  ],
+  "admin": [
+    {
+      "id": 3,
+      "username": "admin",
+      "password": "$2b$10$5QpIn/ushoGtQ9IiJyPOmu0N.xVyftqtcfhpgmEREJ.hMk2TOb4hq"
+    }
+  ]
+}
