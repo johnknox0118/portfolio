@@ -40,14 +40,45 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const uploadDir = join(process.cwd(), 'public', 'uploads');
-    await mkdir(uploadDir, { recursive: true });
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
 
     const timestamp = Date.now();
     const cleanName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const filename = `${timestamp}_${cleanName}`;
-    const filePath = join(uploadDir, filename);
 
+    // If Supabase credentials are set, upload directly to Supabase Storage
+    if (supabaseUrl && supabaseKey) {
+      const uploadUrl = `${supabaseUrl}/storage/v1/object/portfolio-uploads/${filename}`;
+      const res = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': file.type,
+        },
+        body: buffer,
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Supabase upload error details:', errorText);
+        throw new Error(`Supabase Storage upload failed with status ${res.status}`);
+      }
+
+      // Return the public Supabase URL
+      const publicUrl = `${supabaseUrl}/storage/v1/object/public/portfolio-uploads/${filename}`;
+      return NextResponse.json({
+        success: true,
+        url: publicUrl,
+        name: file.name,
+      });
+    }
+
+    // Fallback: Save locally inside public/uploads folder (useful for local development)
+    const uploadDir = join(process.cwd(), 'public', 'uploads');
+    await mkdir(uploadDir, { recursive: true });
+    const filePath = join(uploadDir, filename);
     await writeFile(filePath, buffer);
 
     return NextResponse.json({
