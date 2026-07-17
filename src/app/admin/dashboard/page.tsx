@@ -145,9 +145,12 @@ export default function AdminDashboard() {
       const result = await res.json();
       if (result.success) {
         onComplete(result.url);
+      } else {
+        alert("Upload failed: " + (result.error || "Unknown server error"));
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Upload error:", err);
+      alert("Upload network error: " + err.message);
     } finally {
       setUploadingFile(null);
     }
