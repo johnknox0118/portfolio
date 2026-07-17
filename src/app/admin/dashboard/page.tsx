@@ -130,6 +130,11 @@ export default function AdminDashboard() {
   // File Upload Helper
   const [uploadingFile, setUploadingFile] = useState<string | null>(null);
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, onComplete: (url: string) => void, fieldId: string) => {
+    if (typeof window !== "undefined" && window.location.hostname !== "localhost" && !window.location.hostname.includes("127.0.0.1")) {
+      alert("PRODUCTION NOTICE:\n\nDirect file uploads are disabled on Vercel because of its read-only serverless filesystem.\n\nPlease upload your image/PDF to a free hosting site (like imgbb.com or imgur.com) and paste the URL link directly into the text field instead!");
+      e.target.value = "";
+      return;
+    }
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
     setUploadingFile(fieldId);
