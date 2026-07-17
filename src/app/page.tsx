@@ -181,6 +181,26 @@ export default function PublicPortfolio() {
     );
   }
 
+  if (!data || data.error || !data.profile) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#07111F] text-white p-6 text-center font-mono">
+        <div className="scanlines"></div>
+        <div className="w-16 h-16 border-2 border-red-500 rounded-full flex items-center justify-center mb-6 text-red-500 font-bold text-xl shadow-[0_0_15px_#ef4444]">
+          !
+        </div>
+        <h1 className="font-orbitron font-black text-lg text-red-500 mb-2 uppercase tracking-wider">
+          DATABASE CONNECTION ERROR
+        </h1>
+        <p className="text-xs text-gray-400 max-w-md leading-relaxed mb-6">
+          The system was unable to establish a secure link with the cloud database. Verify that all environment variables (DATABASE_URL, DIRECT_URL) are correctly loaded in Vercel.
+        </p>
+        <div className="text-[10px] text-gray-500 bg-black/40 px-4 py-2 rounded-lg border border-white/5">
+          STATUS: OFFLINE // {data?.error || "ERR_NULL_PAYLOAD"}
+        </div>
+      </div>
+    );
+  }
+
   const { profile, settings, education, skills, projects, certifications } = data;
 
   // Filter lists
