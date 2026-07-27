@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, User, Code, Award, Folder, Settings, Mail,
-  LogOut, Plus, Trash, Edit, Check, Loader2, FileText, Camera, X, Globe, ExternalLink
+  LogOut, Plus, Trash, Edit, Check, Loader2, FileText, Camera, X, Globe, ExternalLink, Key, Lock
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -66,8 +66,50 @@ export default function AdminDashboard() {
     }
   }, [data]);
 
+  // Password change state
+  const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [passwordStatus, setPasswordStatus] = useState<{ type: "idle" | "saving" | "success" | "error"; text: string }>({
+    type: "idle",
+    text: "",
+  });
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword) {
+      setPasswordStatus({ type: "error", text: "All password fields are required." });
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordStatus({ type: "error", text: "New password and confirm password do not match." });
+      return;
+    }
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordStatus({ type: "error", text: "New password must be at least 6 characters long." });
+      return;
+    }
+
+    setPasswordStatus({ type: "saving", text: "" });
+    try {
+      const res = await fetch("/api/admin/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(passwordForm),
+      });
+      const result = await res.json();
+      if (res.ok && result.success) {
+        setPasswordStatus({ type: "success", text: result.message || "Password updated successfully." });
+        setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      } else {
+        setPasswordStatus({ type: "error", text: result.error || "Failed to update password." });
+      }
+    } catch (err: any) {
+      setPasswordStatus({ type: "error", text: "Network error occurred while updating password." });
+    }
+  };
+
   useEffect(() => {
     setSuccessMsg("");
+    setPasswordStatus({ type: "idle", text: "" });
   }, [activeTab]);
 
   // Form saving utility for singular tables
@@ -786,79 +828,160 @@ export default function AdminDashboard() {
 
         {/* TAB SETTINGS */}
         {activeTab === "settings" && (
-          <div className="space-y-6">
-            <h2 className="font-orbitron font-black text-xl text-white">SETTINGS_GRID // SYSTEM CONFIG</h2>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                saveSingular("settings", settingsForm);
-              }}
-              className="glass-card p-6 md:p-8 space-y-6"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-8">
+            <div className="space-y-6">
+              <h2 className="font-orbitron font-black text-xl text-white">SETTINGS_GRID // SYSTEM CONFIG</h2>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  saveSingular("settings", settingsForm);
+                }}
+                className="glass-card p-6 md:p-8 space-y-6"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-gray-400 uppercase">Primary Custom Color</label>
+                    <input
+                      type="text"
+                      value={settingsForm.primaryColor || ""}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, primaryColor: e.target.value })}
+                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-gray-400 uppercase">Secondary Custom Color</label>
+                    <input
+                      type="text"
+                      value={settingsForm.secondaryColor || ""}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, secondaryColor: e.target.value })}
+                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-gray-400 uppercase">Boot Loader Style</label>
+                    <select
+                      value={settingsForm.loader || "default"}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, loader: e.target.value })}
+                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
+                    >
+                      <option value="default">Default</option>
+                      <option value="cyber">Cyber Diagnostics</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-gray-400 uppercase">Analytics tracking ID</label>
+                    <input
+                      type="text"
+                      value={settingsForm.analyticsId || ""}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, analyticsId: e.target.value })}
+                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+
                 <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-gray-400 uppercase">Primary Custom Color</label>
+                  <label className="text-[10px] font-mono text-gray-400 uppercase">Custom Footer Text</label>
                   <input
                     type="text"
-                    value={settingsForm.primaryColor || ""}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, primaryColor: e.target.value })}
+                    value={settingsForm.footerText || ""}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, footerText: e.target.value })}
                     className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
                   />
                 </div>
+
+                {successMsg && (
+                  <div className="p-3 bg-cyber-green/10 border border-cyber-green/30 text-cyber-green text-xs font-mono rounded-lg">
+                    {successMsg}
+                  </div>
+                )}
+
+                <button type="submit" disabled={saving} className="btn-cyber flex items-center gap-2">
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} COMMIT SETTINGS
+                </button>
+              </form>
+            </div>
+
+            {/* CHANGE ADMIN PASSWORD */}
+            <div className="space-y-6">
+              <h2 className="font-orbitron font-black text-xl text-white flex items-center gap-2">
+                <Key className="w-5 h-5 text-cyber-green" /> SECURITY_GRID // CHANGE ADMIN PASSWORD
+              </h2>
+              <form onSubmit={handleChangePassword} className="glass-card p-6 md:p-8 space-y-6 border-cyber-green/20">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-gray-400 uppercase">Secondary Custom Color</label>
+                  <label className="text-[10px] font-mono text-gray-400 uppercase tracking-wider block">
+                    Current Password (Verifies Authority)
+                  </label>
                   <input
-                    type="text"
-                    value={settingsForm.secondaryColor || ""}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, secondaryColor: e.target.value })}
-                    className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
+                    type="password"
+                    required
+                    placeholder="Enter your current password"
+                    value={passwordForm.currentPassword}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                    className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-gray-400 uppercase">Boot Loader Style</label>
-                  <select
-                    value={settingsForm.loader || "default"}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, loader: e.target.value })}
-                    className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
-                  >
-                    <option value="default">Default</option>
-                    <option value="cyber">Cyber Diagnostics</option>
-                  </select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-gray-400 uppercase tracking-wider block">
+                      New Password
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      minLength={6}
+                      placeholder="Minimum 6 characters"
+                      value={passwordForm.newPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-gray-400 uppercase tracking-wider block">
+                      Confirm New Password
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="Re-enter new password"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-gray-400 uppercase">Analytics tracking ID</label>
-                  <input
-                    type="text"
-                    value={settingsForm.analyticsId || ""}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, analyticsId: e.target.value })}
-                    className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
-                  />
-                </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-[10px] font-mono text-gray-400 uppercase">Custom Footer Text</label>
-                <input
-                  type="text"
-                  value={settingsForm.footerText || ""}
-                  onChange={(e) => setSettingsForm({ ...settingsForm, footerText: e.target.value })}
-                  className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
-                />
-              </div>
+                {passwordStatus.type === "error" && (
+                  <div className="p-3 bg-rose-950/40 border border-rose-500/40 text-rose-400 text-xs font-mono rounded-lg flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span>{passwordStatus.text}</span>
+                  </div>
+                )}
 
-              {successMsg && (
-                <div className="p-3 bg-cyber-green/10 border border-cyber-green/30 text-cyber-green text-xs font-mono rounded-lg">
-                  {successMsg}
-                </div>
-              )}
+                {passwordStatus.type === "success" && (
+                  <div className="p-3 bg-cyber-green/10 border border-cyber-green/40 text-cyber-green text-xs font-mono rounded-lg flex items-center gap-2">
+                    <Check className="w-4 h-4 text-cyber-green shrink-0" />
+                    <span>{passwordStatus.text}</span>
+                  </div>
+                )}
 
-              <button type="submit" disabled={saving} className="btn-cyber flex items-center gap-2">
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} COMMIT SETTINGS
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={passwordStatus.type === "saving"}
+                  className="btn-cyber flex items-center gap-2 border-cyber-green text-cyber-green font-bold"
+                >
+                  {passwordStatus.type === "saving" ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Key className="w-4 h-4" />
+                  )}{" "}
+                  UPDATE SECURITY PASSWORD
+                </button>
+              </form>
+            </div>
           </div>
         )}
       </main>
