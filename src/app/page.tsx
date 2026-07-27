@@ -445,18 +445,28 @@ export default function PublicPortfolio() {
             {projects.map((project: any) => (
               <div key={project.id} className="glass-card hud-box p-6 flex flex-col gap-4">
                 <div className="aspect-video w-full rounded-xl overflow-hidden border border-white/5 bg-black/40 relative group">
-                  <div className="absolute inset-0 bg-[#07111F]/70 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-4 transition-all duration-300 backdrop-blur-sm z-20">
+                  <div className="absolute inset-0 bg-[#07111F]/80 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3 transition-all duration-300 backdrop-blur-sm z-20 p-3 flex-wrap">
                     <button
                       onClick={() => {
                         setSelectedProject(project);
                         setProjectTab("details");
                       }}
-                      className="btn-cyber flex items-center gap-1.5 px-4 py-2 border-cyber-green text-cyber-green"
+                      className="btn-cyber flex items-center gap-1.5 px-3 py-2 border-cyber-green text-cyber-green text-xs"
                     >
                       <Eye className="w-4 h-4" /> VIEW SPEC
                     </button>
+                    {project.liveUrl && (
+                      <a
+                        href={project.liveUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-cyber flex items-center gap-1.5 px-3.5 py-2 bg-cyber-green/20 border-cyber-green text-cyber-green text-xs font-bold shadow-[0_0_10px_rgba(0,255,157,0.3)] hover:bg-cyber-green hover:text-black transition-all"
+                      >
+                        <Globe className="w-4 h-4" /> VIEW PROJECT
+                      </a>
+                    )}
                     {project.githubUrl && (
-                      <a href={project.githubUrl} target="_blank" rel="noreferrer" className="btn-cyber btn-cyber-blue flex items-center gap-1.5 px-4 py-2">
+                      <a href={project.githubUrl} target="_blank" rel="noreferrer" className="btn-cyber btn-cyber-blue flex items-center gap-1.5 px-3 py-2 text-xs">
                         <ExternalLink className="w-4 h-4" /> SOURCE
                       </a>
                     )}
@@ -470,18 +480,45 @@ export default function PublicPortfolio() {
                     {project.category}
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-start gap-2">
-                    <h3 className="font-orbitron font-bold text-lg text-white group-hover:text-cyber-green transition-colors">{project.title}</h3>
-                    <span className="cyber-tag text-[9px] border-emerald-500/20 text-cyber-green">{project.status?.toUpperCase()}</span>
+                <div className="space-y-2 flex-1 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-start gap-2">
+                      <h3 className="font-orbitron font-bold text-lg text-white group-hover:text-cyber-green transition-colors">{project.title}</h3>
+                      <span className="cyber-tag text-[9px] border-emerald-500/20 text-cyber-green">{project.status?.toUpperCase()}</span>
+                    </div>
+                    <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{project.description}</p>
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {project.tags.map((tag: string) => (
+                        <span key={tag} className="cyber-tag text-[8.5px] border-white/10 text-gray-300">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{project.description}</p>
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    {project.tags.map((tag: string) => (
-                      <span key={tag} className="cyber-tag text-[8.5px] border-white/10 text-gray-300">
-                        {tag}
-                      </span>
-                    ))}
+
+                  <div className="flex items-center justify-between pt-3 border-t border-white/5 font-mono text-xs mt-2">
+                    {project.liveUrl ? (
+                      <a
+                        href={project.liveUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 text-cyber-green hover:underline font-bold text-[11px]"
+                      >
+                        <Globe className="w-3.5 h-3.5" /> VIEW PROJECT <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ) : (
+                      <span className="text-gray-500 text-[10px]">INTERNAL DOSSIER</span>
+                    )}
+                    {project.githubUrl && (
+                      <a
+                        href={project.githubUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-cyber-blue hover:underline text-[11px]"
+                      >
+                        <Code className="w-3.5 h-3.5" /> REPOSITORY
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
@@ -716,12 +753,36 @@ export default function PublicPortfolio() {
               </button>
 
               <div className="space-y-6">
-                <div>
-                  <div className="cyber-tag text-[9px] border-cyber-blue/30 text-cyber-blue font-bold uppercase tracking-wider mb-2">
-                    PROJECT DATA DOSSIER // {selectedProject.id}
+                <div className="flex flex-wrap items-start justify-between gap-4 pr-8">
+                  <div>
+                    <div className="cyber-tag text-[9px] border-cyber-blue/30 text-cyber-blue font-bold uppercase tracking-wider mb-2">
+                      PROJECT DATA DOSSIER // {selectedProject.id}
+                    </div>
+                    <h2 className="font-orbitron font-black text-2xl md:text-3xl text-white">{selectedProject.title}</h2>
+                    <p className="font-mono text-[10px] text-cyber-green uppercase mt-1">{selectedProject.role}</p>
                   </div>
-                  <h2 className="font-orbitron font-black text-2xl md:text-3xl text-white">{selectedProject.title}</h2>
-                  <p className="font-mono text-[10px] text-cyber-green uppercase mt-1">{selectedProject.role}</p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {selectedProject.liveUrl && (
+                      <a
+                        href={selectedProject.liveUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-cyber flex items-center gap-2 px-5 py-2.5 bg-cyber-green/20 border-cyber-green text-cyber-green font-bold hover:bg-cyber-green hover:text-black transition-all shadow-[0_0_15px_rgba(0,255,157,0.3)] text-xs"
+                      >
+                        <Globe className="w-4 h-4" /> VIEW DEPLOYED PROJECT <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    )}
+                    {selectedProject.githubUrl && (
+                      <a
+                        href={selectedProject.githubUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-cyber btn-cyber-blue flex items-center gap-2 px-4 py-2.5 text-xs"
+                      >
+                        <Code className="w-4 h-4" /> REPOSITORY
+                      </a>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex border-b border-white/10 pb-px gap-6 font-orbitron text-xs font-bold tracking-wider">

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, User, Code, Award, Folder, Settings, Mail,
-  LogOut, Plus, Trash, Edit, Check, Loader2, FileText, Camera, X
+  LogOut, Plus, Trash, Edit, Check, Loader2, FileText, Camera, X, Globe, ExternalLink
 } from "lucide-react";
 
 export default function AdminDashboard() {
@@ -1202,14 +1202,25 @@ export default function AdminDashboard() {
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono text-gray-400 uppercase">GitHub URL</label>
                       <input
                         type="text"
-                        value={editingItem.githubUrl}
+                        placeholder="https://github.com/..."
+                        value={editingItem.githubUrl || ""}
                         onChange={(e) => setEditingItem({ ...editingItem, githubUrl: e.target.value })}
-                        className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none"
+                        className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-gray-400 uppercase font-bold text-cyber-green">Deployed / Live URL</label>
+                      <input
+                        type="text"
+                        placeholder="https://your-app.vercel.app"
+                        value={editingItem.liveUrl || ""}
+                        onChange={(e) => setEditingItem({ ...editingItem, liveUrl: e.target.value })}
+                        className="w-full bg-[#040a12] border border-cyber-green/40 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green shadow-[0_0_10px_rgba(0,255,157,0.1)]"
                       />
                     </div>
                     <div className="space-y-2">
@@ -1217,9 +1228,10 @@ export default function AdminDashboard() {
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          value={editingItem.imageUrl}
+                          placeholder="/uploads/... or https://..."
+                          value={editingItem.imageUrl || ""}
                           onChange={(e) => setEditingItem({ ...editingItem, imageUrl: e.target.value })}
-                          className="flex-grow bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none"
+                          className="flex-grow bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
                         />
                         <label className="btn-cyber flex items-center justify-center p-2.5 cursor-pointer">
                           <input
