@@ -34,6 +34,11 @@
   100% { filter: drop-shadow(0 0 25px rgba(0, 200, 255, 0.7)); }
 }
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px;
+}
+
 :root {
   --background: #07111F;
   --foreground: #ffffff;
@@ -45,6 +50,27 @@ body {
   font-family: "Inter", sans-serif;
   overflow-x: hidden;
   position: relative;
+}
+
+/* Global Content & Media Theft Protection */
+* {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+}
+
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
+img {
+  -webkit-user-drag: none !important;
+  user-drag: none !important;
+  pointer-events: none !important;
 }
 
 /* Custom Scrollbar */
@@ -241,4 +267,51 @@ body {
   filter: brightness(0.9);
   transform: translate3d(0, 0, 0);
   will-change: transform;
+}
+
+/* Scrollbar None Utility for Mobile Touch Devices */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ATS Print Stylesheet for Executive PDF Dossier Export */
+@media print {
+  @page {
+    margin: 8mm 10mm;
+    size: A4 portrait;
+  }
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  #executive-dossier-print, #executive-dossier-print * {
+    visibility: visible !important;
+  }
+  #executive-dossier-print {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+  }
 }

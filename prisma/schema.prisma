@@ -15,26 +15,27 @@ model Admin {
 }
 
 model Profile {
-  id              Int     @id @default(autoincrement())
-  name            String
-  title           String
-  tagline         String
-  bio             String
-  careerObjective String
-  location        String
-  phone           String
-  email           String
-  linkedin        String
-  github          String
-  instagram       String
-  twitter         String
-  portfolioUrl    String
-  resumeUrl       String
-  cvUrl           String
-  profileImageUrl   String
-  coverImageUrl     String
-  profileImageGrayscale String @default("100")
-  profileImageScale     String @default("1.0")
+  id                      Int    @id @default(autoincrement())
+  name                    String
+  title                   String
+  tagline                 String
+  bio                     String
+  careerObjective         String
+  typingPhrases           String @default("Compiling secure architectures..., Emulating threat payloads..., Auditing system kernels..., Defending endpoints...")
+  location                String
+  phone                   String
+  email                   String
+  linkedin                String
+  github                  String
+  instagram               String
+  twitter                 String
+  portfolioUrl            String
+  resumeUrl               String
+  cvUrl                   String
+  profileImageUrl         String
+  coverImageUrl           String
+  profileImageGrayscale   String @default("100")
+  profileImageScale       String @default("1.0")
   profileImageBorderColor String @default("#00FF9D")
 }
 
@@ -127,6 +128,18 @@ model GalleryItem {
   imageUrl String
   caption  String
   category String // "event", "project", "hackathon", "certificate", "personal"
+}
+
+model Article {
+  id        Int      @id @default(autoincrement())
+  title     String
+  excerpt   String
+  category  String   // "CYBERSECURITY", "ENGINEERING", "AI"
+  readTime  String   // "6 min read"
+  date      String   // "July 2026"
+  tags      String   // Serialized JSON array: ["Zero-Trust", "Next.js"]
+  content   String
+  createdAt DateTime @default(now())
 }
 
 model Message {

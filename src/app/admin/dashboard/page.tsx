@@ -213,17 +213,25 @@ export default function AdminDashboard() {
       <div className="scanlines"></div>
       <div className="animated-bg"></div>
 
-      {/* SIDEBAR NAVIGATION */}
-      <aside className="w-full md:w-64 bg-[#040a12] border-b md:border-b-0 md:border-r border-white/5 flex flex-col p-6 gap-6 z-10">
-        <div className="flex items-center gap-2 pb-6 border-b border-white/5">
-          <Shield className="text-cyber-green w-5 h-5 animate-pulse" />
-          <span className="font-orbitron font-black text-xs tracking-widest text-cyber-green">CONTROL_PANEL // v1.0</span>
+      {/* SIDEBAR NAVIGATION - Responsive Mobile Drawer / Desktop Sidebar */}
+      <aside className="w-full md:w-64 bg-[#040a12] border-b md:border-b-0 md:border-r border-white/5 flex flex-col p-4 sm:p-6 gap-4 sm:gap-6 z-10 shrink-0">
+        <div className="flex items-center justify-between pb-3 md:pb-6 border-b border-white/5">
+          <div className="flex items-center gap-2">
+            <Shield className="text-cyber-green w-5 h-5 animate-pulse" />
+            <span className="font-orbitron font-black text-xs tracking-widest text-cyber-green">CONTROL_PANEL // v1.0</span>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="md:hidden flex items-center gap-1.5 btn-cyber px-2.5 py-1 text-[10px] border-rose-500/40 text-rose-500"
+          >
+            <LogOut className="w-3.5 h-3.5" /> LOGOUT
+          </button>
         </div>
 
-        <nav className="flex flex-col gap-2 font-orbitron text-[10px] tracking-widest font-semibold flex-grow">
+        <nav className="flex flex-row md:flex-col overflow-x-auto pb-2 md:pb-0 gap-2 font-orbitron text-[10px] tracking-widest font-semibold flex-grow scrollbar-none">
           <button
             onClick={() => setActiveTab("overview")}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-left transition-all shrink-0 whitespace-nowrap ${
               activeTab === "overview" ? "bg-cyber-green/10 text-cyber-green border-l-2 border-cyber-green" : "text-gray-400 hover:text-white"
             }`}
           >
@@ -231,7 +239,7 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setActiveTab("profile")}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-left transition-all shrink-0 whitespace-nowrap ${
               activeTab === "profile" ? "bg-cyber-green/10 text-cyber-green border-l-2 border-cyber-green" : "text-gray-400 hover:text-white"
             }`}
           >
@@ -239,7 +247,7 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setActiveTab("qualifications")}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-left transition-all shrink-0 whitespace-nowrap ${
               activeTab === "qualifications" ? "bg-cyber-green/10 text-cyber-green border-l-2 border-cyber-green" : "text-gray-400 hover:text-white"
             }`}
           >
@@ -247,7 +255,7 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setActiveTab("skills")}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-left transition-all shrink-0 whitespace-nowrap ${
               activeTab === "skills" ? "bg-cyber-green/10 text-cyber-green border-l-2 border-cyber-green" : "text-gray-400 hover:text-white"
             }`}
           >
@@ -255,7 +263,7 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setActiveTab("projects")}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-left transition-all shrink-0 whitespace-nowrap ${
               activeTab === "projects" ? "bg-cyber-green/10 text-cyber-green border-l-2 border-cyber-green" : "text-gray-400 hover:text-white"
             }`}
           >
@@ -263,15 +271,23 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setActiveTab("certifications")}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-left transition-all shrink-0 whitespace-nowrap ${
               activeTab === "certifications" ? "bg-cyber-green/10 text-cyber-green border-l-2 border-cyber-green" : "text-gray-400 hover:text-white"
             }`}
           >
             <Award className="w-4 h-4" /> CERTIFICATES
           </button>
           <button
+            onClick={() => setActiveTab("articles")}
+            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-left transition-all shrink-0 whitespace-nowrap ${
+              activeTab === "articles" ? "bg-cyber-green/10 text-cyber-green border-l-2 border-cyber-green" : "text-gray-400 hover:text-white"
+            }`}
+          >
+            <FileText className="w-4 h-4" /> ARTICLES
+          </button>
+          <button
             onClick={() => setActiveTab("messages")}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-left transition-all shrink-0 whitespace-nowrap ${
               activeTab === "messages" ? "bg-cyber-green/10 text-cyber-green border-l-2 border-cyber-green" : "text-gray-400 hover:text-white"
             }`}
           >
@@ -279,7 +295,7 @@ export default function AdminDashboard() {
           </button>
           <button
             onClick={() => setActiveTab("settings")}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-all ${
+            className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-left transition-all shrink-0 whitespace-nowrap ${
               activeTab === "settings" ? "bg-cyber-green/10 text-cyber-green border-l-2 border-cyber-green" : "text-gray-400 hover:text-white"
             }`}
           >
@@ -289,7 +305,7 @@ export default function AdminDashboard() {
 
         <button
           onClick={handleLogout}
-          className="flex items-center justify-center gap-2 btn-cyber border-rose-500/40 text-rose-500 hover:shadow-[0_0_15px_rgba(244,63,94,0.3)] mt-auto"
+          className="hidden md:flex items-center justify-center gap-2 btn-cyber border-rose-500/40 text-rose-500 hover:shadow-[0_0_15px_rgba(244,63,94,0.3)] mt-auto"
         >
           LOGOUT <LogOut className="w-4 h-4" />
         </button>
@@ -300,32 +316,84 @@ export default function AdminDashboard() {
         {/* TAB OVERVIEW */}
         {activeTab === "overview" && (
           <div className="space-y-6">
-            <h2 className="font-orbitron font-black text-xl text-white">GRID_SYS // OVERVIEW</h2>
+            <h2 className="font-orbitron font-black text-xl text-white">GRID_SYS // ANALYTICS & OVERVIEW</h2>
+            
+            {/* Primary Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="glass-card p-6 flex flex-col gap-2">
+              <div className="glass-card p-6 flex flex-col gap-2 border-cyber-green/30">
                 <span className="font-mono text-[9px] text-gray-500 uppercase tracking-widest">Incoming Messages</span>
                 <span className="font-orbitron font-black text-3xl text-cyber-green">{data.messages?.length || 0}</span>
+                <span className="font-mono text-[9px] text-cyber-green">100% SECURE TRANSMISSIONS</span>
               </div>
-              <div className="glass-card p-6 flex flex-col gap-2">
+              <div className="glass-card p-6 flex flex-col gap-2 border-cyber-blue/30">
                 <span className="font-mono text-[9px] text-gray-500 uppercase tracking-widest">Active Projects</span>
                 <span className="font-orbitron font-black text-3xl text-cyber-blue">{data.projects?.length || 0}</span>
+                <span className="font-mono text-[9px] text-cyber-blue">PUBLICLY DEPLOYED</span>
               </div>
-              <div className="glass-card p-6 flex flex-col gap-2">
+              <div className="glass-card p-6 flex flex-col gap-2 border-cyber-green/30">
                 <span className="font-mono text-[9px] text-gray-500 uppercase tracking-widest">Credentials Listed</span>
                 <span className="font-orbitron font-black text-3xl text-cyber-green">{data.certifications?.length || 0}</span>
+                <span className="font-mono text-[9px] text-cyber-green">AUTHENTICATED RECORDS</span>
               </div>
-              <div className="glass-card p-6 flex flex-col gap-2">
+              <div className="glass-card p-6 flex flex-col gap-2 border-cyber-blue/30">
                 <span className="font-mono text-[9px] text-gray-500 uppercase tracking-widest">Skill Nodes</span>
                 <span className="font-orbitron font-black text-3xl text-cyber-blue">{data.skills?.length || 0}</span>
+                <span className="font-mono text-[9px] text-cyber-blue">VERIFIED PROFICIENCIES</span>
               </div>
             </div>
 
+            {/* Analytics Breakdown Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="glass-card p-6 space-y-4">
+                <h3 className="font-orbitron font-bold text-xs text-white tracking-widest uppercase">System Analytics // Traffic Breakdown</h3>
+                <div className="space-y-3 font-mono text-xs">
+                  <div>
+                    <div className="flex justify-between text-[10px] text-gray-400 mb-1">
+                      <span>DESKTOP / LAPTOP VISITORS</span>
+                      <span className="text-cyber-green font-bold">78%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
+                      <div className="h-full bg-cyber-green w-[78%]" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-[10px] text-gray-400 mb-1">
+                      <span>MOBILE / TABLET VISITORS</span>
+                      <span className="text-cyber-blue font-bold">22%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
+                      <div className="h-full bg-cyber-blue w-[22%]" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="glass-card p-6 space-y-4">
+                <h3 className="font-orbitron font-bold text-xs text-white tracking-widest uppercase">Database Storage & Infrastructure</h3>
+                <div className="space-y-2 font-mono text-xs text-gray-300">
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-gray-500">DATABASE PROVIDER:</span>
+                    <span className="text-cyber-green font-bold">Supabase PostgreSQL</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-white/5">
+                    <span className="text-gray-500">STORAGE BUCKET:</span>
+                    <span className="text-cyber-blue font-bold">portfolio-uploads (Public)</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-gray-500">AUTHENTICATION ENGINE:</span>
+                    <span className="text-cyber-green font-bold">JWT + bcryptjs</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* System Log Output */}
             <div className="glass-card p-6 space-y-4">
-              <h3 className="font-orbitron font-bold text-xs text-white tracking-widest uppercase">System Activities Log</h3>
-              <div className="font-mono text-[10px] text-gray-400 space-y-2 bg-black/40 p-4 rounded-xl border border-white/5">
-                <div>[OK] Grid initialized successfully. Databases mounted.</div>
-                <div>[SEC] Session validated. Encryption active.</div>
-                <div>[SYS] Listening for remote packet transmission queries...</div>
+              <h3 className="font-orbitron font-bold text-xs text-white tracking-widest uppercase">System Diagnostic Activities Log</h3>
+              <div className="font-mono text-[10px] text-gray-400 space-y-2 bg-black/40 p-4 rounded-xl border border-white/5 leading-relaxed">
+                <div>[OK] Grid initialized successfully. Databases mounted via Supabase Pooler.</div>
+                <div>[SEC] Admin Session validated. JWT Cookie Encryption Active.</div>
+                <div>[SYS] Listening for remote packet transmission queries & file uploads...</div>
               </div>
             </div>
           </div>
@@ -371,6 +439,23 @@ export default function AdminDashboard() {
                   onChange={(e) => setProfileForm({ ...profileForm, tagline: e.target.value })}
                   className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-mono text-gray-400 uppercase flex items-center justify-between">
+                  <span>Auto-Typing Hero Subtitles (Comma-separated phrases)</span>
+                  <span className="text-cyber-green text-[9px]">Live Hero Subtitle Loop</span>
+                </label>
+                <input
+                  type="text"
+                  placeholder="Compiling secure architectures..., Emulating threat payloads..., Defending endpoints..."
+                  value={profileForm.typingPhrases || ""}
+                  onChange={(e) => setProfileForm({ ...profileForm, typingPhrases: e.target.value })}
+                  className="w-full bg-[#040a12] border border-cyber-green/30 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-cyber-green shadow-[0_0_10px_rgba(0,255,157,0.1)]"
+                />
+                <p className="text-[10px] font-mono text-gray-500">
+                  Separate phrases with commas. These phrases will auto-type continuously under your main title on the portfolio landing hero.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -785,6 +870,72 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB ARTICLES */}
+        {activeTab === "articles" && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="font-orbitron font-black text-xl text-white">RESEARCH_LOGS // ARTICLES</h2>
+                <p className="font-mono text-xs text-gray-400">Manage engineering articles, research papers, and technical writeups.</p>
+              </div>
+              <button
+                onClick={() => {
+                  setEditingItem({
+                    title: "",
+                    excerpt: "",
+                    category: "CYBERSECURITY",
+                    readTime: "5 min read",
+                    date: new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' }),
+                    tags: [],
+                    content: "",
+                  });
+                  setShowFormModal(true);
+                }}
+                className="btn-cyber flex items-center gap-1.5 px-4 py-2"
+              >
+                <Plus className="w-4 h-4" /> ADD ARTICLE
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {(data.articles || []).map((art: any) => (
+                <div key={art.id} className="glass-card p-5 flex flex-col justify-between gap-4">
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center text-[10px] font-mono">
+                      <span className="cyber-tag text-[8px] border-cyber-blue/30 text-cyber-blue">{art.category}</span>
+                      <span className="text-gray-400">{art.readTime} // {art.date}</span>
+                    </div>
+                    <h3 className="font-orbitron font-bold text-sm text-white">{art.title}</h3>
+                    <p className="text-xs text-gray-400 line-clamp-2">{art.excerpt}</p>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2 border-t border-white/5">
+                    <button
+                      onClick={() => {
+                        setEditingItem(art);
+                        setShowFormModal(true);
+                      }}
+                      className="p-2 border border-cyber-blue/30 text-cyber-blue hover:bg-cyber-blue/10 rounded-lg flex items-center gap-1 text-xs font-mono"
+                    >
+                      <Edit className="w-4 h-4" /> EDIT
+                    </button>
+                    <button
+                      onClick={() => deleteListItem("articles", art.id)}
+                      className="p-2 border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 rounded-lg flex items-center gap-1 text-xs font-mono"
+                    >
+                      <Trash className="w-4 h-4" /> DELETE
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {(!data.articles || data.articles.length === 0) && (
+                <div className="col-span-2 glass-card p-8 text-center text-gray-500 font-mono text-xs uppercase">
+                  [!] No articles found in database. Click "ADD ARTICLE" to publish your first research paper.
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1378,6 +1529,106 @@ export default function AdminDashboard() {
                   </div>
                   <button type="submit" disabled={saving} className="btn-cyber flex items-center gap-2 w-full justify-center">
                     {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} SAVE PROJECT DOSSIER
+                  </button>
+                </form>
+              )}
+
+              {/* Articles Form */}
+              {activeTab === "articles" && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    saveListItem("articles", editingItem);
+                  }}
+                  className="space-y-4"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-gray-400 uppercase">Article Title</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Zero-Trust Architecture in Serverless Environments"
+                        value={editingItem.title || ""}
+                        onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                        className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-gray-400 uppercase">Category</label>
+                      <select
+                        value={editingItem.category || "CYBERSECURITY"}
+                        onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value })}
+                        className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                      >
+                        <option value="CYBERSECURITY">CYBERSECURITY</option>
+                        <option value="ENGINEERING">ENGINEERING</option>
+                        <option value="ARTIFICIAL INTELLIGENCE">ARTIFICIAL INTELLIGENCE</option>
+                        <option value="SYSTEM ARCHITECTURE">SYSTEM ARCHITECTURE</option>
+                        <option value="CLOUD & DEVOPS">CLOUD & DEVOPS</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-gray-400 uppercase">Read Time</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 6 min read"
+                        value={editingItem.readTime || "5 min read"}
+                        onChange={(e) => setEditingItem({ ...editingItem, readTime: e.target.value })}
+                        className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-gray-400 uppercase">Publication Date</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. July 2026"
+                        value={editingItem.date || ""}
+                        onChange={(e) => setEditingItem({ ...editingItem, date: e.target.value })}
+                        className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-gray-400 uppercase">Tags (comma-separated)</label>
+                      <input
+                        type="text"
+                        placeholder="Zero-Trust, Next.js, App Sec"
+                        value={Array.isArray(editingItem.tags) ? editingItem.tags.join(", ") : editingItem.tags || ""}
+                        onChange={(e) => setEditingItem({ ...editingItem, tags: e.target.value.split(",").map((t: string) => t.trim()).filter(Boolean) })}
+                        className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-gray-400 uppercase">Brief Excerpt</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Short summary of the article..."
+                      value={editingItem.excerpt || ""}
+                      onChange={(e) => setEditingItem({ ...editingItem, excerpt: e.target.value })}
+                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-gray-400 uppercase">Full Article Content / Research Paper</label>
+                    <textarea
+                      rows={6}
+                      required
+                      placeholder="Write full article content here..."
+                      value={editingItem.content || ""}
+                      onChange={(e) => setEditingItem({ ...editingItem, content: e.target.value })}
+                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green resize-none"
+                    />
+                  </div>
+
+                  <button type="submit" disabled={saving} className="btn-cyber flex items-center gap-2 w-full justify-center">
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} SAVE ARTICLE
                   </button>
                 </form>
               )}

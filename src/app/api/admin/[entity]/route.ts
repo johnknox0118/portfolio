@@ -15,12 +15,14 @@ const modelMapping: { [key: string]: string } = {
   achievements: 'achievement',
   gallery: 'galleryItem',
   messages: 'message',
+  articles: 'article',
 };
 
 const jsonFieldsMapping: { [key: string]: string[] } = {
   project: ['screenshots', 'tags', 'logs', 'challenges', 'solutions'],
   certification: ['skills'],
   internship: ['skills'],
+  article: ['tags'],
 };
 
 // GET: Fetch records
@@ -136,6 +138,12 @@ export async function PUT(
       
       const preparedData = { ...body };
       delete preparedData.id;
+      if (preparedData.profileImageScale !== undefined) {
+        preparedData.profileImageScale = String(preparedData.profileImageScale);
+      }
+      if (preparedData.profileImageGrayscale !== undefined) {
+        preparedData.profileImageGrayscale = String(preparedData.profileImageGrayscale);
+      }
 
       let record;
       if (existing) {

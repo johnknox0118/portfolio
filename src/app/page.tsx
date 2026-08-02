@@ -9,8 +9,20 @@ import {
   Lock, Download, Eye, Loader2, Check, ChevronUp, Camera, FileText,
   Box, ShieldAlert, Laptop, Server, Wifi, Unlock, Key, FileCheck, Layers, GitBranch,
   Search, Zap, Play, Pause, HelpCircle, AlertTriangle, Coffee, CodeXml, FileJson,
-  Fingerprint, MessagesSquare, Crown
+  Fingerprint, MessagesSquare, Crown, Volume2, VolumeX, Printer, Sparkles
 } from "lucide-react";
+import AntiGravityCanvas from "@/components/AntiGravityCanvas";
+import BootLoader from "@/components/BootLoader";
+import CommandPalette from "@/components/CommandPalette";
+import TerminalModal from "@/components/TerminalModal";
+import AIAssistantWidget from "@/components/AIAssistantWidget";
+import SkillsVisualization from "@/components/SkillsVisualization";
+import TimelineSection from "@/components/TimelineSection";
+import CertificationsSection from "@/components/CertificationsSection";
+import BlogSection from "@/components/BlogSection";
+import CTFChallengeModal from "@/components/CTFChallengeModal";
+import DossierExport from "@/components/DossierExport";
+
 
 const IconMap: { [key: string]: any } = {
   Shield, ShieldCheck, Terminal, Code, Award, Trophy, Flag, Flame, Cpu, 
@@ -46,12 +58,123 @@ const getIcon = (name: string) => {
 };
 
 export default function PublicPortfolio() {
+  // Helper to ensure safe array parsing for Prisma string/JSON fields
+  const ensureArray = (val: any): any[] => {
+    if (Array.isArray(val)) return val;
+    if (!val) return [];
+    if (typeof val === "string") {
+      try {
+        const parsed = JSON.parse(val);
+        if (Array.isArray(parsed)) return parsed;
+        return [val];
+      } catch {
+        return [val];
+      }
+    }
+    return [];
+  };
+
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
   const [certFilter, setCertFilter] = useState("all");
   const [selectedProject, setSelectedProject] = useState<any>(null);
   const [projectTab, setProjectTab] = useState("details");
+  
+  // Command Palette & Terminal & Mobile Nav States
+  const [isPaletteOpen, setIsPaletteOpen] = useState(false);
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
+  // Smooth Scroll Click Handler with Fixed Header Offset
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault();
+    setIsMobileNavOpen(false);
+    const element = document.getElementById(targetId);
+    if (element) {
+      const headerOffset = 90;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+    }
+  };
+
+  // CTF Challenge Modal & Achievement Badge State
+  const [ctfModalOpen, setCtfModalOpen] = useState(false);
+  const [ctfBadgeUnlocked, setCtfBadgeUnlocked] = useState(false);
+
+  // Keyboard shortcut listener for Ctrl+K / Cmd+K and `~` key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsPaletteOpen((prev) => !prev);
+      }
+      if (e.key === "`" || e.key === "~") {
+        e.preventDefault();
+        setIsTerminalOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  // Content & Media Theft Protection Event Listeners
+  useEffect(() => {
+    // Disable right-click context menu across site
+    const handleContextMenu = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) {
+        return;
+      }
+      e.preventDefault();
+    };
+
+    // Disable dragging images/media out of browser
+    const handleDragStart = (e: DragEvent) => {
+      e.preventDefault();
+    };
+
+    // Disable text copying (except inside form inputs & textareas)
+    const handleCopy = (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) {
+        return;
+      }
+      e.preventDefault();
+    };
+
+    // Block keyboard shortcuts: Ctrl+S (Save), Ctrl+U (Source), Ctrl+C (Copy outside input)
+    const handleSecurityKeys = (e: KeyboardEvent) => {
+      const key = e.key.toLowerCase();
+      const isCmdOrCtrl = e.ctrlKey || e.metaKey;
+      const target = e.target as HTMLElement;
+      const isInput = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
+
+      if (isCmdOrCtrl && (key === "s" || key === "u")) {
+        e.preventDefault();
+      }
+      if (isCmdOrCtrl && key === "c" && !isInput) {
+        e.preventDefault();
+      }
+    };
+
+    window.addEventListener("contextmenu", handleContextMenu);
+    window.addEventListener("dragstart", handleDragStart);
+    window.addEventListener("copy", handleCopy);
+    window.addEventListener("keydown", handleSecurityKeys);
+
+    return () => {
+      window.removeEventListener("contextmenu", handleContextMenu);
+      window.removeEventListener("dragstart", handleDragStart);
+      window.removeEventListener("copy", handleCopy);
+      window.removeEventListener("keydown", handleSecurityKeys);
+    };
+  }, []);
   
   // Contact Form State
   const [contactForm, setContactForm] = useState({ name: "", email: "", subject: "", message: "" });
@@ -122,15 +245,27 @@ export default function PublicPortfolio() {
 
   // Typist intro text
   const [typedText, setTypedText] = useState("");
-  const typingTexts = [
-    "Compiling secure architectures...",
-    "Emulating threat payloads...",
-    "Auditing system kernels...",
-    "Defending endpoints..."
-  ];
+  const rawPhrases = data?.profile?.typingPhrases;
 
   useEffect(() => {
     if (loading) return;
+
+    const typingTexts = (() => {
+      if (rawPhrases) {
+        const parsed = rawPhrases
+          .split(",")
+          .map((s: string) => s.trim())
+          .filter(Boolean);
+        if (parsed.length > 0) return parsed;
+      }
+      return [
+        "Compiling secure architectures...",
+        "Emulating threat payloads...",
+        "Auditing system kernels...",
+        "Defending endpoints..."
+      ];
+    })();
+
     let isDeleting = false;
     let text = "";
     let loopIndex = 0;
@@ -163,7 +298,7 @@ export default function PublicPortfolio() {
 
     timer = setTimeout(tick, 500);
     return () => clearTimeout(timer);
-  }, [loading]);
+  }, [loading, rawPhrases]);
 
   if (loading) {
     return (
@@ -201,7 +336,7 @@ export default function PublicPortfolio() {
     );
   }
 
-  const { profile, settings, education, skills, projects, certifications } = data;
+  const { profile, settings, education, skills, projects, certifications, articles } = data;
 
   // Filter lists
   const filteredCerts = certifications.filter((c: any) => certFilter === "all" || c.category === certFilter);
@@ -217,10 +352,12 @@ export default function PublicPortfolio() {
   })();
 
   return (
-    <div id="top-portal" className="min-h-screen relative overflow-x-hidden select-none">
-      {/* Background elements */}
-      <div className="scanlines"></div>
-      <div className="animated-bg"></div>
+    <AntiGravityCanvas>
+      <BootLoader />
+      <div id="top-portal" className="min-h-screen relative overflow-hidden select-none">
+        {/* Background elements */}
+        <div className="scanlines"></div>
+        <div className="animated-bg"></div>
       
       {/* Aurora Background Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#00FF9D]/5 rounded-full blur-[120px] pointer-events-none"></div>
@@ -251,30 +388,133 @@ export default function PublicPortfolio() {
             {profile.name?.toUpperCase() || "GRID_AGENT"}
           </span>
         </a>
-        <div className="flex items-center gap-10">
-          <nav className="hidden md:flex items-center gap-8 text-xs font-orbitron font-semibold tracking-wider text-gray-400">
-            <a href="#about" className="hover:text-cyber-green transition-colors">ABOUT</a>
-            <a href="#qualifications" className="hover:text-cyber-green transition-colors">QUALIFICATIONS</a>
-            <a href="#skills" className="hover:text-cyber-green transition-colors">SKILLS</a>
-            <a href="#projects" className="hover:text-cyber-green transition-colors">PROJECTS</a>
-            <a href="#certifications" className="hover:text-cyber-green transition-colors">CERTIFICATES</a>
-            <a href="#contact" className="hover:text-cyber-green transition-colors">CONTACT</a>
+        <div className="flex items-center gap-6">
+          <nav className="hidden md:flex items-center gap-6 text-xs font-orbitron font-semibold tracking-wider text-gray-400">
+            <a href="#about" onClick={(e) => handleNavClick(e, "about")} className="hover:text-cyber-green transition-colors">ABOUT</a>
+            <a href="#qualifications" onClick={(e) => handleNavClick(e, "qualifications")} className="hover:text-cyber-green transition-colors">QUALIFICATIONS</a>
+            <a href="#skills" onClick={(e) => handleNavClick(e, "skills")} className="hover:text-cyber-green transition-colors">SKILLS</a>
+            <a href="#projects" onClick={(e) => handleNavClick(e, "projects")} className="hover:text-cyber-green transition-colors">PROJECTS</a>
+            <a href="#certifications" onClick={(e) => handleNavClick(e, "certifications")} className="hover:text-cyber-green transition-colors">CERTIFICATES</a>
+            <a href="#contact" onClick={(e) => handleNavClick(e, "contact")} className="hover:text-cyber-green transition-colors">CONTACT</a>
           </nav>
-          <a href="/admin/login" className="btn-cyber flex items-center gap-1.5 px-4 py-2 border-cyber-blue/50 text-cyber-blue hover:shadow-[0_0_15px_#00C8FF]">
-            <Lock className="w-3.5 h-3.5" />
-            ADMIN
-          </a>
+          <div className="flex items-center gap-2">
+            {/* CTF Security Challenge Trigger */}
+            <button
+              onClick={() => setCtfModalOpen(true)}
+              className="px-2.5 py-1.5 rounded-lg border border-cyber-blue/40 bg-black/40 text-cyber-blue hover:bg-cyber-blue/10 transition-all flex items-center gap-1.5 text-xs font-mono cursor-pointer"
+              title="Launch CTF Security Audit Challenge"
+            >
+              <ShieldAlert className="w-3.5 h-3.5 text-cyber-blue" />
+              <span className="hidden lg:inline">CTF AUDIT</span>
+            </button>
+
+            <button
+              onClick={() => setIsPaletteOpen(true)}
+              className="px-2.5 py-1.5 rounded-lg border border-white/10 hover:border-cyber-green/40 bg-black/40 text-gray-400 hover:text-cyber-green transition-all flex items-center gap-1.5 text-xs font-mono"
+              title="Search Dossier (Ctrl + K)"
+            >
+              <Search className="w-3.5 h-3.5 text-cyber-green" />
+              <span className="hidden sm:inline">Search</span>
+              <kbd className="hidden sm:inline px-1 py-0.5 rounded bg-white/10 text-[9px]">Ctrl+K</kbd>
+            </button>
+
+            <button
+              onClick={() => setIsTerminalOpen(true)}
+              className="p-1.5 rounded-lg border border-white/10 hover:border-cyber-green/40 bg-black/40 text-gray-400 hover:text-cyber-green transition-all"
+              title="Open Hacker Console (~)"
+            >
+              <Terminal className="w-4 h-4 text-cyber-green" />
+            </button>
+
+            <a href="/admin/login" className="btn-cyber flex items-center gap-1.5 px-3.5 py-1.5 border-cyber-blue/50 text-cyber-blue text-xs hover:shadow-[0_0_15px_#00C8FF]">
+              <Lock className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">ADMIN</span>
+            </a>
+
+            {/* Mobile Navigation Toggle Button */}
+            <button
+              onClick={() => setIsMobileNavOpen((prev) => !prev)}
+              className="p-1.5 rounded-lg border border-white/10 hover:border-cyber-green/40 bg-black/40 text-gray-400 hover:text-cyber-green transition-all md:hidden"
+              aria-label="Toggle Mobile Navigation Menu"
+            >
+              {isMobileNavOpen ? <X className="w-5 h-5 text-cyber-green" /> : <Menu className="w-5 h-5 text-cyber-green" />}
+            </button>
+          </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        <AnimatePresence>
+          {isMobileNavOpen && (
+            <motion.nav
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="md:hidden mt-4 pt-4 border-t border-white/10 flex flex-col gap-3 font-orbitron text-xs font-semibold tracking-wider text-gray-300 bg-[#07111F]/95 p-4 rounded-xl shadow-2xl"
+            >
+              <a
+                href="#about"
+                onClick={(e) => handleNavClick(e, "about")}
+                className="hover:text-cyber-green transition-colors py-1.5 border-b border-white/5"
+              >
+                ABOUT
+              </a>
+              <a
+                href="#qualifications"
+                onClick={(e) => handleNavClick(e, "qualifications")}
+                className="hover:text-cyber-green transition-colors py-1.5 border-b border-white/5"
+              >
+                QUALIFICATIONS
+              </a>
+              <a
+                href="#skills"
+                onClick={(e) => handleNavClick(e, "skills")}
+                className="hover:text-cyber-green transition-colors py-1.5 border-b border-white/5"
+              >
+                SKILLS
+              </a>
+              <a
+                href="#projects"
+                onClick={(e) => handleNavClick(e, "projects")}
+                className="hover:text-cyber-green transition-colors py-1.5 border-b border-white/5"
+              >
+                PROJECTS
+              </a>
+              <a
+                href="#certifications"
+                onClick={(e) => handleNavClick(e, "certifications")}
+                className="hover:text-cyber-green transition-colors py-1.5 border-b border-white/5"
+              >
+                CERTIFICATES
+              </a>
+              <a
+                href="#contact"
+                onClick={(e) => handleNavClick(e, "contact")}
+                className="hover:text-cyber-green transition-colors py-1.5"
+              >
+                CONTACT
+              </a>
+            </motion.nav>
+          )}
+        </AnimatePresence>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 pt-28 pb-16 space-y-24">
         {/* HERO SECTION */}
         <section className="min-h-[75vh] flex flex-col md:flex-row items-center justify-between gap-12 py-8 relative">
           <div className="flex-1 space-y-6 text-left">
-            <div className="cyber-tag flex gap-1.5 items-center w-fit">
-              <span className="w-1.5 h-1.5 bg-cyber-green rounded-full animate-pulse"></span>
-              STATUS: GRID SECURE // ACTIVE
+            <div className="flex flex-wrap gap-2 items-center">
+              <div className="cyber-tag flex gap-1.5 items-center w-fit">
+                <span className="w-1.5 h-1.5 bg-cyber-green rounded-full animate-pulse"></span>
+                STATUS: GRID SECURE // ACTIVE
+              </div>
+              {ctfBadgeUnlocked && (
+                <div className="cyber-tag border-cyber-green bg-cyber-green/10 text-cyber-green flex items-center gap-1 font-bold text-[10px] animate-bounce">
+                  <ShieldCheck className="w-3.5 h-3.5" /> INTERNAL SECURITY VERIFIED
+                </div>
+              )}
             </div>
+
+
             <h1 className="text-4xl md:text-6xl font-orbitron font-black text-white leading-tight">
               I am <span className="holo-text">{profile.name}</span>
             </h1>
@@ -363,77 +603,31 @@ export default function PublicPortfolio() {
           <div className="glass-card p-6 md:p-8 space-y-6 leading-relaxed text-gray-300 text-sm">
             <p>{profile.bio}</p>
             <div className="border-t border-white/5 pt-6 space-y-3 font-mono text-xs">
-              <div className="flex justify-between py-1 border-b border-white/5"><span className="text-gray-400">OBJECTIVE:</span><span className="text-white text-right max-w-lg">{profile.careerObjective}</span></div>
-              <div className="flex justify-between py-1 border-b border-white/5"><span className="text-gray-400">LOCATION:</span><span className="text-white">{profile.location}</span></div>
-              <div className="flex justify-between py-1 border-b border-white/5"><span className="text-gray-400">EMAIL:</span><span className="text-cyber-blue">{profile.email}</span></div>
-              <div className="flex justify-between py-1"><span className="text-gray-400">PHONE:</span><span className="text-white">{profile.phone}</span></div>
+              <div className="flex flex-col sm:flex-row sm:items-start justify-between py-2 border-b border-white/5 gap-2">
+                <span className="text-gray-400 font-bold shrink-0">OBJECTIVE:</span>
+                <span className="text-white text-left max-w-xl leading-relaxed">{profile.careerObjective}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-white/5">
+                <span className="text-gray-400 font-bold">LOCATION:</span>
+                <span className="text-white">{profile.location}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-white/5">
+                <span className="text-gray-400 font-bold">EMAIL:</span>
+                <span className="text-cyber-blue font-bold">{profile.email}</span>
+              </div>
+              <div className="flex justify-between py-2">
+                <span className="text-gray-400 font-bold">PHONE:</span>
+                <span className="text-white">{profile.phone}</span>
+              </div>
             </div>
           </div>
         </section>
 
         {/* ACADEMIC LOG // QUALIFICATIONS */}
-        <section id="qualifications" className="space-y-6 scroll-mt-24">
-          <div className="flex items-center gap-3">
-            <h2 className="font-orbitron text-2xl md:text-3xl font-black text-white">ACADEMIC_LOG // QUALIFICATIONS</h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-cyber-blue/40 to-transparent"></div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {education.map((edu: any) => (
-              <div key={edu.id} className="glass-card p-6 border-cyber-blue/30 space-y-4">
-                <div className="flex justify-between items-start gap-2">
-                  <div>
-                    <h3 className="font-orbitron font-bold text-sm text-white">{edu.degree}</h3>
-                    <p className="font-mono text-[10px] text-cyber-blue">{edu.institution}</p>
-                  </div>
-                  <span className="cyber-tag text-[9px] border-cyber-blue/30 text-cyber-blue whitespace-nowrap">{edu.duration}</span>
-                </div>
-                <p className="text-xs text-gray-400 leading-relaxed">{edu.description}</p>
-                <div className="text-xs font-mono font-bold text-cyber-green">{edu.grade}</div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <TimelineSection education={education} />
 
         {/* SKILLS SECTION */}
-        <section id="skills" className="space-y-6 scroll-mt-24">
-          <div className="flex items-center gap-3">
-            <h2 className="font-orbitron text-2xl md:text-3xl font-black text-white">CORE_SKILLS // TECHNOLOGIES</h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-cyber-green/40 to-transparent"></div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {skills.map((skill: any) => (
-              <div key={skill.id} className="glass-card hud-box p-5 space-y-4 hover:border-cyber-green/30">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="text-cyber-green bg-cyber-green/5 p-2 rounded-lg border border-cyber-green/10">
-                      {getIcon(skill.logo)}
-                    </div>
-                    <div>
-                      <h3 className="font-orbitron font-bold text-sm text-white">{skill.name}</h3>
-                      <p className="font-mono text-[9px] text-gray-500 uppercase tracking-wider">{skill.category}</p>
-                    </div>
-                  </div>
-                  <span className="font-mono text-xs text-cyber-green">{skill.progress}%</span>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden border border-white/5">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      whileInView={{ width: `${skill.progress}%` }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 1, ease: "easeOut" }}
-                      className="h-full bg-gradient-to-r from-cyber-green to-cyber-blue rounded-full shadow-[0_0_10px_#00FF9D]"
-                    />
-                  </div>
-                  <div className="flex justify-between font-mono text-[9px] text-gray-500">
-                    <span>LEVEL: SECURE</span>
-                    <span>EXP: {skill.yearsOfExp} YEARS</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <SkillsVisualization skills={skills} />
 
         {/* PROJECTS SECTION */}
         <section id="projects" className="space-y-6 scroll-mt-24">
@@ -488,7 +682,7 @@ export default function PublicPortfolio() {
                     </div>
                     <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{project.description}</p>
                     <div className="flex flex-wrap gap-2 pt-2">
-                      {project.tags.map((tag: string) => (
+                      {ensureArray(project.tags).map((tag: string) => (
                         <span key={tag} className="cyber-tag text-[8.5px] border-white/10 text-gray-300">
                           {tag}
                         </span>
@@ -526,69 +720,16 @@ export default function PublicPortfolio() {
           </div>
         </section>
 
+
+
         {/* CERTIFICATIONS SECTION */}
-        <section id="certifications" className="space-y-6 scroll-mt-24">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="flex items-center gap-3 flex-1">
-              <h2 className="font-orbitron text-2xl md:text-3xl font-black text-white">VERIFIED_CREDENTIALS // CERTIFICATES</h2>
-              <div className="flex-1 h-px bg-gradient-to-r from-cyber-green/40 to-transparent"></div>
-            </div>
-            {/* Filter buttons */}
-            <div className="flex flex-wrap gap-2 text-[10px] font-orbitron tracking-wider">
-              {["all", "certification", "ctf", "award", "course"].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setCertFilter(cat)}
-                  className={`px-3 py-1.5 border rounded uppercase transition-all duration-300 ${
-                    certFilter === cat
-                      ? "border-cyber-green bg-cyber-green/10 text-cyber-green shadow-[0_0_10px_rgba(0,255,157,0.15)]"
-                      : "border-white/10 text-gray-400 hover:border-white/20 hover:text-white"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredCerts.map((cert: any) => (
-              <div key={cert.id} className="glass-card p-6 flex flex-col gap-4 border-cyber-green/20">
-                <div className="flex justify-between items-start gap-4">
-                  <div className="flex gap-4">
-                    <div className="text-cyber-green bg-cyber-green/5 p-3 rounded-lg border border-cyber-green/10 self-start">
-                      {getIcon(cert.icon)}
-                    </div>
-                    <div>
-                      <h3 className="font-orbitron font-bold text-sm text-white leading-snug">{cert.title}</h3>
-                      <p className="font-mono text-[10px] text-cyber-blue mt-0.5">{cert.issuer}</p>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <span className="cyber-tag text-[8px] py-0.5 border-cyber-blue/20 text-cyber-blue">{cert.category.toUpperCase()}</span>
-                        <span className="text-[10px] font-mono text-gray-500">{cert.year}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-400 leading-relaxed">{cert.description}</p>
-                <div className="flex flex-wrap gap-2">
-                  {cert.skills.map((skill: string) => (
-                    <span key={skill} className="cyber-tag text-[8px] py-0.5 border-white/5 bg-white/2 text-gray-400">{skill}</span>
-                  ))}
-                </div>
-                <div className="flex justify-between items-center border-t border-white/5 pt-4 mt-2">
-                  <div className="text-[10px] font-mono text-gray-500">ID: {cert.credentialId}</div>
-                  <a
-                    href={cert.verificationUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-[10px] font-mono text-cyber-green hover:underline"
-                  >
-                    SECURE_LINK <ExternalLink className="w-3 h-3" />
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+        <CertificationsSection certifications={certifications} />
+
+        {/* ENGINEERING BLOG SECTION */}
+        <BlogSection articles={articles} />
+
+        {/* EXECUTIVE DOSSIER EXPORT */}
+        <DossierExport data={data} />
 
 
         {/* CONTACT SECTION */}
@@ -703,11 +844,52 @@ export default function PublicPortfolio() {
               {settings.footerText || "Grid Security Matrix"}
             </span>
           </div>
-          <div className="flex gap-6 font-mono text-[10px] text-gray-500">
-            <a href={profile.github} target="_blank" rel="noreferrer" className="hover:text-cyber-green">GITHUB</a>
-            <a href={profile.linkedin} target="_blank" rel="noreferrer" className="hover:text-cyber-green">LINKEDIN</a>
-            <a href={profile.twitter} target="_blank" rel="noreferrer" className="hover:text-cyber-green">TWITTER</a>
-            <a href={`mailto:${profile.email}`} className="hover:text-cyber-green">EMAIL</a>
+          <div className="flex flex-wrap items-center gap-6 font-mono text-[11px] text-gray-400">
+            <a
+              href={profile.github}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 hover:text-cyber-green transition-colors group"
+            >
+              <svg className="w-4 h-4 fill-current text-gray-400 group-hover:text-cyber-green transition-colors" viewBox="0 0 24 24">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+              </svg>
+              <span>GITHUB</span>
+            </a>
+
+            <a
+              href={profile.linkedin}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 hover:text-cyber-blue transition-colors group"
+            >
+              <svg className="w-4 h-4 fill-current text-gray-400 group-hover:text-cyber-blue transition-colors" viewBox="0 0 24 24">
+                <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
+              </svg>
+              <span>LINKEDIN</span>
+            </a>
+
+            <a
+              href={profile.twitter}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 hover:text-cyber-blue transition-colors group"
+            >
+              <svg className="w-4 h-4 fill-current text-gray-400 group-hover:text-cyber-blue transition-colors" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              <span>TWITTER</span>
+            </a>
+
+            <a
+              href={`mailto:${profile.email}`}
+              className="inline-flex items-center gap-2 hover:text-cyber-green transition-colors group"
+            >
+              <svg className="w-4 h-4 fill-current text-gray-400 group-hover:text-cyber-green transition-colors" viewBox="0 0 24 24">
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
+              </svg>
+              <span>EMAIL</span>
+            </a>
           </div>
           <div className="text-[10px] font-mono text-gray-600">
             © {new Date().getFullYear()} {profile.name || "Alex Thorne"}. All operations verified.
@@ -723,7 +905,8 @@ export default function PublicPortfolio() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-            className="fixed bottom-6 right-6 z-40 p-3 rounded-full bg-[#07111F]/80 border border-cyber-green/50 text-cyber-green hover:bg-cyber-green/10 transition-colors shadow-[0_0_15px_#00FF9D]"
+            className="fixed bottom-20 right-6 z-40 p-3 rounded-full bg-[#07111F]/90 border border-cyber-green/50 text-cyber-green hover:bg-cyber-green/20 transition-all shadow-[0_0_15px_#00FF9D] cursor-pointer"
+            title="Scroll back to top"
           >
             <ChevronUp className="w-5 h-5" />
           </motion.button>
@@ -808,7 +991,7 @@ export default function PublicPortfolio() {
                         <p className="text-xs text-gray-400 leading-relaxed">{selectedProject.fullDescription}</p>
                       </div>
                       <div className="flex flex-wrap gap-2 pt-2">
-                        {selectedProject.tags.map((t: string) => (
+                        {ensureArray(selectedProject.tags).map((t: string) => (
                           <span key={t} className="cyber-tag text-[8px]">{t}</span>
                         ))}
                       </div>
@@ -820,7 +1003,7 @@ export default function PublicPortfolio() {
                           <ShieldCheck className="w-4 h-4 text-rose-500" /> Critical Impediments
                         </div>
                         <ul className="list-disc pl-4 space-y-1.5 text-xs text-gray-400 leading-relaxed">
-                          {selectedProject.challenges.map((c: string, idx: number) => (
+                          {ensureArray(selectedProject.challenges).map((c: string, idx: number) => (
                             <li key={idx}>{c}</li>
                           ))}
                         </ul>
@@ -831,7 +1014,7 @@ export default function PublicPortfolio() {
                           <Check className="w-4 h-4 text-cyber-green" /> Engineering Countermeasures
                         </div>
                         <ul className="list-disc pl-4 space-y-1.5 text-xs text-gray-400 leading-relaxed">
-                          {selectedProject.solutions.map((s: string, idx: number) => (
+                          {ensureArray(selectedProject.solutions).map((s: string, idx: number) => (
                             <li key={idx}>{s}</li>
                           ))}
                         </ul>
@@ -845,7 +1028,7 @@ export default function PublicPortfolio() {
                       <span className="cyber-tag text-[8px] bg-cyber-green/5 border-cyber-green/30 text-cyber-green font-bold">TERMINAL ON // STREAMING</span>
                     </div>
                     <div className="bg-black/80 border border-white/5 rounded-xl p-4 font-mono text-[10px] space-y-2 overflow-x-auto text-gray-400 leading-relaxed max-h-[300px]">
-                      {selectedProject.logs.map((log: string, idx: number) => {
+                      {ensureArray(selectedProject.logs).map((log: string, idx: number) => {
                         let color = "text-gray-400";
                         if (log.startsWith("[OK]")) color = "text-cyber-green";
                         if (log.startsWith("[WARN]")) color = "text-amber-400";
@@ -865,6 +1048,11 @@ export default function PublicPortfolio() {
         )}
       </AnimatePresence>
 
+      <CommandPalette data={data} isOpen={isPaletteOpen} onClose={() => setIsPaletteOpen(false)} />
+      <TerminalModal data={data} isOpen={isTerminalOpen} onClose={() => setIsTerminalOpen(false)} />
+      <AIAssistantWidget data={data} />
+      <CTFChallengeModal isOpen={ctfModalOpen} onClose={() => setCtfModalOpen(false)} onSuccessBadge={() => setCtfBadgeUnlocked(true)} />
     </div>
+    </AntiGravityCanvas>
   );
 }
