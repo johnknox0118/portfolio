@@ -64,11 +64,11 @@ Combining declarative React state with hardware-composited canvas particle field
   },
 ];
 
-export default function BlogSection({ articles = [] }: BlogSectionProps) {
+export default function BlogSection({ articles }: BlogSectionProps) {
   const [selectedArticle, setSelectedArticle] = useState<any | null>(null);
   const [search, setSearch] = useState("");
 
-  const displayArticles = articles.length > 0 ? articles : DEFAULT_ARTICLES;
+  const displayArticles = articles !== undefined ? articles : DEFAULT_ARTICLES;
 
   const filteredArticles = displayArticles.filter((art) => {
     const titleMatch = art.title?.toLowerCase().includes(search.toLowerCase());
@@ -91,16 +91,28 @@ export default function BlogSection({ articles = [] }: BlogSectionProps) {
       </div>
 
       {/* Search Input */}
-      <div className="relative w-full max-w-sm">
-        <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-        <input
-          type="text"
-          placeholder="Search research papers & articles..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full bg-[#040912] border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs font-mono text-white placeholder-gray-500 focus:outline-none focus:border-cyber-blue"
-        />
-      </div>
+      {displayArticles.length > 0 && (
+        <div className="relative w-full max-w-sm">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            placeholder="Search research papers & articles..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full bg-[#040912] border border-white/10 rounded-xl pl-9 pr-4 py-2 text-xs font-mono text-white placeholder-gray-500 focus:outline-none focus:border-cyber-blue"
+          />
+        </div>
+      )}
+
+      {/* Empty State */}
+      {filteredArticles.length === 0 && (
+        <div className="glass-card hud-box p-8 text-center space-y-2">
+          <BookOpen className="w-8 h-8 text-gray-500 mx-auto animate-pulse" />
+          <p className="font-mono text-xs text-gray-400">
+            [!] NO ENGINEERING ARTICLES OR RESEARCH LOGS PUBLISHED IN DATABASE.
+          </p>
+        </div>
+      )}
 
       {/* Article Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
