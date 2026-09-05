@@ -162,3 +162,38 @@ model Setting {
   analyticsId    String @default("")
   footerText     String @default("")
 }
+
+model CtfQuestion {
+  id           Int      @id @default(autoincrement())
+  stageNumber  Int      @default(1)
+  category     String   @default("ENCODING")
+  title        String
+  description  String
+  clue         String   @default("")
+  type         String   @default("text") // "text" | "multiple_choice"
+  options      String   @default("[]")   // Serialized JSON array: [{"id":"...","text":"..."}]
+  answer       String
+  hint         String   @default("")
+  points       Int      @default(100)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model CtfSubmission {
+  id              Int      @id @default(autoincrement())
+  userName        String
+  email           String   @default("")
+  role            String   @default("Recruiter / Visitor")
+  score           Int      @default(0)
+  totalStages     Int      @default(3)
+  stagesCompleted Int      @default(0)
+  status          String   @default("in_progress") // "completed" | "in_progress"
+  details         String   @default("[]")          // Serialized JSON array of stage results
+  timeSpentSec    Int      @default(0)
+  ipAddress       String   @default("")
+  userAgent       String   @default("")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+

@@ -71,8 +71,9 @@ export default function BootLoader() {
       {visible && (
         <motion.div
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, transition: { duration: 0.6, ease: "easeInOut" } }}
+          exit={{ opacity: 0, transition: { duration: 0.35, ease: "easeInOut" } }}
           className="fixed inset-0 z-[100] flex items-center justify-center bg-[#040912] p-4 select-none"
+          style={{ pointerEvents: visible ? "auto" : "none" }}
         >
           {/* Subtle Cyber Grid Background */}
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_60%_at_50%_50%,rgba(0,255,157,0.08),transparent)] pointer-events-none" />

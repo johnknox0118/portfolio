@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import fallbackData from '@/data/fallbackData.json';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,6 +17,8 @@ const modelMapping: { [key: string]: string } = {
   gallery: 'galleryItem',
   messages: 'message',
   articles: 'article',
+  ctfQuestions: 'ctfQuestion',
+  ctfSubmissions: 'ctfSubmission',
 };
 
 const jsonFieldsMapping: { [key: string]: string[] } = {
@@ -23,6 +26,8 @@ const jsonFieldsMapping: { [key: string]: string[] } = {
   certification: ['skills'],
   internship: ['skills'],
   article: ['tags'],
+  ctfQuestion: ['options'],
+  ctfSubmission: ['details'],
 };
 
 // GET: Fetch records
@@ -30,8 +35,10 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ entity: string }> }
 ) {
+  let requestedEntity = '';
   try {
     const { entity } = await params;
+    requestedEntity = entity;
     const modelName = modelMapping[entity];
 
     if (!modelName) {
@@ -48,9 +55,9 @@ export async function GET(
 
     // List items, order by id/displayOrder if applicable
     let records;
-    if (modelName === 'timelineEvent' || modelName === 'skill') {
+    if (modelName === 'timelineEvent' || modelName === 'skill' || modelName === 'ctfQuestion') {
       records = await model.findMany({ orderBy: { displayOrder: 'asc' } });
-    } else if (modelName === 'message') {
+    } else if (modelName === 'message' || modelName === 'ctfSubmission') {
       records = await model.findMany({ orderBy: { createdAt: 'desc' } });
     } else {
       records = await model.findMany({ orderBy: { id: 'asc' } });
@@ -75,6 +82,10 @@ export async function GET(
     return NextResponse.json(parsedRecords);
   } catch (error: any) {
     console.error('API GET Error:', error);
+    const fallback = (fallbackData as any)[requestedEntity];
+    if (fallback) {
+      return NextResponse.json(fallback);
+    }
     return NextResponse.json({ error: 'Failed to retrieve data' }, { status: 500 });
   }
 }

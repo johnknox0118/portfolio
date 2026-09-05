@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { AntiGravityMouseContext } from "./three/AntiGravityMouseContext";
 
 interface AntiGravityCanvasProps {
   children?: React.ReactNode;
@@ -122,19 +123,12 @@ export default function AntiGravityCanvas({ children }: AntiGravityCanvasProps) 
       <div className="fixed inset-0 pointer-events-none z-[1] bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(0,255,157,0.15),rgba(255,255,255,0))]" />
       <div className="fixed inset-0 pointer-events-none z-[1] bg-[linear-gradient(to_right,#1f293d0a_1px,transparent_1px),linear-gradient(to_bottom,#1f293d0a_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
 
-      {/* LAYER 6: Reticles & Scanlines HUD Overlay */}
-      <div className="scanlines pointer-events-none z-40" />
-
-      {/* LAYER 7: Dynamic Mouse Lighting Spotlight */}
-      <motion.div
-        className="fixed inset-0 pointer-events-none z-[2] transition-opacity duration-500"
-        style={{
-          background: `radial-gradient(600px circle at ${lightX.get()} ${lightY.get()}, rgba(0, 255, 157, 0.06), transparent 80%)`,
-        }}
-      />
-
       {/* LAYER 4, 5: Children Floating UI Layer */}
-      <div className="relative z-10">{children}</div>
+      <div className="relative z-10">
+        <AntiGravityMouseContext.Provider value={{ smoothX, smoothY, reducedMotion }}>
+          {children}
+        </AntiGravityMouseContext.Provider>
+      </div>
     </div>
   );
 }

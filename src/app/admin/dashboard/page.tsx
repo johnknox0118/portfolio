@@ -5,8 +5,25 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, User, Code, Award, Folder, Settings, Mail,
-  LogOut, Plus, Trash, Edit, Check, Loader2, FileText, Camera, X, Globe, ExternalLink, Key, Lock
+  LogOut, Plus, Trash, Edit, Check, Loader2, FileText, Camera, X, Globe, ExternalLink, Key, Lock,
+  ShieldAlert, Trophy, Eye, Clock, Users, CheckCircle2, ChevronRight, HelpCircle
 } from "lucide-react";
+
+// Broadcast synchronization across browser tabs and public portfolio
+const broadcastSyncUpdate = (entity?: string) => {
+  try {
+    if (typeof BroadcastChannel !== "undefined") {
+      const channel = new BroadcastChannel("portfolio_sync");
+      channel.postMessage({ type: "data_updated", entity, timestamp: Date.now() });
+      channel.close();
+    }
+  } catch (e) {}
+  try {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("portfolio_sync_timestamp", Date.now().toString());
+    }
+  } catch (e) {}
+};
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -14,17 +31,61 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // CTF Tab State & Participant Audit Modal
+  const [ctfSubTab, setCtfSubTab] = useState<"questions" | "participants">("questions");
+  const [viewingSubmission, setViewingSubmission] = useState<any>(null);
+  const [ctfSearchQuery, setCtfSearchQuery] = useState("");
+  const [ctfStatusFilter, setCtfStatusFilter] = useState<"all" | "completed" | "in_progress">("all");
+
   // Load all aggregates
   const loadData = async () => {
     try {
       const res = await fetch("/api/public/data?t=" + Date.now());
       const result = await res.json();
       
-      // Also load messages
-      const msgRes = await fetch("/api/admin/messages?t=" + Date.now());
-      const messages = await msgRes.json();
+      // Also load messages safely
+      let messages: any[] = [];
+      try {
+        const msgRes = await fetch("/api/admin/messages?t=" + Date.now());
+        if (msgRes.ok) {
+          const parsed = await msgRes.json();
+          if (Array.isArray(parsed)) {
+            messages = parsed;
+          }
+        }
+      } catch (msgErr) {
+        console.warn("Could not load admin messages:", msgErr);
+      }
+
+      // Load CTF Questions
+      let ctfQuestions: any[] = [];
+      try {
+        const qRes = await fetch("/api/admin/ctfQuestions?t=" + Date.now());
+        if (qRes.ok) {
+          const parsed = await qRes.json();
+          if (Array.isArray(parsed)) {
+            ctfQuestions = parsed;
+          }
+        }
+      } catch (qErr) {
+        console.warn("Could not load CTF questions:", qErr);
+      }
+
+      // Load CTF Participant Submissions
+      let ctfSubmissions: any[] = [];
+      try {
+        const subRes = await fetch("/api/admin/ctfSubmissions?t=" + Date.now());
+        if (subRes.ok) {
+          const parsed = await subRes.json();
+          if (Array.isArray(parsed)) {
+            ctfSubmissions = parsed;
+          }
+        }
+      } catch (subErr) {
+        console.warn("Could not load CTF submissions:", subErr);
+      }
       
-      setData({ ...result, messages });
+      setData({ ...result, messages, ctfQuestions, ctfSubmissions });
       setLoading(false);
     } catch (err) {
       console.error("Failed to load dashboard data:", err);
@@ -112,6 +173,7 @@ export default function AdminDashboard() {
     setPasswordStatus({ type: "idle", text: "" });
   }, [activeTab]);
 
+
   // Form saving utility for singular tables
   const saveSingular = async (entity: "profile" | "settings", formState: any) => {
     setSaving(true);
@@ -125,6 +187,7 @@ export default function AdminDashboard() {
       if (res.ok) {
         setSuccessMsg("System configuration updated successfully.");
         loadData();
+        broadcastSyncUpdate(entity);
       }
     } catch (err) {
       console.error("Update error:", err);
@@ -147,6 +210,7 @@ export default function AdminDashboard() {
         setShowFormModal(false);
         setEditingItem(null);
         loadData();
+        broadcastSyncUpdate(entity);
       }
     } catch (err) {
       console.error(`Error saving ${entity}:`, err);
@@ -163,6 +227,7 @@ export default function AdminDashboard() {
       });
       if (res.ok) {
         loadData();
+        broadcastSyncUpdate(entity);
       }
     } catch (err) {
       console.error(`Error deleting ${entity}:`, err);
@@ -284,6 +349,21 @@ export default function AdminDashboard() {
             }`}
           >
             <FileText className="w-4 h-4" /> ARTICLES
+          </button>
+          <button
+            onClick={() => setActiveTab("ctf")}
+            className={`flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-lg text-left transition-all shrink-0 whitespace-nowrap ${
+              activeTab === "ctf" ? "bg-cyber-green/10 text-cyber-green border-l-2 border-cyber-green" : "text-gray-400 hover:text-white"
+            }`}
+          >
+            <span className="flex items-center gap-2.5">
+              <ShieldAlert className="w-4 h-4 text-cyber-green" /> CTF CHALLENGE
+            </span>
+            {data?.ctfSubmissions && data.ctfSubmissions.length > 0 && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-cyber-green/20 text-cyber-green font-mono font-bold">
+                {data.ctfSubmissions.length}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab("messages")}
@@ -940,17 +1020,337 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {/* TAB CTF CHALLENGES & PARTICIPANT AUDIT */}
+        {activeTab === "ctf" && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-white/5 pb-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <ShieldAlert className="w-5 h-5 text-cyber-green animate-pulse" />
+                  <h2 className="font-orbitron font-black text-xl text-white">
+                    CTF_GRID // SECURITY CHALLENGES &amp; AUDIT
+                  </h2>
+                </div>
+                <p className="text-xs font-mono text-gray-400 mt-1">
+                  Manage interactive CTF stages, inspect participant scores, and review recruiter telemetry.
+                </p>
+              </div>
+
+              {/* Sub-tab switcher */}
+              <div className="flex items-center gap-2 bg-[#040a12] p-1 rounded-xl border border-white/10 font-mono text-xs">
+                <button
+                  onClick={() => setCtfSubTab("questions")}
+                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    ctfSubTab === "questions"
+                      ? "bg-cyber-green/20 text-cyber-green font-bold border border-cyber-green/40 shadow-[0_0_10px_rgba(0,255,157,0.2)]"
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  STAGES ({data.ctfQuestions?.length || 0})
+                </button>
+                <button
+                  onClick={() => setCtfSubTab("participants")}
+                  className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${
+                    ctfSubTab === "participants"
+                      ? "bg-cyber-blue/20 text-cyber-blue font-bold border border-cyber-blue/40 shadow-[0_0_10px_rgba(0,200,255,0.2)]"
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  PARTICIPANTS ({data.ctfSubmissions?.length || 0})
+                </button>
+              </div>
+            </div>
+
+            {/* SUB-TAB 1: QUESTIONS & STAGES */}
+            {ctfSubTab === "questions" && (
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-mono text-gray-400">
+                    Active Security Stages: <strong className="text-white">{data.ctfQuestions?.length || 0}</strong>
+                  </span>
+                  <button
+                    onClick={() => {
+                      setEditingItem({
+                        stageNumber: (data.ctfQuestions?.length || 0) + 1,
+                        category: "CYBERSECURITY",
+                        title: "",
+                        description: "",
+                        clue: "",
+                        type: "text",
+                        options: [
+                          { id: "opt_a", text: "A) Option description" },
+                          { id: "opt_b", text: "B) Option description" },
+                        ],
+                        answer: "",
+                        hint: "",
+                        points: 100,
+                        displayOrder: (data.ctfQuestions?.length || 0) + 1,
+                      });
+                      setShowFormModal(true);
+                    }}
+                    className="btn-cyber flex items-center gap-1.5 px-4 py-2 text-xs"
+                  >
+                    <Plus className="w-4 h-4" /> ADD CTF STAGE
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(data.ctfQuestions || []).map((q: any) => (
+                    <div key={q.id} className="glass-card p-5 flex flex-col justify-between gap-4 border-cyber-green/20">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center text-[10px] font-mono">
+                          <span className="cyber-tag text-[9px] border-cyber-green/40 text-cyber-green font-bold">
+                            STAGE {q.stageNumber} // {q.category}
+                          </span>
+                          <span className="px-2 py-0.5 rounded bg-cyber-blue/10 border border-cyber-blue/30 text-cyber-blue font-bold">
+                            +{q.points || 100} PTS
+                          </span>
+                        </div>
+
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-orbitron font-bold text-sm text-white">{q.title}</h3>
+                            <span className="text-[9px] font-mono text-gray-400 px-1.5 py-0.5 bg-black/40 rounded border border-white/10 uppercase">
+                              {q.type === "multiple_choice" ? "CHOICE" : "TEXT FLAG"}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-1 line-clamp-2">{q.description}</p>
+                        </div>
+
+                        {q.clue && (
+                          <div className="p-2.5 bg-black/60 border border-cyber-green/20 rounded-lg text-cyber-green font-mono text-[11px] truncate">
+                            {q.clue}
+                          </div>
+                        )}
+
+                        <div className="p-2.5 bg-[#040a12] border border-white/10 rounded-lg text-[11px] font-mono space-y-1">
+                          <div className="flex items-center justify-between text-gray-400">
+                            <span>VERIFIED ANSWER / FLAG:</span>
+                            <span className="text-cyber-green font-bold select-all">{q.answer}</span>
+                          </div>
+                          {q.hint && (
+                            <div className="text-[10px] text-gray-500 truncate">
+                              HINT: {q.hint}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-2 border-t border-white/5">
+                        <button
+                          onClick={() => {
+                            setEditingItem({
+                              ...q,
+                              options: Array.isArray(q.options)
+                                ? q.options
+                                : typeof q.options === "string"
+                                ? JSON.parse(q.options || "[]")
+                                : [],
+                            });
+                            setShowFormModal(true);
+                          }}
+                          className="p-2 border border-cyber-blue/30 text-cyber-blue hover:bg-cyber-blue/10 rounded-lg flex items-center gap-1 text-xs font-mono"
+                        >
+                          <Edit className="w-4 h-4" /> EDIT
+                        </button>
+                        <button
+                          onClick={() => deleteListItem("ctfQuestions", q.id)}
+                          className="p-2 border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 rounded-lg flex items-center gap-1 text-xs font-mono"
+                        >
+                          <Trash className="w-4 h-4" /> DELETE
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {(!data.ctfQuestions || data.ctfQuestions.length === 0) && (
+                    <div className="col-span-2 glass-card p-8 text-center text-gray-500 font-mono text-xs uppercase">
+                      [!] No CTF challenge stages found. Click &quot;ADD CTF STAGE&quot; to configure your first challenge.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* SUB-TAB 2: PARTICIPANTS & AUDIT LOGS */}
+            {ctfSubTab === "participants" && (
+              <div className="space-y-6">
+                {/* 4 Summary Metric Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="glass-card p-4 border-cyber-green/30">
+                    <span className="font-mono text-[9px] text-gray-400 uppercase">Total Participants</span>
+                    <div className="font-orbitron font-bold text-2xl text-white mt-1">
+                      {data.ctfSubmissions?.length || 0}
+                    </div>
+                    <span className="text-[10px] font-mono text-gray-500">RECRUITERS &amp; VISITORS</span>
+                  </div>
+                  <div className="glass-card p-4 border-cyber-blue/30">
+                    <span className="font-mono text-[9px] text-gray-400 uppercase">Completed Audits</span>
+                    <div className="font-orbitron font-bold text-2xl text-cyber-green mt-1">
+                      {(data.ctfSubmissions || []).filter((s: any) => s.status === "completed").length}
+                    </div>
+                    <span className="text-[10px] font-mono text-cyber-green">VERIFIED CRITICAL PASS</span>
+                  </div>
+                  <div className="glass-card p-4 border-cyber-cyan/30">
+                    <span className="font-mono text-[9px] text-gray-400 uppercase">Average Score</span>
+                    <div className="font-orbitron font-bold text-2xl text-cyber-blue mt-1">
+                      {data.ctfSubmissions && data.ctfSubmissions.length > 0
+                        ? Math.round(
+                            data.ctfSubmissions.reduce((acc: number, s: any) => acc + (s.score || 0), 0) /
+                              data.ctfSubmissions.length
+                          )
+                        : 0}{" "}
+                      <span className="text-xs text-gray-400">PTS</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-gray-500">ACROSS ALL ATTEMPTS</span>
+                  </div>
+                  <div className="glass-card p-4 border-cyber-green/30">
+                    <span className="font-mono text-[9px] text-gray-400 uppercase">Top Score Achieved</span>
+                    <div className="font-orbitron font-bold text-2xl text-cyber-green mt-1">
+                      {data.ctfSubmissions && data.ctfSubmissions.length > 0
+                        ? Math.max(...data.ctfSubmissions.map((s: any) => s.score || 0))
+                        : 0}{" "}
+                      <span className="text-xs text-gray-400">PTS</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-cyber-green">MAXIMUM UNLOCKED</span>
+                  </div>
+                </div>
+
+                {/* Filter and Search Bar */}
+                <div className="flex flex-col sm:flex-row justify-between gap-3">
+                  <input
+                    type="text"
+                    placeholder="Search by participant name, email, or role..."
+                    value={ctfSearchQuery}
+                    onChange={(e) => setCtfSearchQuery(e.target.value)}
+                    className="w-full sm:w-80 bg-[#040a12] border border-white/10 rounded-lg px-4 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyber-blue"
+                  />
+                  <div className="flex gap-2 font-mono text-xs">
+                    {(["all", "completed", "in_progress"] as const).map((filter) => (
+                      <button
+                        key={filter}
+                        onClick={() => setCtfStatusFilter(filter)}
+                        className={`px-3 py-1.5 rounded-lg uppercase text-[10px] font-bold transition-all cursor-pointer ${
+                          ctfStatusFilter === filter
+                            ? "bg-cyber-green/20 text-cyber-green border border-cyber-green/40"
+                            : "bg-[#040a12] text-gray-400 hover:text-white border border-white/10"
+                        }`}
+                      >
+                        {filter === "all" ? "ALL" : filter === "completed" ? "COMPLETED" : "IN PROGRESS"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Participants Table */}
+                <div className="glass-card overflow-hidden border-white/10">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left font-mono text-xs">
+                      <thead className="bg-[#040a12] text-gray-400 text-[10px] uppercase border-b border-white/10">
+                        <tr>
+                          <th className="p-4">Participant / Callsign</th>
+                          <th className="p-4">Role &amp; Affiliation</th>
+                          <th className="p-4">Status</th>
+                          <th className="p-4">Score</th>
+                          <th className="p-4">Time</th>
+                          <th className="p-4">Date</th>
+                          <th className="p-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 text-gray-300">
+                        {(data.ctfSubmissions || [])
+                          .filter((sub: any) => {
+                            const matchQuery =
+                              !ctfSearchQuery ||
+                              (sub.userName || "").toLowerCase().includes(ctfSearchQuery.toLowerCase()) ||
+                              (sub.email || "").toLowerCase().includes(ctfSearchQuery.toLowerCase()) ||
+                              (sub.role || "").toLowerCase().includes(ctfSearchQuery.toLowerCase());
+                            const matchStatus =
+                              ctfStatusFilter === "all" || sub.status === ctfStatusFilter;
+                            return matchQuery && matchStatus;
+                          })
+                          .map((sub: any) => (
+                            <tr key={sub.id} className="hover:bg-white/[0.02] transition-colors">
+                              <td className="p-4 font-bold text-white">
+                                <div className="flex items-center gap-2">
+                                  <User className="w-3.5 h-3.5 text-cyber-green shrink-0" />
+                                  <span>{sub.userName}</span>
+                                </div>
+                              </td>
+                              <td className="p-4 text-gray-400">
+                                <div>{sub.role || "Visitor"}</div>
+                                {sub.email && <div className="text-[10px] text-gray-500">{sub.email}</div>}
+                              </td>
+                              <td className="p-4">
+                                {sub.status === "completed" ? (
+                                  <span className="px-2 py-0.5 rounded text-[9px] bg-cyber-green/10 border border-cyber-green/30 text-cyber-green font-bold inline-flex items-center gap-1">
+                                    <CheckCircle2 className="w-3 h-3" /> COMPLETED
+                                  </span>
+                                ) : (
+                                  <span className="px-2 py-0.5 rounded text-[9px] bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold inline-flex items-center gap-1">
+                                    <Clock className="w-3 h-3 animate-pulse" /> IN PROGRESS
+                                  </span>
+                                )}
+                              </td>
+                              <td className="p-4 font-orbitron font-bold text-cyber-blue">
+                                {sub.score || 0}{" "}
+                                <span className="text-[10px] text-gray-500 font-mono">
+                                  ({sub.stagesCompleted || 0}/{sub.totalStages || 3})
+                                </span>
+                              </td>
+                              <td className="p-4 text-gray-400 text-[11px]">
+                                {sub.timeSpentSec ? `${sub.timeSpentSec}s` : "--"}
+                              </td>
+                              <td className="p-4 text-gray-500 text-[10px]">
+                                {sub.createdAt ? new Date(sub.createdAt).toLocaleDateString() : "--"}
+                              </td>
+                              <td className="p-4 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    onClick={() => setViewingSubmission(sub)}
+                                    className="px-2.5 py-1 rounded border border-cyber-blue/40 text-cyber-blue hover:bg-cyber-blue/10 flex items-center gap-1 text-[10px] cursor-pointer"
+                                    title="View Detailed Participant Dossier"
+                                  >
+                                    <Eye className="w-3 h-3" /> DOSSIER
+                                  </button>
+                                  <button
+                                    onClick={() => deleteListItem("ctfSubmissions", sub.id)}
+                                    className="p-1.5 rounded border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 cursor-pointer"
+                                    title="Delete Attempt Record"
+                                  >
+                                    <Trash className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        {(!data.ctfSubmissions || data.ctfSubmissions.length === 0) && (
+                          <tr>
+                            <td colSpan={7} className="p-8 text-center text-gray-500 font-mono text-xs">
+                              [!] No participant submissions logged yet. When visitors attempt the CTF on your portfolio, their full audit dossiers will appear here.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* TAB MESSAGES */}
         {activeTab === "messages" && (
           <div className="space-y-6">
             <h2 className="font-orbitron font-black text-xl text-white">INBOX_TICKET // VISITOR MESSAGES</h2>
             <div className="space-y-4">
-              {data.messages?.length === 0 ? (
+              {!Array.isArray(data.messages) || data.messages.length === 0 ? (
                 <div className="glass-card p-8 text-center text-gray-500 font-mono text-xs uppercase">
                   [!] Communications queue empty. No messages logged.
                 </div>
               ) : (
-                data.messages?.map((msg: any) => (
+                data.messages.map((msg: any) => (
                   <div key={msg.id} className="glass-card p-6 space-y-4 border-cyber-blue/10">
                     <div className="flex justify-between items-start gap-4">
                       <div>
@@ -1632,10 +2032,337 @@ export default function AdminDashboard() {
                   </button>
                 </form>
               )}
+
+              {/* CTF Challenge Stage Form */}
+              {activeTab === "ctf" && (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    saveListItem("ctfQuestions", editingItem);
+                  }}
+                  className="space-y-4"
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-gray-400 uppercase">Stage Number</label>
+                      <input
+                        type="number"
+                        min="1"
+                        required
+                        value={editingItem.stageNumber || 1}
+                        onChange={(e) => setEditingItem({ ...editingItem, stageNumber: parseInt(e.target.value) || 1 })}
+                        className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-gray-400 uppercase">Category Tag</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. ENCODING, JWT AUDIT, SECURE CODING"
+                        value={editingItem.category || ""}
+                        onChange={(e) => setEditingItem({ ...editingItem, category: e.target.value.toUpperCase() })}
+                        className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-gray-400 uppercase">Score Points</label>
+                      <input
+                        type="number"
+                        min="10"
+                        step="10"
+                        required
+                        value={editingItem.points || 100}
+                        onChange={(e) => setEditingItem({ ...editingItem, points: parseInt(e.target.value) || 100 })}
+                        className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-gray-400 uppercase">Challenge Title</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Decode Auth Token Payload"
+                      value={editingItem.title || ""}
+                      onChange={(e) => setEditingItem({ ...editingItem, title: e.target.value })}
+                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-gray-400 uppercase">Challenge Type</label>
+                    <select
+                      value={editingItem.type || "text"}
+                      onChange={(e) => {
+                        const newType = e.target.value;
+                        const defaultOpts = [
+                          { id: "opt_a", text: "A) First choice description" },
+                          { id: "opt_b", text: "B) Second choice description" },
+                          { id: "opt_c", text: "C) Third choice description" },
+                        ];
+                        setEditingItem({
+                          ...editingItem,
+                          type: newType,
+                          options: newType === "multiple_choice" && (!editingItem.options || editingItem.options.length === 0)
+                            ? defaultOpts
+                            : editingItem.options,
+                        });
+                      }}
+                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-blue"
+                    >
+                      <option value="text">Text Input (Flag / Solution Match)</option>
+                      <option value="multiple_choice">Multiple Choice (Select from Options)</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-gray-400 uppercase">Mission Prompt / Description</label>
+                    <textarea
+                      rows={3}
+                      required
+                      placeholder="Explain the vulnerability or challenge mission..."
+                      value={editingItem.description || ""}
+                      onChange={(e) => setEditingItem({ ...editingItem, description: e.target.value })}
+                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-gray-400 uppercase">Clue / Code Snippet / Payload (Optional)</label>
+                    <textarea
+                      rows={3}
+                      placeholder="Inspectable payload or token snippet (e.g. a2FsbGUtY3liZXItc2Vj)"
+                      value={editingItem.clue || ""}
+                      onChange={(e) => setEditingItem({ ...editingItem, clue: e.target.value })}
+                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2 text-xs font-mono text-cyber-green focus:outline-none focus:border-cyber-green font-mono"
+                    />
+                  </div>
+
+                  {/* Multiple Choice Options Builder */}
+                  {editingItem.type === "multiple_choice" && (
+                    <div className="space-y-3 p-4 bg-black/40 border border-white/10 rounded-xl">
+                      <div className="flex justify-between items-center">
+                        <label className="text-[10px] font-mono text-cyber-blue uppercase font-bold">
+                          Multiple Choice Options ({Array.isArray(editingItem.options) ? editingItem.options.length : 0})
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const current = Array.isArray(editingItem.options) ? editingItem.options : [];
+                            const letter = String.fromCharCode(65 + current.length);
+                            setEditingItem({
+                              ...editingItem,
+                              options: [...current, { id: `opt_${Date.now()}`, text: `${letter}) ` }],
+                            });
+                          }}
+                          className="text-[10px] font-mono text-cyber-green hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus className="w-3 h-3" /> ADD OPTION
+                        </button>
+                      </div>
+
+                      {(Array.isArray(editingItem.options) ? editingItem.options : []).map((opt: any, optIdx: number) => (
+                        <div key={optIdx} className="flex gap-2 items-center">
+                          <input
+                            type="text"
+                            placeholder="Choice ID (e.g. none, parametrized)"
+                            value={opt.id}
+                            onChange={(e) => {
+                              const newOpts = [...editingItem.options];
+                              newOpts[optIdx].id = e.target.value;
+                              setEditingItem({ ...editingItem, options: newOpts });
+                            }}
+                            className="w-1/3 bg-[#040a12] border border-white/10 rounded-lg px-3 py-1.5 text-xs font-mono text-cyber-blue focus:outline-none"
+                          />
+                          <input
+                            type="text"
+                            placeholder="Option description text"
+                            value={opt.text}
+                            onChange={(e) => {
+                              const newOpts = [...editingItem.options];
+                              newOpts[optIdx].text = e.target.value;
+                              setEditingItem({ ...editingItem, options: newOpts });
+                            }}
+                            className="w-full bg-[#040a12] border border-white/10 rounded-lg px-3 py-1.5 text-xs font-mono text-white focus:outline-none"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newOpts = editingItem.options.filter((_: any, i: number) => i !== optIdx);
+                              setEditingItem({ ...editingItem, options: newOpts });
+                            }}
+                            className="p-1.5 text-rose-500 hover:bg-rose-500/10 rounded cursor-pointer"
+                          >
+                            <Trash className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-cyber-green uppercase font-bold">
+                        Correct Answer / Flag *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder={editingItem.type === "multiple_choice" ? "Enter Choice ID (e.g. none)" : "Enter expected string (e.g. kalle-cyber-sec)"}
+                        value={editingItem.answer || ""}
+                        onChange={(e) => setEditingItem({ ...editingItem, answer: e.target.value })}
+                        className="w-full bg-[#040a12] border border-cyber-green/40 rounded-lg px-4 py-2.5 text-xs font-mono text-cyber-green font-bold focus:outline-none focus:border-cyber-green"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-gray-400 uppercase">
+                        Hint (Shown to user after failed attempt)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. Use Base64 decoding or inspect alg parameter"
+                        value={editingItem.hint || ""}
+                        onChange={(e) => setEditingItem({ ...editingItem, hint: e.target.value })}
+                        className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-blue"
+                      />
+                    </div>
+                  </div>
+
+                  <button type="submit" disabled={saving} className="btn-cyber flex items-center gap-2 w-full justify-center cursor-pointer">
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} SAVE CTF STAGE
+                  </button>
+                </form>
+              )}
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* PARTICIPANT AUDIT DOSSIER MODAL */}
+      {viewingSubmission && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="w-full max-w-xl glass-card border-cyber-blue/40 bg-[#07111F]/95 rounded-2xl p-6 shadow-[0_0_50px_rgba(0,200,255,0.2)] flex flex-col gap-5 relative hud-box max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <ShieldAlert className="w-5 h-5 text-cyber-blue" />
+                <span className="font-orbitron font-black text-xs text-white uppercase tracking-wider">
+                  SECURITY_AUDIT_DOSSIER // #{viewingSubmission.id}
+                </span>
+              </div>
+              <button
+                onClick={() => setViewingSubmission(null)}
+                className="text-gray-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Participant Profile Card */}
+            <div className="p-4 bg-black/50 border border-white/10 rounded-xl space-y-3 font-mono text-xs">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-orbitron font-bold text-base text-white">{viewingSubmission.userName}</h3>
+                  <p className="text-cyber-green text-xs">{viewingSubmission.role || "Visitor"}</p>
+                </div>
+                <span
+                  className={`px-2.5 py-1 rounded text-[10px] font-bold ${
+                    viewingSubmission.status === "completed"
+                      ? "bg-cyber-green/20 text-cyber-green border border-cyber-green/40"
+                      : "bg-amber-500/20 text-amber-400 border border-amber-500/40"
+                  }`}
+                >
+                  {viewingSubmission.status === "completed" ? "AUDIT COMPLETED" : "IN PROGRESS"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 text-[11px] text-gray-400 border-t border-white/5 pt-2">
+                <div>
+                  <span className="text-gray-500">EMAIL: </span>
+                  <span className="text-white">{viewingSubmission.email || "Not provided"}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">FINAL SCORE: </span>
+                  <span className="text-cyber-blue font-bold font-orbitron">{viewingSubmission.score || 0} PTS</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">TIME ELAPSED: </span>
+                  <span className="text-white">{viewingSubmission.timeSpentSec ? `${viewingSubmission.timeSpentSec} seconds` : "--"}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">RECORDED: </span>
+                  <span className="text-white">{viewingSubmission.createdAt ? new Date(viewingSubmission.createdAt).toLocaleString() : "--"}</span>
+                </div>
+                <div className="col-span-2 truncate">
+                  <span className="text-gray-500">IP ADDRESS: </span>
+                  <span className="text-white">{viewingSubmission.ipAddress || "127.0.0.1"}</span>
+                </div>
+                <div className="col-span-2 truncate text-[10px] text-gray-500">
+                  USER AGENT: {viewingSubmission.userAgent || "Browser Client"}
+                </div>
+              </div>
+            </div>
+
+            {/* Stage-by-Stage Solved Log */}
+            <div className="space-y-2">
+              <h4 className="font-orbitron font-bold text-xs text-white uppercase tracking-wider">
+                VERIFIED STAGE AUDIT TRAIL
+              </h4>
+              <div className="space-y-2 font-mono text-xs">
+                {(() => {
+                  let detailsArr: any[] = [];
+                  try {
+                    detailsArr = Array.isArray(viewingSubmission.details)
+                      ? viewingSubmission.details
+                      : JSON.parse(viewingSubmission.details || "[]");
+                  } catch {}
+                  if (detailsArr.length === 0) {
+                    return (
+                      <div className="p-4 bg-black/40 border border-white/10 rounded-xl text-center text-gray-500 text-xs">
+                        No intermediate stage telemetry recorded for this attempt.
+                      </div>
+                    );
+                  }
+                  return detailsArr.map((d: any, idx: number) => (
+                    <div
+                      key={idx}
+                      className="p-3 bg-black/40 border border-cyber-green/20 rounded-xl flex items-center justify-between"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <CheckCircle2 className="w-4 h-4 text-cyber-green shrink-0" />
+                        <div>
+                          <div className="text-white font-bold">
+                            Stage {d.stageNumber}: {d.title}
+                          </div>
+                          {d.passedAt && (
+                            <div className="text-[9px] text-gray-500">
+                              {new Date(d.passedAt).toLocaleTimeString()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-cyber-green font-bold text-xs">
+                        +{d.pointsAwarded || 100} PTS
+                      </span>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-white/10">
+              <button
+                onClick={() => setViewingSubmission(null)}
+                className="btn-cyber px-4 py-2 text-xs cursor-pointer"
+              >
+                CLOSE DOSSIER
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

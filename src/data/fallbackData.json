@@ -1,0 +1,528 @@
+{
+  "profile": {
+    "id": 3,
+    "name": "Johnknox Kalle",
+    "title": "Cybersecurity Architect & Incident Responder",
+    "tagline": "Turning Ideas into Secure Digital Experiences Through Modern Web Development and Cybersecurity.",
+    "bio": "As a dedicated Cybersecurity student and aspiring software developer, I am committed to designing secure, scalable, and efficient digital solutions. I have a growing interest in web development, AI-powered applications, and cloud technologies, and I believe that continuous learning and practical experience are the keys to professional growth. Every project I build reflects my focus on quality, innovation, and problem-solving.",
+    "careerObjective": "To build a successful career in cybersecurity and software development by creating secure, innovative, and scalable digital solutions. I aim to continuously enhance my technical expertise, contribute to impactful projects, and grow as a technology professional while delivering value through creativity, problem-solving, and collaboration.",
+    "typingPhrases": "Compiling secure architectures..., Emulating threat payloads..., Auditing system kernels..., Defending endpoints...",
+    "location": "Prathyusha Engineering College,Thiruvallur,Tamilnadu.",
+    "phone": "+91 9182597274",
+    "email": "johnknox.kalle@gmail.com",
+    "linkedin": "https://www.linkedin.com/in/john-knox-kalle-309b15301/",
+    "github": "https://github.com/johnknox0118",
+    "instagram": "https://instagram.com/alex_sec_ops",
+    "twitter": "https://x.com/johnknox0118",
+    "portfolioUrl": "https://alex-thorne-security.vercel.app",
+    "resumeUrl": "https://exziamokifkbzmibjpkp.supabase.co/storage/v1/object/public/portfolio-uploads/1784348519291_5018_Johnknox_Kalle_Resume.pdf",
+    "cvUrl": "/uploads/Alex_Thorne_CV.pdf",
+    "profileImageUrl": "https://exziamokifkbzmibjpkp.supabase.co/storage/v1/object/public/portfolio-uploads/1785651071177_ChatGPT_Image_Aug_2__2026__11_38_29_AM.png",
+    "coverImageUrl": "/uploads/matrix_bg.png",
+    "profileImageGrayscale": "22",
+    "profileImageScale": "1.0",
+    "profileImageBorderColor": "#00FF9D"
+  },
+  "settings": {
+    "id": 3,
+    "theme": "dark",
+    "primaryColor": "#00FF9D",
+    "secondaryColor": "#00C8FF",
+    "accentColor": "#00e5ff",
+    "loader": "cyber",
+    "analyticsId": "G-XXXXXXXXXX",
+    "footerText": "Secure Systems & Resilient Infrastructure"
+  },
+  "education": [
+    {
+      "id": 3,
+      "degree": "B.E. in Computer Science (Cyber Security Focus)",
+      "institution": "Prathyusha Engineering College",
+      "duration": "2023 - 2027 (Expected)",
+      "grade": "GPA: 8.3",
+      "description": "Advanced coursework in Cryptography, Advanced Computer Networks, Operating System Kernels, Malware Analysis, and Intrusion Detection Systems. Research assistant in the Secure Systems Lab."
+    },
+    {
+      "id": 4,
+      "degree": "Intermediate ( MPC )",
+      "institution": "VIT Junior College",
+      "duration": "2021-2023",
+      "grade": "CGPA: 8.7/10",
+      "description": "Completed Intermediate education while building a solid understanding of logical reasoning, communication, and fundamental computing concepts, preparing for a career in engineering and information technology."
+    },
+    {
+      "id": 5,
+      "degree": "Secondary School Certificate (SSC)",
+      "institution": "Oxfords High School",
+      "duration": "2020-2021",
+      "grade": "CGPA: 10/10",
+      "description": "Successfully completed Secondary School education with a strong academic foundation in mathematics, science, and analytical thinking. Developed essential problem-solving, communication, and learning skills that laid the groundwork for higher education and a career in technology."
+    }
+  ],
+  "timeline": [
+    {
+      "id": 7,
+      "title": "Malware Analyst Intern",
+      "description": "Assisted in reverse-engineering ransomware families and implementing static/dynamic behavioral analysis reports in sandbox environments.",
+      "date": "June 2025 - Present",
+      "category": "experience",
+      "icon": "ShieldAlert",
+      "displayOrder": 1
+    },
+    {
+      "id": 8,
+      "title": "Security Operations Intern",
+      "description": "Monitored SOC alert queues, triaged network anomalies, and tuned Snort and Suricata IDS rules to minimize false positives.",
+      "date": "June 2024 - Sept 2024",
+      "category": "experience",
+      "icon": "Activity",
+      "displayOrder": 2
+    },
+    {
+      "id": 9,
+      "title": "National Cyber League CTF - Finalist",
+      "description": "Finished in the top 1.5% individually in a pool of 8,000+ national competitors across challenges in cryptography, log analysis, and network auditing.",
+      "date": "April 2025",
+      "category": "award",
+      "icon": "Trophy",
+      "displayOrder": 3
+    }
+  ],
+  "skills": [
+    {
+      "id": 30,
+      "name": "Java",
+      "logo": "Java",
+      "progress": 75,
+      "category": "programming",
+      "displayOrder": 0,
+      "yearsOfExp": 3
+    },
+    {
+      "id": 31,
+      "name": "C Programming",
+      "logo": "file-code",
+      "progress": 70,
+      "category": "programming",
+      "displayOrder": 0,
+      "yearsOfExp": 3
+    },
+    {
+      "id": 34,
+      "name": "SQL",
+      "logo": "database",
+      "progress": 70,
+      "category": "backend",
+      "displayOrder": 0,
+      "yearsOfExp": 2
+    },
+    {
+      "id": 35,
+      "name": "GitHub",
+      "logo": "GitHub",
+      "progress": 70,
+      "category": "os",
+      "displayOrder": 0,
+      "yearsOfExp": 1
+    },
+    {
+      "id": 37,
+      "name": "Digital Forensics",
+      "logo": "fingerprint",
+      "progress": 70,
+      "category": "cybersecurity",
+      "displayOrder": 0,
+      "yearsOfExp": 1
+    },
+    {
+      "id": 38,
+      "name": "Team Collaboration",
+      "logo": "users",
+      "progress": 90,
+      "category": "networking",
+      "displayOrder": 0,
+      "yearsOfExp": 3
+    },
+    {
+      "id": 39,
+      "name": "Communication",
+      "logo": "messages-square",
+      "progress": 90,
+      "category": "cybersecurity",
+      "displayOrder": 0,
+      "yearsOfExp": 3
+    },
+    {
+      "id": 29,
+      "name": "Python",
+      "logo": "code",
+      "progress": 70,
+      "category": "programming",
+      "displayOrder": 0,
+      "yearsOfExp": 3
+    },
+    {
+      "id": 32,
+      "name": "HTML5",
+      "logo": "code-xml",
+      "progress": 75,
+      "category": "frontend",
+      "displayOrder": 0,
+      "yearsOfExp": 2
+    },
+    {
+      "id": 33,
+      "name": "JavaScript",
+      "logo": "file-json",
+      "progress": 70,
+      "category": "frontend",
+      "displayOrder": 0,
+      "yearsOfExp": 2
+    },
+    {
+      "id": 40,
+      "name": "Leadership",
+      "logo": "crown",
+      "progress": 90,
+      "category": "cybersecurity",
+      "displayOrder": 0,
+      "yearsOfExp": 3
+    },
+    {
+      "id": 36,
+      "name": "Cybersecurity",
+      "logo": "Shield",
+      "progress": 70,
+      "category": "cybersecurity",
+      "displayOrder": 0,
+      "yearsOfExp": 2
+    }
+  ],
+  "projects": [
+    {
+      "id": 7,
+      "title": "AI Network Intrusion Detection System (AI-NIDS)",
+      "description": "An AI-powered web application that analyzes network traffic and detects malicious activities using machine learning techniques. The system classifies network behavior in real time, helping identify potential cyber threats through an interactive dashboard and predictive analytics. AI-driven NIDS solutions are widely used to improve detection accuracy and automate threat analysis.",
+      "role": "Full-Stack Developer | Machine Learning Engineer | Cybersecurity Researcher",
+      "timeline": "January 2026 – March 2026",
+      "event": "Personal Portfolio Project",
+      "fullDescription": "Developed an AI-powered Network Intrusion Detection System that leverages machine learning to analyze network traffic, detect malicious activities, and provide real-time threat classification through an interactive web dashboard, demonstrating the practical integration of cybersecurity and artificial intelligence.",
+      "githubUrl": "https://github.com/johnknox0118/ai-nids",
+      "liveUrl": "https://ai-nids.onrender.com/",
+      "imageUrl": "/uploads/1784277682063_Screenshot_2026-07-17_141041.png",
+      "screenshots": "[]",
+      "tags": "[]",
+      "logs": "[]",
+      "challenges": "[]",
+      "solutions": "[]",
+      "status": "completed",
+      "category": "cybersecurity"
+    },
+    {
+      "id": 8,
+      "title": "AI-Powered Customer Support Assistant",
+      "description": "An enterprise-grade, full-stack conversational AI platform powered by Google Gemini 2.0. Delivers real-time, human-like customer support across 11 global languages alongside a comprehensive Admin Analytics Workspace with live CSAT and ticket metrics.",
+      "role": "Full-Stack AI Engineer & Lead Developer",
+      "timeline": "9 Weeks (Internship Project at iScalePro Pvt. Ltd.)",
+      "event": "iScalePro Pvt. Ltd. / Enterprise Web Application",
+      "fullDescription": "### Overview\nThe **AI-Powered Customer Support Assistant** is a full-stack conversational platform engineered to automate enterprise customer service. Powered by **Google Gemini 2.0 Generative AI**, it eliminates rigid, hardcoded chatbots by dynamically synthesizing natural, human-like answers for account recovery, billing, order tracking, and technical support.\n\n### Key Features\n- **🤖 Generative AI Engine**: Powered by `@google/genai` (Gemini 2.0) with alternating multi-turn conversation memory.\n- **🌐 11 Global Languages**: 1-click header language selector (English, Spanish, Hindi, French, German, Tamil, Telugu, etc.).\n- **📊 Real-Time Admin Dashboard**: Live KPI metrics (Total Tickets, Resolved Count, Escalation Rates), sentiment pie charts, and security audit logs.\n- **🔒 Secret `/admin` URL Route**: Dedicated route listener for secure administrative portal access.\n- **⚡ Resilient Architecture**: Express MVC backend with zero-downtime offline datastore emulation.\n\n### Tech Stack & Live Links\n- **Tech Stack**: React 18, Node.js 20, Express MVC, Socket.IO, MongoDB Mongoose, Recharts, Render, Vercel.\n- **Live Frontend**: https://ai-support-final-server-five.vercel.app\n- **Live Admin Portal**: https://ai-support-final-server-five.vercel.app/admin\n- **GitHub Repository**: https://github.com/johnknox0118/ai-support-final-server",
+      "githubUrl": "https://github.com/johnknox0118/ai-support-final-server",
+      "liveUrl": "https://ai-support-final-server-five.vercel.app/",
+      "imageUrl": "https://exziamokifkbzmibjpkp.supabase.co/storage/v1/object/public/portfolio-uploads/1785123275907_Screenshot_2026-07-27_090415.png",
+      "screenshots": "[]",
+      "tags": "[]",
+      "logs": "[]",
+      "challenges": "[]",
+      "solutions": "[]",
+      "status": "completed",
+      "category": "cybersecurity"
+    },
+    {
+      "id": 9,
+      "title": "Smart Campus Management & Security Telemetry Platform",
+      "description": "An enterprise-grade full-stack campus operating system featuring real-time GPS tracking, cybersecurity spoof detection, automated attendance marking, bus fleet telemetry, leave workflows, and emergency SOS alarms wrapped in a modern glassmorphism UI.",
+      "role": "Full-Stack Engineer & Lead UI/UX Architect",
+      "timeline": "Completed (2026)",
+      "event": "Full-Stack Web SaaS / Enterprise Campus OS",
+      "fullDescription": "# Smart Campus OS — Enterprise Telemetry & Security Platform\n\n## 📌 Executive Overview\nSmart Campus OS is a commercial-grade, full-stack campus telemetry and management platform built to handle real-time geospatial tracking, automated attendance, transit fleet operations, leave request approvals, and emergency distress alarms for Prathyusha Engineering College (PEC). \n\nDesigned with a high-density, dark-mode Glassmorphism design system (inspired by Apple VisionOS, Linear, and Tesla Fleet Dashboards), the platform provides 6 distinct role-based views (Admin, Staff, Student, Driver, Security, Non-Teaching Staff).\n\n---\n\n## 🔑 Key Features & Subsystems\n\n1. 🛡️ Cybersecurity & GPS Spoofing Detection Engine\n   - Real-time telemetry processing with anti-spoofing heuristics.\n   - Detects impossible movement speed (>15 km/h walking, >80 km/h vehicle), client-side mock GPS flags, and concurrent multi-device logins.\n   - Triggers real-time security warnings and flags malicious telemetry logs.\n\n2. 📍 Interactive Satellite Tracking & Geofencing\n   - High-performance Leaflet.js interactive satellite maps powered by Google Maps Hybrid tiles.\n   - Automatic 7-zone circular geofencing (Entire Campus, Academic Block, Library, Hostels, Parking, Sports Ground).\n   - Live user location search bar with instant pin locator and camera focus.\n\n3. 📋 Automated & Manual Attendance Management\n   - Geofence-triggered automatic check-in/check-out calculation.\n   - Manual marking roster with instant Present / Absent / On-Duty / On-Leave circular toggle controls.\n   - Report download center generating instant Excel (.xlsx) and PDF (.pdf) summary reports.\n\n4. 🚌 Transit Fleet Operations & Driver Telemetry\n   - Real-time bus tracking with live speed, route stops, and dynamic ETA calculation to main campus.\n   - Driver trip console with periodic automatic location broadcast.\n   - Complete Admin CRUD interface for fleet configuration and driver assignment.\n\n5. 🚨 Emergency SOS Distress System\n   - One-click panic SOS trigger broadcasting exact GPS coordinates.\n   - Instant critical alert dispatch to all active Admin and Security staff feeds.\n   - Resolution workflow with audit logging.\n\n6. 📝 Leave Approval Workflow\n   - Student/Staff leave filing with automatic date range validation.\n   - Department-filtered approval panel for staff/admin decisions.\n\n---\n\n## 🛠️ Technical Architecture & Stack\n\n- Frontend: Vanilla JavaScript (SPA View Router), HTML5, Custom Glassmorphism CSS Design System, Bootstrap 5, FontAwesome 6\n- Mapping & Charts: Leaflet.js (Google Hybrid Satellite Tiles), Chart.js\n- Backend API: Python Flask (RESTful Blueprints API architecture)\n- Database: SQLite & Flask-SQLAlchemy (11 normalized models)\n- Authentication & Security: JWT (Flask-JWT-Extended), Bcrypt Password Hashing, Session Management, Account Lockout Security (5 failed attempts limit)\n- Document Export: openpyxl (Excel), ReportLab (PDF)\n- Deployment: Gunicorn on Render / Static Vercel",
+      "githubUrl": "https://github.com/johnknox0118/smart-campus",
+      "liveUrl": "https://smart-campus-henna.vercel.app/",
+      "imageUrl": "https://exziamokifkbzmibjpkp.supabase.co/storage/v1/object/public/portfolio-uploads/1786419645588_Screenshot_2026-08-11_090638.png",
+      "screenshots": "[]",
+      "tags": "[]",
+      "logs": "[]",
+      "challenges": "[]",
+      "solutions": "[]",
+      "status": "completed",
+      "category": "cybersecurity"
+    },
+    {
+      "id": 10,
+      "title": "AegisX – Enterprise AI-Powered Cyber Defense & SIEM Platform",
+      "description": "An enterprise-grade cybersecurity command center featuring real-time SIEM log correlation, automated SOAR active containment, CIS compliance auditing, AI malware sandboxing, and WebGL network visualizations.",
+      "role": "Lead Full-Stack Security Engineer & UI/UX Architect",
+      "timeline": "2024 – Present",
+      "event": "Enterprise Cybersecurity / Full-Stack SaaS Application",
+      "fullDescription": "AegisX is a next-generation Enterprise Cybersecurity Operations Command Platform designed for SOC analysts, threat hunters, and security engineers to monitor, analyze, and automatically mitigate cyber threats in real time.\n\nKEY ARCHITECTURAL HIGHLIGHTS & CAPABILITIES:\n\n• SOAR Active Containment Engine: 1-click active response routines supporting automated process termination (PID kill), firewall IP block rule creation (netsh / iptables), network isolation of compromised hosts, and user account lockouts.\n• SIEM Log Correlation & WebSockets Push: Ingests real-time operating system logs (Windows Event Logs & Linux Syslog) with automated rule correlation pushing instant alert banners over WebSockets (ws://).\n• CIS & Multi-Framework Compliance Engine: Conducts real-time host hardening audits against CIS Benchmarks, NIST CSF 2.0, ISO 27001:2022, and PCI-DSS 4.0 with 1-click CLI remediation scripts.\n• AI Malware Sandbox & Vulnerability Scanner: Shannon entropy calculation, YARA-like binary pattern matching, and Nmap target network vulnerability scanning mapped against CISA KEV and MITRE ATT&CK libraries.\n• Modern Futuristic Aesthetics: Built with high-contrast cybersecurity Dark Mode, custom WebGL Three.js ribbon background shaders, glassmorphism cards, dynamic Recharts data visualizations, and an ultra-responsive layout for Mobile, Tablet, and Desktop displays.\n\nTECH STACK:\n• Frontend: React 18, TypeScript, Vite, Tailwind CSS, Three.js (WebGL), Recharts, Lucide Icons, Axios, TanStack React Query.\n• Backend: Python 3.12, FastAPI, Uvicorn, SQLAlchemy ORM, PyJWT, Psutil, Scapy, SQLite / PostgreSQL.\n• Deployment & DevOps: Docker Compose, Nginx, Render Cloud PaaS, Vercel Serverless Edge CDN, GitHub Actions.",
+      "githubUrl": "https://github.com/johnknox0118/AegisX",
+      "liveUrl": "https://aegis-x-two.vercel.app/login",
+      "imageUrl": "https://exziamokifkbzmibjpkp.supabase.co/storage/v1/object/public/portfolio-uploads/1786441121861_Screenshot_2026-08-11_150602.png",
+      "screenshots": "[]",
+      "tags": "[]",
+      "logs": "[]",
+      "challenges": "[]",
+      "solutions": "[]",
+      "status": "completed",
+      "category": "cybersecurity"
+    }
+  ],
+  "certifications": [
+    {
+      "id": 7,
+      "title": "GEN-AI Camp Certificate of Completion",
+      "issuer": "AlgoUniversity",
+      "year": "2026",
+      "category": "course",
+      "description": "Successfully completed the GEN-AI Camp under the mentorship of Microsoft Engineer Nipun, gaining practical knowledge in Generative AI, Multimodal AI Systems, and Natural Language Processing (NLP). Strengthened foundational and applied AI skills through hands-on learning.",
+      "icon": "Brain",
+      "imageUrl": "",
+      "credentialId": "",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    },
+    {
+      "id": 8,
+      "title": "Cyber Security Training Program",
+      "issuer": "Codec Technologies",
+      "year": "2026",
+      "category": "certification",
+      "description": "Successfully completed an industry-oriented Cyber Security Training Program, gaining practical knowledge of cybersecurity concepts, security practices, and real-world applications.",
+      "icon": "ShieldCheck",
+      "imageUrl": "",
+      "credentialId": "NCS ID: E19E86-0116588288923",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    },
+    {
+      "id": 9,
+      "title": "Cyber Security Internship",
+      "issuer": "Codec Technologies Pvt. Ltd.",
+      "year": "2026",
+      "category": "certification",
+      "description": "Completed a one-month AICTE & ICAC-approved Cyber Security Internship, gaining hands-on experience in cybersecurity concepts, practical tasks, and industry workflows.",
+      "icon": "Briefcase",
+      "imageUrl": "",
+      "credentialId": "",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    },
+    {
+      "id": 10,
+      "title": "Cyber Security & Ethical Hacking Internship",
+      "issuer": "Maincrafts Technology",
+      "year": "2026",
+      "category": "certification",
+      "description": "Successfully completed an internship focused on Cyber Security and Ethical Hacking, demonstrating professionalism, technical skills, and dedication while contributing to practical cybersecurity projects.",
+      "icon": "Briefcase",
+      "imageUrl": "",
+      "credentialId": "MT7151",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    },
+    {
+      "id": 11,
+      "title": "Cyber Security Internship",
+      "issuer": "VirtualWorks Lab",
+      "year": "2026",
+      "category": "certification",
+      "description": "Completed a 157-hour Cyber Security Internship with an overall Grade A and 95/100 performance score. Successfully developed multiple cybersecurity projects, including a Password Strength Checker, Email Risk Analyzer, File Protection Utility, Login Attempt Control System, and Port Status Checker.",
+      "icon": "Briefcase",
+      "imageUrl": "",
+      "credentialId": "VWX-JUL26TOAUG26-716",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    },
+    {
+      "id": 12,
+      "title": "HTML5 – The Language",
+      "issuer": "Infosys Springboard",
+      "year": "2025",
+      "category": "certification",
+      "description": "Successfully completed the HTML5 – The Language course, strengthening knowledge of HTML5 fundamentals, semantic elements, modern web standards, and responsive web development.",
+      "icon": "Code",
+      "imageUrl": "",
+      "credentialId": "",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    },
+    {
+      "id": 13,
+      "title": "Certificate of Appreciation – Cyber Security",
+      "issuer": "KITECH",
+      "year": "2025",
+      "category": "certification",
+      "description": "Awarded for outstanding performance in Cyber Security, recognizing dedication, consistent learning, and academic excellence in cybersecurity studies.",
+      "icon": "Award",
+      "imageUrl": "",
+      "credentialId": "CEKI2641",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    },
+    {
+      "id": 14,
+      "title": "Generative AI Literacy",
+      "issuer": "FutureSkills Prime – NASSCOM",
+      "year": "2025",
+      "category": "certification",
+      "description": "Completed the Generative AI Literacy program aligned with IT-ITeS Sector Skills Council competency standards, gaining foundational knowledge of Generative AI concepts, applications, and emerging technologies.",
+      "icon": "Brain",
+      "imageUrl": "",
+      "credentialId": "25161080987",
+      "verificationUrl": "",
+      "longDescription": "",
+      "grade": "",
+      "skills": "[]"
+    }
+  ],
+  "internships": [
+    {
+      "id": 3,
+      "companyName": "Secure Networks Corp",
+      "role": "Malware Analyst & Security Intern",
+      "duration": "May 2025 - August 2025",
+      "description": "Analyzed malicious binaries using Ghidra and IDA Pro, drafted threat profiles, and integrated indicators of compromise (IOCs) into security log architectures.",
+      "skills": "[\"Ghidra\",\"Malware Analysis\",\"YARA Rules\",\"Reverse Engineering\"]",
+      "logoUrl": "/placeholder_logo.png",
+      "offerLetterUrl": "/placeholder_offer.pdf",
+      "completionCertificateUrl": "/placeholder_completion.pdf"
+    }
+  ],
+  "achievements": [
+    {
+      "id": 9,
+      "label": "CTFs Competed",
+      "value": "25+",
+      "icon": "Flag"
+    },
+    {
+      "id": 10,
+      "label": "Vulnerabilities Reported",
+      "value": "15",
+      "icon": "ShieldAlert"
+    },
+    {
+      "id": 11,
+      "label": "Security Tools Authored",
+      "value": "8",
+      "icon": "Code"
+    },
+    {
+      "id": 12,
+      "label": "Certifications Verified",
+      "value": "12",
+      "icon": "Award"
+    }
+  ],
+  "gallery": [
+    {
+      "id": 5,
+      "imageUrl": "/placeholder_gallery.jpg",
+      "caption": "Secure Systems Hackathon Hack-it 2025",
+      "category": "hackathon"
+    },
+    {
+      "id": 6,
+      "imageUrl": "/placeholder_gallery.jpg",
+      "caption": "Research Presentation at CyberSec-Con",
+      "category": "event"
+    }
+  ],
+  "articles": [],
+  "ctfQuestions": [
+    {
+      "id": 1,
+      "stageNumber": 1,
+      "category": "ENCODING",
+      "title": "Decode Auth Token Payload",
+      "description": "Inspect the following Base64 token and enter the decoded ASCII string below:",
+      "clue": "a2FsbGUtY3liZXItc2Vj",
+      "type": "text",
+      "options": [],
+      "answer": "kalle-cyber-sec",
+      "hint": "Hint: Use Base64 decoding or type 'kalle-cyber-sec'.",
+      "points": 100,
+      "displayOrder": 1
+    },
+    {
+      "id": 2,
+      "stageNumber": 2,
+      "category": "JWT AUDIT",
+      "title": "Identify Token Vulnerability",
+      "description": "Select the critical security flaw in this JSON Web Token header:",
+      "clue": "{\n  \"alg\": \"none\",\n  \"typ\": \"JWT\"\n}",
+      "type": "multiple_choice",
+      "options": [
+        { "id": "typ", "text": "A) The 'typ' header parameter is missing bearer scope." },
+        { "id": "none", "text": "B) CRITICAL: 'alg': 'none' disables signature verification, allowing token forgery." },
+        { "id": "format", "text": "C) JSON key indentation is missing tab stops." }
+      ],
+      "answer": "none",
+      "hint": "Using 'alg': 'none' disables cryptographic signature verification!",
+      "points": 150,
+      "displayOrder": 2
+    },
+    {
+      "id": 3,
+      "stageNumber": 3,
+      "category": "SECURE CODING",
+      "title": "Patch Database Injection Query",
+      "description": "Select the secure implementation to patch string concatenation vulnerability:",
+      "clue": "SELECT * FROM users WHERE id = '\" + userInput + \"';",
+      "type": "multiple_choice",
+      "options": [
+        { "id": "sanitize", "text": "A) Strip quote characters using regex replace." },
+        { "id": "parametrized", "text": "B) SECURE: Use Parametrized Prepared Statements (e.g. Prisma ORM / $1 parameters)." },
+        { "id": "eval", "text": "C) Wrap query string inside eval()." }
+      ],
+      "answer": "parametrized",
+      "hint": "Parametrized prepared statements ($1) isolate query logic from data inputs.",
+      "points": 200,
+      "displayOrder": 3
+    }
+  ],
+  "ctfSubmissions": [
+    {
+      "id": 1,
+      "userName": "Security Lead (CrowdStrike)",
+      "email": "recruiter@crowdstrike.com",
+      "role": "Recruiter / Talent Scout",
+      "score": 450,
+      "totalStages": 3,
+      "stagesCompleted": 3,
+      "status": "completed",
+      "details": [
+        { "stageNumber": 1, "title": "Decode Auth Token Payload", "passed": true, "pointsAwarded": 100 },
+        { "stageNumber": 2, "title": "Identify Token Vulnerability", "passed": true, "pointsAwarded": 150 },
+        { "stageNumber": 3, "title": "Patch Database Injection Query", "passed": true, "pointsAwarded": 200 }
+      ],
+      "timeSpentSec": 142,
+      "ipAddress": "192.168.1.101",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+      "createdAt": "2026-09-05T14:20:00.000Z"
+    }
+  ]
+}

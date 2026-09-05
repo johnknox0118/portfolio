@@ -1,4 +1,4 @@
-@import "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap";
+@import "https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap";
 @import "tailwindcss";
 
 @theme {
@@ -9,8 +9,9 @@
   --color-cyber-darker: #040a12;
   --color-cyber-surface: rgba(10, 25, 47, 0.45);
   
-  --font-orbitron: "Orbitron", sans-serif;
-  --font-sans: "Inter", sans-serif;
+  --font-orbitron: "Oxanium", sans-serif;
+  --font-exo2: "Oxanium", sans-serif;
+  --font-sans: "Oxanium", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   
   --animate-scanline: scanline 6s linear infinite;
@@ -34,9 +35,22 @@
   100% { filter: drop-shadow(0 0 25px rgba(0, 200, 255, 0.7)); }
 }
 
-html {
-  scroll-behavior: smooth;
-  scroll-padding-top: 100px;
+/* Lenis Smooth Scrolling Optimizations */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: clip;
 }
 
 :root {
@@ -47,9 +61,13 @@ html {
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: "Inter", sans-serif;
+  font-family: "Oxanium", sans-serif;
   overflow-x: hidden;
   position: relative;
+}
+
+input, textarea, select, button {
+  font-family: inherit;
 }
 
 /* Global Content & Media Theft Protection */
@@ -119,7 +137,7 @@ img {
   border-radius: 20px;
   box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37),
               inset 0 1px 1px rgba(255, 255, 255, 0.05);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: border-color 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   transform: translate3d(0, 0, 0);
 }
 .glass-card:hover {
@@ -171,10 +189,130 @@ img {
   animation: holo-shift 6s ease infinite;
 }
 
+/* Premium True 3D Typography System — Matching Reference Design */
+.hero-3d-name-font {
+  font-family: "Oxanium", sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.035em;
+}
+
+.hero-3d-text-front {
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #dcf7ff 18%,
+    #30d0ff 52%,
+    #009ad6 82%,
+    #0074aa 100%
+  );
+  background-size: 100% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 3px rgba(0, 200, 255, 0.22));
+}
+
+.hero-3d-extrusion {
+  color: #001a38;
+  text-shadow:
+    /* Solid crisp downward volumetric 3D extrusion */
+    0.5px 1px 0 #009ed0,
+    0.5px 2px 0 #008cc0,
+    0.5px 3px 0 #007bb0,
+    0.5px 4px 0 #006aa0,
+    0.5px 5px 0 #005a90,
+    0.5px 6px 0 #004b7e,
+    0.5px 7px 0 #003c6a,
+    0.5px 8px 0 #002e56,
+    0.5px 9px 0 #002244,
+    0.5px 10px 0 #001732,
+    /* Clean directional cast shadow without blurry glow cloud */
+    0 12px 14px rgba(0, 0, 0, 0.75),
+    0 18px 24px rgba(0, 10, 25, 0.6);
+}
+
+@media (max-width: 1024px) {
+  .hero-3d-extrusion {
+    text-shadow:
+      0.5px 1px 0 #009ed0,
+      0.5px 2px 0 #008cc0,
+      0.5px 3px 0 #007bb0,
+      0.5px 4px 0 #006aa0,
+      0.5px 5px 0 #005a90,
+      0.5px 6px 0 #004b7e,
+      0 8px 10px rgba(0, 0, 0, 0.7),
+      0 12px 18px rgba(0, 10, 25, 0.5);
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-3d-extrusion {
+    text-shadow:
+      0.5px 1px 0 #009ed0,
+      0.5px 2px 0 #007bb0,
+      0.5px 3px 0 #005a90,
+      0.5px 4px 0 #003c6a,
+      0 5px 8px rgba(0, 0, 0, 0.65);
+  }
+}
+
+.hero-3d-selectable,
+.hero-3d-selectable * {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+
+/* 3D "I am" Typography System */
+.hero-iam-3d-font {
+  font-family: "Oxanium", sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.06em;
+}
+
+.hero-iam-3d-front {
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #dcfce7 22%,
+    #00FF9D 55%,
+    #00c978 82%,
+    #008f52 100%
+  );
+  background-size: 100% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 2px rgba(0, 255, 157, 0.35));
+}
+
+.hero-iam-3d-extrusion {
+  color: #001f12;
+  text-shadow:
+    0.5px 1px 0 #00cc7a,
+    0.5px 2px 0 #00b36b,
+    0.5px 3px 0 #00995c,
+    0.5px 4px 0 #007345,
+    0.5px 5px 0 #004d2e,
+    0.5px 6px 0 #001f12,
+    0 6px 10px rgba(0, 0, 0, 0.75);
+}
+
+@media (max-width: 640px) {
+  .hero-iam-3d-extrusion {
+    text-shadow:
+      0.5px 1px 0 #00cc7a,
+      0.5px 2px 0 #00995c,
+      0.5px 3px 0 #004d2e,
+      0 4px 6px rgba(0, 0, 0, 0.65);
+  }
+}
+
 /* Cyber Button Styling */
 .btn-cyber {
   position: relative;
-  font-family: "Orbitron", sans-serif;
+  font-family: "Oxanium", sans-serif;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -187,14 +325,31 @@ img {
   transition: all 0.3s ease;
   overflow: hidden;
   cursor: pointer;
+  pointer-events: auto;
 }
 .btn-cyber::before {
   content: "";
   position: absolute;
-  top: 0; left: -100%;
-  width: 100%; height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(0, 200, 255, 0.2), transparent);
-  transition: all 0.5s ease;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 20%,
+    rgba(255, 255, 255, 0.03) 30%,
+    rgba(255, 255, 255, 0.30) 40%,
+    rgba(255, 255, 255, 0.55) 45%,
+    rgba(255, 255, 255, 0.95) 50%,
+    rgba(255, 255, 255, 0.55) 55%,
+    rgba(255, 255, 255, 0.30) 60%,
+    rgba(255, 255, 255, 0.03) 70%,
+    transparent 80%
+  );
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.7));
+  animation: glassShineDiagonalSweep 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+  z-index: 5;
 }
 .btn-cyber:hover {
   color: #ffffff;
@@ -203,7 +358,7 @@ img {
   box-shadow: 0 0 15px rgba(0, 200, 255, 0.4);
 }
 .btn-cyber:hover::before {
-  left: 100%;
+  filter: brightness(1.3);
 }
 
 .btn-cyber-blue {
@@ -262,6 +417,7 @@ img {
   background-size: cover;
   background-position: center;
   z-index: -1;
+  pointer-events: none;
   animation: cyberPan 40s ease-in-out infinite;
   opacity: 0.85;
   filter: brightness(0.9);
@@ -277,11 +433,296 @@ img {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+/* Lenis Smooth Scroll Recommended Rules */
+html.lenis, html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* Global Click Ripple Effect */
+@keyframes clickRipple {
+  0% {
+    width: 0px;
+    height: 0px;
+    opacity: 0.85;
+    box-shadow: 0 0 10px rgba(0, 200, 255, 0.8), 0 0 20px rgba(0, 255, 157, 0.5);
+    border: 2px solid #00C8FF;
+  }
+  100% {
+    width: 70px;
+    height: 70px;
+    opacity: 0;
+    box-shadow: 0 0 25px rgba(0, 200, 255, 0), 0 0 35px rgba(0, 255, 157, 0);
+    border: 1px solid #00FF9D;
+  }
+}
+
+.animate-click-ripple {
+  animation: clickRipple 0.32s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+  pointer-events: none;
+}
+
+/* ANIMATION 6: Realistic Continuous Diagonal Glass Shine Sweep (Top-Right to Bottom-Left every 3s) */
+@keyframes glassShineDiagonalSweep {
+  0% {
+    transform: translate3d(95%, -95%, 0);
+    opacity: 0;
+  }
+  2% {
+    opacity: 1;
+  }
+  42% {
+    transform: translate3d(-95%, 95%, 0);
+    opacity: 1;
+  }
+  46% {
+    transform: translate3d(-95%, 95%, 0);
+    opacity: 0;
+  }
+  48% {
+    transform: translate3d(95%, -95%, 0);
+    opacity: 0;
+  }
+  100% {
+    transform: translate3d(95%, -95%, 0);
+    opacity: 0;
+  }
+}
+
+.glass-shine-beam {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 18%,
+    rgba(255, 255, 255, 0.02) 28%,
+    /* Secondary soft reflection line */
+    rgba(255, 255, 255, 0.25) 36%,
+    rgba(255, 255, 255, 0.50) 40%,
+    rgba(255, 255, 255, 0.22) 43%,
+    rgba(255, 255, 255, 0.08) 45%,
+    /* Primary intense specular white-hot reflection core */
+    rgba(255, 255, 255, 0.45) 47%,
+    rgba(255, 255, 255, 0.88) 49%,
+    rgba(255, 255, 255, 1.00) 50%,
+    rgba(255, 255, 255, 0.88) 51%,
+    rgba(255, 255, 255, 0.45) 53%,
+    /* Soft trailing specular falloff */
+    rgba(255, 255, 255, 0.18) 58%,
+    rgba(255, 255, 255, 0.03) 68%,
+    transparent 80%
+  );
+  filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.75)) drop-shadow(0 0 5px rgba(0, 255, 157, 0.45));
+  animation: glassShineDiagonalSweep 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+  z-index: 25;
+}
+
+.glass-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-shine:not(.hud-box)::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent 18%,
+    rgba(255, 255, 255, 0.02) 28%,
+    rgba(255, 255, 255, 0.25) 36%,
+    rgba(255, 255, 255, 0.50) 40%,
+    rgba(255, 255, 255, 0.22) 43%,
+    rgba(255, 255, 255, 0.08) 45%,
+    rgba(255, 255, 255, 0.45) 47%,
+    rgba(255, 255, 255, 0.88) 49%,
+    rgba(255, 255, 255, 1.00) 50%,
+    rgba(255, 255, 255, 0.88) 51%,
+    rgba(255, 255, 255, 0.45) 53%,
+    rgba(255, 255, 255, 0.18) 58%,
+    rgba(255, 255, 255, 0.03) 68%,
+    transparent 80%
+  );
+  filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.75)) drop-shadow(0 0 5px rgba(0, 255, 157, 0.45));
+  animation: glassShineDiagonalSweep 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+  z-index: 25;
+}
+
+/* ANIMATION 7: Animated Gradient Border */
+@keyframes gradientBorderShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-gradient-border {
+  position: relative;
+  border-radius: 20px;
+}
+.animated-gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 200, 255, 0.7),
+    rgba(0, 255, 157, 0.7),
+    rgba(0, 200, 255, 0.25),
+    rgba(0, 255, 157, 0.8)
+  );
+  background-size: 300% 300%;
+  animation: gradientBorderShift 7s ease infinite;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ANIMATION 11: Skill Card Hover */
+.skill-card-hover {
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+              box-shadow 0.35s ease,
+              border-color 0.35s ease,
+              background-color 0.35s ease;
+}
+.skill-card-hover:hover {
+  transform: translateY(-6px) scale(1.02);
+  border-color: rgba(0, 255, 157, 0.45) !important;
+  background: rgba(10, 26, 47, 0.85) !important;
+  box-shadow: 0 16px 36px rgba(0, 255, 157, 0.12),
+              0 0 20px rgba(0, 200, 255, 0.15) !important;
+}
+
+/* ANIMATION 12: Social Icon Hover */
+.social-icon-hover {
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1),
+              background-color 0.25s ease,
+              border-color 0.25s ease,
+              box-shadow 0.25s ease,
+              color 0.25s ease;
+}
+.social-icon-hover:hover {
+  transform: translateY(-3px) scale(1.1);
+  background: rgba(0, 255, 157, 0.12);
+  border-color: rgba(0, 255, 157, 0.5);
+  box-shadow: 0 0 16px rgba(0, 255, 157, 0.35);
+  color: #00FF9D;
+}
+
+/* ANIMATION 45: Focus Depth Effect */
+.focus-depth-group {
+  perspective: 1000px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .focus-depth-group:hover > .focus-depth-item:not(:hover) {
+    opacity: 0.8;
+    transform: scale(0.99);
+  }
+}
+
+.focus-depth-item {
+  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.35s ease;
+}
+
+/* ANIMATION 43: Interactive Card Spotlight */
+.card-spotlight {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    320px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+    rgba(0, 200, 255, 0.12),
+    rgba(0, 255, 157, 0.05) 45%,
+    transparent 80%
+  );
+  opacity: var(--spotlight-opacity, 0);
+  transition: opacity 0.3s ease;
+  z-index: 20;
+}
+
+.card-spotlight:hover::after {
+  --spotlight-opacity: 1;
+}
+
+/* ANIMATION 50: Holographic Glass Accent */
+.holo-glass {
+  position: relative;
+}
+.holo-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    125deg,
+    transparent 20%,
+    rgba(0, 200, 255, 0.05) 35%,
+    rgba(0, 255, 157, 0.08) 50%,
+    rgba(0, 200, 255, 0.05) 65%,
+    transparent 80%
+  );
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Custom sleek scrollbar for modals & panels */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.4);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 255, 157, 0.35);
+  border-radius: 3px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 255, 157, 0.65);
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 255, 157, 0.35) rgba(0, 0, 0, 0.4);
+}
 
 /* ATS Print Stylesheet for Executive PDF Dossier Export */
 @media print {
   @page {
-    margin: 8mm 10mm;
+    margin: 10mm 12mm;
     size: A4 portrait;
   }
   html, body {
@@ -290,8 +731,10 @@ img {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
-    height: 100% !important;
-    overflow: hidden !important;
+    height: auto !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   body * {
     visibility: hidden !important;
@@ -311,7 +754,9 @@ img {
     padding: 0 !important;
     margin: 0 !important;
     box-sizing: border-box !important;
-    page-break-after: avoid !important;
+  }
+  .print-avoid-break {
+    break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
 }

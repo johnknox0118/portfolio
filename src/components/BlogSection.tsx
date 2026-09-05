@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { BookOpen, Clock, ExternalLink, X, Search, Share2 } from "lucide-react";
+import SectionDivider from "./SectionDivider";
+import NeonBorderCard from "@/components/cyber/NeonBorderCard";
+import StickyCardSection, { StickyCardItem } from "@/components/StickyCardSection";
+import { FlipText } from "@/components/text/AnimatedTypography";
+import Cyber3DCard from "@/components/cyber/Cyber3DCard";
 
 interface Article {
   id: string | number;
@@ -80,14 +85,14 @@ export default function BlogSection({ articles }: BlogSectionProps) {
   });
 
   return (
-    <section id="blog" className="space-y-8 scroll-mt-24">
+    <section id="blog" className="space-y-8 scroll-mt-20">
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <h2 className="font-orbitron text-2xl md:text-3xl font-black text-white flex items-center gap-2">
+      <div className="space-y-3">
+        <div className="flex items-center gap-3">
           <BookOpen className="w-6 h-6 text-cyber-blue animate-pulse" />
-          RESEARCH_LOGS // ENGINEERING ARTICLES
-        </h2>
-        <div className="flex-1 h-px bg-gradient-to-r from-cyber-blue/40 to-transparent" />
+          <FlipText as="h2" text="RESEARCH LOGS" subtitle="// ENGINEERING ARTICLES" className="text-2xl md:text-3xl" />
+        </div>
+        <SectionDivider color="blue" />
       </div>
 
       {/* Search Input */}
@@ -106,16 +111,18 @@ export default function BlogSection({ articles }: BlogSectionProps) {
 
       {/* Empty State */}
       {filteredArticles.length === 0 && (
-        <div className="glass-card hud-box p-8 text-center space-y-2">
-          <BookOpen className="w-8 h-8 text-gray-500 mx-auto animate-pulse" />
-          <p className="font-mono text-xs text-gray-400">
-            [!] NO ENGINEERING ARTICLES OR RESEARCH LOGS PUBLISHED IN DATABASE.
-          </p>
-        </div>
+        <Cyber3DCard glowColor="blue" depth={180}>
+          <div className="glass-card hud-box p-8 text-center space-y-2">
+            <BookOpen className="w-8 h-8 text-gray-500 mx-auto animate-pulse" />
+            <p className="font-mono text-xs text-gray-400">
+              [!] NO ENGINEERING ARTICLES OR RESEARCH LOGS PUBLISHED IN DATABASE.
+            </p>
+          </div>
+        </Cyber3DCard>
       )}
 
-      {/* Article Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Article Cards with Sticky Cards Stacking (#54) on Desktop & Focus Depth */}
+      <StickyCardSection className="focus-depth-group max-w-4xl mx-auto">
         {filteredArticles.map((art: any, idx: number) => {
           const tagArray = Array.isArray(art.tags)
             ? art.tags
@@ -124,49 +131,48 @@ export default function BlogSection({ articles }: BlogSectionProps) {
             : [];
 
           return (
-            <motion.div
-              key={art.id || idx}
-              initial={{ opacity: 0, y: 15 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              whileHover={{ y: -4 }}
-              className="glass-card hud-box p-6 flex flex-col justify-between gap-4 relative group"
-            >
-              <div className="space-y-3">
-                <div className="flex justify-between items-center text-[10px] font-mono">
-                  <span className="cyber-tag border-cyber-blue/30 text-cyber-blue font-bold uppercase">
-                    {art.category || "ENGINEERING"}
-                  </span>
-                  <span className="text-gray-400 flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-cyber-green" /> {art.readTime || "5 min read"}
-                  </span>
-                </div>
-                <h3 className="font-orbitron font-bold text-lg text-white group-hover:text-cyber-green transition-colors leading-snug">
-                  {art.title}
-                </h3>
-                <p className="text-xs text-gray-400 leading-relaxed line-clamp-3">{art.excerpt}</p>
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {tagArray.map((t: string) => (
-                    <span key={t} className="cyber-tag text-[8px] border-white/10 text-gray-300">
-                      #{t.replace(/^#/, "")}
-                    </span>
-                  ))}
-                </div>
-              </div>
+            <StickyCardItem key={art.id || idx} index={idx} topOffset={110} className="w-full">
+              <div className="focus-depth-item h-full">
+                <Cyber3DCard glowColor="green" index={idx} depth={180} enableScrollDepth={false}>
+                  <div className="glass-card hud-box card-spotlight glass-shine p-6 md:p-8 flex flex-col justify-between gap-4 relative group h-full">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center text-[10px] font-mono">
+                        <span className="cyber-tag border-cyber-blue/30 text-cyber-blue font-bold uppercase">
+                          {art.category || "ENGINEERING"}
+                        </span>
+                        <span className="text-gray-400 flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-cyber-green" /> {art.readTime || "5 min read"}
+                        </span>
+                      </div>
+                      <h3 className="font-orbitron font-bold text-lg md:text-xl text-white group-hover:text-cyber-green transition-colors leading-snug">
+                        {art.title}
+                      </h3>
+                      <p className="text-xs text-gray-400 leading-relaxed line-clamp-3">{art.excerpt}</p>
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {tagArray.map((t: string) => (
+                          <span key={t} className="cyber-tag text-[8px] border-white/10 text-gray-300">
+                            #{t.replace(/^#/, "")}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
 
-              <div className="pt-3 border-t border-white/5 flex justify-between items-center text-xs font-mono">
-                <span className="text-[10px] text-gray-500">{art.date || "2026"}</span>
-                <button
-                  onClick={() => setSelectedArticle(art)}
-                  className="btn-cyber flex items-center gap-1.5 px-3 py-1.5 text-xs text-cyber-green cursor-pointer"
-                >
-                  READ ARTICLE <ExternalLink className="w-3.5 h-3.5" />
-                </button>
+                    <div className="pt-3 border-t border-white/5 flex justify-between items-center text-xs font-mono">
+                      <span className="text-[10px] text-gray-500">{art.date || "2026"}</span>
+                      <button
+                        onClick={() => setSelectedArticle(art)}
+                        className="btn-cyber flex items-center gap-1.5 px-3 py-1.5 text-xs text-cyber-green cursor-pointer"
+                      >
+                        READ ARTICLE <ExternalLink className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </Cyber3DCard>
               </div>
-            </motion.div>
+            </StickyCardItem>
           );
         })}
-      </div>
+      </StickyCardSection>
 
       {/* Article Reading Drawer Modal */}
       <AnimatePresence>

@@ -5,8 +5,9 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Cpu, X, Send, User, Bot, Sparkles, Download, Mail, ExternalLink,
-  Globe, ShieldCheck, FileText, Code, CheckCircle, ArrowUpRight
+  Globe, ShieldCheck, FileText, Code, CheckCircle, ArrowUpRight, Loader2
 } from "lucide-react";
+import { smoothScrollTo } from "./SmoothScrollProvider";
 
 interface ActionItem {
   type: "link" | "scroll";
@@ -50,6 +51,7 @@ export default function AIAssistantWidget({ data }: AIAssistantWidgetProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<MessageItem[]>([
     {
       sender: "ai",
@@ -58,6 +60,7 @@ export default function AIAssistantWidget({ data }: AIAssistantWidgetProps) {
   ]);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const drawerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -69,6 +72,24 @@ export default function AIAssistantWidget({ data }: AIAssistantWidgetProps) {
     }
   }, [messages, isOpen]);
 
+  // Isolate J.A.M.S. chat drawer so mouse wheel / touch never scrolls background
+  useEffect(() => {
+    const drawer = drawerRef.current;
+    if (!drawer || !isOpen) return;
+
+    const stopPropagation = (e: Event) => {
+      e.stopPropagation();
+    };
+
+    drawer.addEventListener("wheel", stopPropagation, { passive: true });
+    drawer.addEventListener("touchmove", stopPropagation, { passive: true });
+
+    return () => {
+      drawer.removeEventListener("wheel", stopPropagation);
+      drawer.removeEventListener("touchmove", stopPropagation);
+    };
+  }, [isOpen]);
+
   const profile = data?.profile || {};
   const projects: any[] = data?.projects || [];
   const skills: any[] = data?.skills || [];
@@ -77,110 +98,105 @@ export default function AIAssistantWidget({ data }: AIAssistantWidgetProps) {
   const internships: any[] = data?.internships || [];
 
   const scrollToSection = (id: string) => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth" });
-    }
+    smoothScrollTo(`#${id}`, { offset: 0, duration: 1.0 });
   };
 
-  const handleAsk = (queryText?: string) => {
+  const handleAsk = async (queryText?: string) => {
     const textToProcess = (queryText || input).trim();
-    if (!textToProcess) return;
+    if (!textToProcess || isLoading) return;
 
     const userMsg: MessageItem = { sender: "user", text: textToProcess };
-    const q = textToProcess.toLowerCase();
-
-    let aiReply = "";
-    const actions: ActionItem[] = [];
-
-    // 1. SPECIFIC PROJECT SEARCH & INTENT MATCHING
-    const matchedProject = projects.find(
-      (p) =>
-        p.title.toLowerCase().includes(q) ||
-        q.includes(p.title.toLowerCase()) ||
-        (p.category && q.includes(p.category.toLowerCase())) ||
-        (p.tags && p.tags.some((t: string) => q.includes(t.toLowerCase())))
-    );
-
-    // 2. SPECIFIC CERTIFICATE SEARCH
-    const matchedCert = certs.find(
-      (c) =>
-        c.title.toLowerCase().includes(q) ||
-        c.issuer.toLowerCase().includes(q) ||
-        (c.category && q.includes(c.category.toLowerCase()))
-    );
-
-    // 3. SPECIFIC ARTICLE SEARCH
-    const matchedArticle = ARTICLES.find(
-      (a) => a.title.toLowerCase().includes(q) || a.tags.some((t) => q.includes(t.toLowerCase()))
-    );
-
-    if (matchedProject && (q.includes("project") || q.includes("open") || q.includes("show") || q.includes("view") || q.includes("tell") || q.includes(matchedProject.title.toLowerCase()))) {
-      aiReply = `🔍 PROJECT DOSSIER FOUND:\n\n📌 Title: ${matchedProject.title}\n🏷️ Category: ${matchedProject.category || "Full-Stack System"}\n⚡ Status: ${matchedProject.status || "Active"}\n\n📝 Description: ${matchedProject.description}\n\n🛠️ Tech Tags: ${matchedProject.tags?.join(", ") || "N/A"}`;
-      
-      if (matchedProject.liveUrl) {
-        actions.push({ type: "link", text: "🚀 Launch Live Project", url: matchedProject.liveUrl });
-      }
-      if (matchedProject.githubUrl) {
-        actions.push({ type: "link", text: "💻 Source Repository", url: matchedProject.githubUrl });
-      }
-      actions.push({ type: "scroll", text: "📜 Jump to Projects Section", targetId: "projects" });
-
-    } else if (matchedCert && (q.includes("cert") || q.includes("credential") || q.includes("open") || q.includes("verify") || q.includes(matchedCert.title.toLowerCase()))) {
-      aiReply = `🛡️ VERIFIED CREDENTIAL DOSSIER:\n\n📜 Title: ${matchedCert.title}\n🏛️ Issuer: ${matchedCert.issuer}\n📅 Year: ${matchedCert.year}\n🔑 Credential ID: ${matchedCert.credentialId || "AUTHENTICATED"}\n\n📌 Description: ${matchedCert.description || "Official security certification."}`;
-      
-      if (matchedCert.verificationUrl) {
-        actions.push({ type: "link", text: "🛡️ Verify Credential Link", url: matchedCert.verificationUrl });
-      }
-      actions.push({ type: "scroll", text: "📜 View Certifications Matrix", targetId: "certifications" });
-
-    } else if (matchedArticle && (q.includes("article") || q.includes("paper") || q.includes("blog") || q.includes("read"))) {
-      aiReply = `📄 ENGINEERING RESEARCH ARTICLE:\n\n📰 Title: ${matchedArticle.title}\n⏱️ Read Time: ${matchedArticle.readTime}\n🏷️ Category: ${matchedArticle.category}\n\nSummary: ${matchedArticle.excerpt}`;
-      actions.push({ type: "scroll", text: "📖 Open Research Articles Drawer", targetId: "blog" });
-
-    } else if (q.includes("project") || q.includes("work") || q.includes("portfolio") || q.includes("build") || q.includes("repo")) {
-      const projList = projects.map((p, i) => `[${i + 1}] ${p.title} (${p.category || "Web App"})\n   └ ${p.description}`).join("\n\n");
-      aiReply = ` Johnknox has engineered ${projects.length} major production projects:\n\n${projList || "Security platforms and full-stack web applications."}`;
-      actions.push({ type: "scroll", text: "📜 Explore Projects Ledger", targetId: "projects" });
-
-    } else if (q.includes("cert") || q.includes("credential") || q.includes("qualification") || q.includes("degree") || q.includes("college") || q.includes("gpa")) {
-      const certList = certs.map((c) => `✓ ${c.title} — ${c.issuer} (${c.year})`).join("\n");
-      const eduList = education.map((e) => `🎓 ${e.degree} — ${e.institution}`).join("\n");
-      aiReply = ` Verified Credentials & Academic Ledger:\n\nCertifications:\n${certList || "Verified Security Credentials"}\n\nAcademic Education:\n${eduList || "Prathyusha Engineering College"}`;
-      actions.push({ type: "scroll", text: "📜 View Qualifications Timeline", targetId: "qualifications" });
-      actions.push({ type: "scroll", text: "🛡️ View Credentials Matrix", targetId: "certifications" });
-
-    } else if (q.includes("skill") || q.includes("stack") || q.includes("tech") || q.includes("python") || q.includes("react") || q.includes("language")) {
-      const topSkills = skills.map((s) => `• ${s.name} (${s.progress || 90}% — ${s.yearsOfExp || 2} yrs exp)`).join("\n");
-      aiReply = ` Verified Technical Skills Stack:\n\n${topSkills || "Cybersecurity, Python, Next.js, PostgreSQL, Cloud Security"}`;
-      actions.push({ type: "scroll", text: "⚡ View Interactive Skills Matrix", targetId: "skills" });
-
-    } else if (q.includes("contact") || q.includes("email") || q.includes("phone") || q.includes("hire") || q.includes("location") || q.includes("linkedin") || q.includes("github")) {
-      aiReply = ` Direct Communication Channels:\n\n📧 Email: ${profile.email || "johnknox.kalle@gmail.com"}\n📞 Phone: ${profile.phone || "+91 9182597274"}\n📍 Location: ${profile.location || "Prathyusha Engineering College, Thiruvallur, Tamilnadu"}`;
-      if (profile.email) actions.push({ type: "link", text: "📧 Send Direct Email", url: `mailto:${profile.email}` });
-      if (profile.linkedin) actions.push({ type: "link", text: "🔗 Open LinkedIn Profile", url: profile.linkedin });
-      if (profile.github) actions.push({ type: "link", text: "🐙 Open GitHub Developer Profile", url: profile.github });
-      actions.push({ type: "scroll", text: "✉️ Open Contact Form", targetId: "contact" });
-
-    } else if (q.includes("resume") || q.includes("cv") || q.includes("download")) {
-      aiReply = " You can view or download Johnknox Kalle's official verified resume dossier using the action below.";
-      if (profile.resumeUrl) {
-        actions.push({ type: "link", text: "📥 Download Official Resume PDF", url: profile.resumeUrl });
-      } else {
-        actions.push({ type: "scroll", text: "📜 View Profile Bio & Details", targetId: "about" });
-      }
-
-    } else if (q.includes("who") || q.includes("bio") || q.includes("about") || q.includes("johnknox") || q.includes("kalle")) {
-      aiReply = ` ${profile.name || "Johnknox Kalle"} // ${profile.title || "Cybersecurity Engineer & Systems Architect"}\n\nTagline: ${profile.tagline || "Securing Systems & Building Resilient Infrastructure"}\n\nBio: ${profile.bio || "Specializing in threat analysis, secure system architectures, Python development, and full-stack cloud applications."}`;
-      if (profile.resumeUrl) actions.push({ type: "link", text: "📥 Download Resume PDF", url: profile.resumeUrl });
-      actions.push({ type: "scroll", text: "📜 View Full Dossier", targetId: "about" });
-
-    } else {
-      aiReply = `🤖 I analyzed your query regarding "${textToProcess}".\n\nI have dynamic access to all ${projects.length} projects, ${certs.length} certificates, ${skills.length} technical skills, and research papers. Try asking:\n\n• "Open project [name]"\n• "Show certifications"\n• "What are his technical skills?"\n• "Get contact information"\n• "Download resume"`;
-    }
-
-    setMessages((prev) => [...prev, userMsg, { sender: "ai", text: aiReply, actions }]);
+    setMessages((prev) => [...prev, userMsg]);
     setInput("");
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: textToProcess,
+          history: messages.slice(-6),
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const resData = await res.json();
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text: resData.reply || "Transmission received, but payload empty.",
+          actions: resData.actions || [],
+        },
+      ]);
+    } catch (error) {
+      console.warn("Live /api/ai/chat failed, utilizing local fallback engine:", error);
+
+      // Local Fallback Grounding
+      const q = textToProcess.toLowerCase();
+      let aiReply = "";
+      const actions: ActionItem[] = [];
+
+      const matchedProject = projects.find(
+        (p) =>
+          p.title?.toLowerCase().includes(q) ||
+          q.includes(p.title?.toLowerCase()) ||
+          (p.category && q.includes(p.category?.toLowerCase())) ||
+          (p.tags && Array.isArray(p.tags) && p.tags.some((t: string) => q.includes(t?.toLowerCase())))
+      );
+
+      const matchedCert = certs.find(
+        (c) =>
+          c.title?.toLowerCase().includes(q) ||
+          c.issuer?.toLowerCase().includes(q)
+      );
+
+      if (matchedProject) {
+        aiReply = `🔍 **PROJECT DOSSIER FOUND:**\n\n📌 **${matchedProject.title}**\n🏷️ **Category:** ${matchedProject.category || "Full-Stack System"}\n⚡ **Status:** ${matchedProject.status || "Active"}\n\n📝 ${matchedProject.description}\n\n🛠️ **Tech Tags:** ${Array.isArray(matchedProject.tags) ? matchedProject.tags.join(", ") : matchedProject.tags || "N/A"}`;
+        if (matchedProject.liveUrl) actions.push({ type: "link", text: "🚀 Launch Live Project", url: matchedProject.liveUrl });
+        if (matchedProject.githubUrl) actions.push({ type: "link", text: "💻 Source Repository", url: matchedProject.githubUrl });
+        actions.push({ type: "scroll", text: "📜 Jump to Projects", targetId: "projects" });
+      } else if (matchedCert) {
+        aiReply = `🛡️ **VERIFIED CREDENTIAL FOUND:**\n\n📜 **${matchedCert.title}**\n🏛️ **Issuer:** ${matchedCert.issuer}\n📅 **Year:** ${matchedCert.year}\n🔑 **Credential ID:** ${matchedCert.credentialId || "AUTHENTICATED"}\n\n📌 ${matchedCert.description || "Official security certification."}`;
+        if (matchedCert.verificationUrl) actions.push({ type: "link", text: "🛡️ Verify Credential Link", url: matchedCert.verificationUrl });
+        actions.push({ type: "scroll", text: "📜 View Certifications", targetId: "certifications" });
+      } else if (q.includes("project") || q.includes("work") || q.includes("portfolio") || q.includes("build") || q.includes("repo")) {
+        const projList = projects.slice(0, 4).map((p, i) => `**${i + 1}. ${p.title}** (${p.category || "System"})\n   └ ${p.description}`).join("\n\n");
+        aiReply = `⚡ Johnknox has engineered **${projects.length} major production projects**:\n\n${projList}\n\nAsk me about any specific project to inspect its architecture or launch it!`;
+        actions.push({ type: "scroll", text: "📜 Explore Projects Ledger", targetId: "projects" });
+      } else if (q.includes("cert") || q.includes("credential") || q.includes("qualification") || q.includes("degree")) {
+        const certList = certs.map((c) => `✓ **${c.title}** — ${c.issuer} (${c.year})`).join("\n");
+        const eduList = education.map((e) => `🎓 **${e.degree}** — ${e.institution}`).join("\n");
+        aiReply = `🛡️ **Verified Credentials & Academic Ledger:**\n\n${certList}\n\n${eduList}`;
+        actions.push({ type: "scroll", text: "📜 View Qualifications Timeline", targetId: "qualifications" });
+        actions.push({ type: "scroll", text: "🛡️ View Credentials Matrix", targetId: "certifications" });
+      } else if (q.includes("skill") || q.includes("stack") || q.includes("tech") || q.includes("python") || q.includes("react")) {
+        const topSkills = skills.slice(0, 8).map((s) => `• **${s.name}** (${s.progress || 90}% — ${s.yearsOfExp || 2} yrs exp)`).join("\n");
+        aiReply = `⚡ **Verified Technical Skills Stack:**\n\n${topSkills}`;
+        actions.push({ type: "scroll", text: "⚡ View Interactive Skills Matrix", targetId: "skills" });
+      } else if (q.includes("contact") || q.includes("email") || q.includes("phone") || q.includes("hire") || q.includes("location")) {
+        aiReply = `📬 **Direct Communication Channels:**\n\n📧 **Email:** [${profile.email || "johnknox.kalle@gmail.com"}](mailto:${profile.email || "johnknox.kalle@gmail.com"})\n📞 **Phone:** ${profile.phone || "+91 9182597274"}\n📍 **Location:** ${profile.location || "Tamilnadu, India"}`;
+        if (profile.email) actions.push({ type: "link", text: "📧 Send Direct Email", url: `mailto:${profile.email}` });
+        if (profile.linkedin) actions.push({ type: "link", text: "🔗 Open LinkedIn", url: profile.linkedin });
+        if (profile.github) actions.push({ type: "link", text: "🐙 Open GitHub", url: profile.github });
+        actions.push({ type: "scroll", text: "✉️ Open Contact Form", targetId: "contact" });
+      } else if (q.includes("resume") || q.includes("cv") || q.includes("download")) {
+        aiReply = "📄 You can view or download Johnknox Kalle's official verified resume dossier using the action below:";
+        if (profile.resumeUrl) actions.push({ type: "link", text: "📥 Download Official Resume PDF", url: profile.resumeUrl });
+        actions.push({ type: "scroll", text: "📜 Open Resume Section", targetId: "dossier" });
+      } else {
+        aiReply = `🤖 **Greetings.** I am J.A.M.S. // CYBER_AI v2.0.\n\nI have dynamic access to all ${projects.length} projects, ${certs.length} certificates, ${skills.length} technical skills, and research papers. Try asking:\n\n• "Show projects"\n• "Show certifications"\n• "What are his technical skills?"\n• "Get contact information"`;
+        actions.push({ type: "scroll", text: "📜 View Projects", targetId: "projects" });
+      }
+
+      setMessages((prev) => [...prev, { sender: "ai", text: aiReply, actions }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (!mounted) return null;
@@ -188,31 +204,129 @@ export default function AIAssistantWidget({ data }: AIAssistantWidgetProps) {
   const content = (
     <>
       {/* Floating Trigger Button - Responsive Mobile/Desktop Positioning */}
-      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[99999]">
-        <motion.button
-          whileHover={{ scale: 1.08 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setIsOpen((prev) => !prev)}
-          className="btn-cyber flex items-center gap-2 px-3.5 py-2.5 sm:px-4 sm:py-3 bg-[#07111F]/90 border-cyber-green text-cyber-green rounded-full shadow-[0_0_30px_rgba(0,255,157,0.4)] backdrop-blur-md font-mono text-xs font-bold cursor-pointer"
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[99999] pointer-events-auto">
+        {/* Floating Levitation Motion Wrapper */}
+        <motion.div
+          animate={{
+            y: [0, -7, 0],
+            rotate: [-0.3, 0.3, -0.3],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="relative group cursor-pointer"
         >
-          <div className="relative">
-            <Cpu className="w-4 h-4 sm:w-5 sm:h-5 animate-pulse text-cyber-green" />
-            <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-cyber-green animate-ping" />
-          </div>
-          <span>J.A.M.S. AI</span>
-        </motion.button>
+          {/* Subtle Refined Ambient Backdrop Glow */}
+          <motion.div
+            animate={{
+              scale: [0.96, 1.05, 0.96],
+              opacity: [0.18, 0.32, 0.18],
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="pointer-events-none absolute -inset-1 rounded-full blur-md -z-10"
+            style={{
+              background:
+                "radial-gradient(ellipse at center, rgba(0, 255, 157, 0.35) 0%, rgba(0, 200, 255, 0.15) 50%, transparent 75%)",
+            }}
+          />
+
+          {/* Main Button Shell - Sleek Dark Obsidian with Controlled Luminance */}
+          <motion.button
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={() => setIsOpen((prev) => !prev)}
+            className="relative flex items-center gap-2.5 px-3.5 py-2 sm:px-4.5 sm:py-2.5 rounded-full bg-[#050e18]/95 border border-cyber-green/35 text-white backdrop-blur-xl shadow-[0_0_15px_rgba(0,255,157,0.18)] hover:shadow-[0_0_24px_rgba(0,255,157,0.4)] transition-shadow duration-300 cursor-pointer overflow-hidden select-none"
+          >
+            {/* Subtle Rotating Laser Border Sweep */}
+            <div
+              className="pointer-events-none absolute -inset-[1.5px] rounded-full overflow-hidden z-0"
+              style={{
+                mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
+                maskComposite: "exclude",
+                WebkitMaskComposite: "xor",
+                padding: "1.5px",
+              }}
+            >
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="w-[200%] h-[200%] -translate-x-1/4 -translate-y-1/4"
+                style={{
+                  background:
+                    "conic-gradient(from 0deg, transparent 0deg, rgba(0,255,157,0.55) 50deg, rgba(0,200,255,0.35) 85deg, transparent 120deg)",
+                }}
+              />
+            </div>
+
+            {/* Icon & Refined Radar Ping */}
+            <div className="relative z-10 flex items-center justify-center">
+              <div className="relative p-1 rounded-md bg-cyber-green/10 border border-cyber-green/25 shadow-[0_0_6px_rgba(0,255,157,0.2)]">
+                <Cpu className="w-4 h-4 text-cyber-green drop-shadow-[0_0_4px_rgba(0,255,157,0.5)] animate-pulse" />
+              </div>
+              <span className="absolute -top-0.5 -right-0.5 flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyber-green/70 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyber-green/90 shadow-[0_0_4px_#00FF9D]" />
+              </span>
+            </div>
+
+            {/* Crisp, Balanced Typography */}
+            <div className="relative z-10 flex items-center gap-1.5 font-orbitron font-bold tracking-wider text-xs sm:text-[13px]">
+              <motion.span
+                animate={{
+                  textShadow: [
+                    "0 0 3px rgba(0,255,157,0.4)",
+                    "0 0 6px rgba(0,255,157,0.7), 0 0 10px rgba(0,200,255,0.3)",
+                    "0 0 3px rgba(0,255,157,0.4)",
+                  ],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="text-white tracking-wider"
+              >
+                J.A.M.S.
+              </motion.span>
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-cyber-green/15 text-cyber-green border border-cyber-green/30 shadow-[0_0_6px_rgba(0,255,157,0.2)]">
+                AI
+              </span>
+            </div>
+
+            {/* Refined Sparkle Accent */}
+            <Sparkles className="w-3.5 h-3.5 text-cyber-green/80 animate-pulse relative z-10 hidden sm:inline-block drop-shadow-[0_0_3px_rgba(0,255,157,0.4)]" />
+          </motion.button>
+        </motion.div>
       </div>
 
       {/* AI Assistant Chat Drawer - Responsive Mobile/Desktop Container */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
+            ref={drawerRef}
             initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.95 }}
+            data-lenis-prevent="true"
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            style={{ overscrollBehavior: "contain" }}
             className="fixed bottom-16 right-3 left-3 sm:left-auto sm:right-6 sm:bottom-20 z-[100000] w-auto sm:w-[420px] max-w-full"
           >
-            <div className="glass-card border-cyber-green/40 bg-[#07111F]/95 rounded-2xl p-5 shadow-[0_0_60px_rgba(0,255,157,0.25)] hud-box flex flex-col h-[540px] max-h-[82vh]">
+            <div
+              data-lenis-prevent="true"
+              onWheel={(e) => e.stopPropagation()}
+              onTouchMove={(e) => e.stopPropagation()}
+              style={{ overscrollBehavior: "contain" }}
+              className="glass-card border-cyber-green/40 bg-[#07111F]/95 rounded-2xl p-5 shadow-[0_0_60px_rgba(0,255,157,0.25)] hud-box flex flex-col h-[540px] max-h-[82vh]"
+            >
               {/* Header Bar */}
               <div className="flex items-center justify-between border-b border-white/10 pb-3">
                 <div className="flex items-center gap-2.5">
@@ -254,7 +368,13 @@ export default function AIAssistantWidget({ data }: AIAssistantWidgetProps) {
               </div>
 
               {/* Messages Output Scroll Region */}
-              <div className="flex-1 overflow-y-auto font-mono text-xs my-3 pr-2 space-y-4">
+              <div
+                data-lenis-prevent="true"
+                onWheel={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
+                style={{ overscrollBehavior: "contain" }}
+                className="flex-1 overflow-y-auto overscroll-contain font-mono text-xs my-3 pr-2 space-y-4"
+              >
                 {messages.map((msg, idx) => (
                   <div
                     key={idx}
@@ -304,6 +424,17 @@ export default function AIAssistantWidget({ data }: AIAssistantWidgetProps) {
                     </div>
                   </div>
                 ))}
+                {/* Real-time Decrypting/Thinking Indicator */}
+                {isLoading && (
+                  <div className="flex gap-3 justify-start animate-fade-in">
+                    <div className="max-w-[88%] p-3 rounded-xl text-xs bg-black/70 border border-cyber-green/40 text-cyber-green rounded-bl-none flex items-center gap-2.5 shadow-[0_0_20px_rgba(0,255,157,0.18)]">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-cyber-green shrink-0" />
+                      <span className="font-mono text-[10px] animate-pulse tracking-wide font-bold">
+                        J.A.M.S. DECRYPTING PACKET & QUERYING LIVE MATRIX...
+                      </span>
+                    </div>
+                  </div>
+                )}
                 <div ref={messagesEndRef} />
               </div>
 
@@ -317,14 +448,16 @@ export default function AIAssistantWidget({ data }: AIAssistantWidgetProps) {
               >
                 <input
                   type="text"
-                  placeholder="Ask J.A.M.S. to find/open projects, certs, skills..."
+                  disabled={isLoading}
+                  placeholder={isLoading ? "J.A.M.S. is synthesizing..." : "Ask J.A.M.S. to find/open projects, certs, skills..."}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  className="flex-1 bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs font-mono text-white placeholder-gray-500 focus:outline-none focus:border-cyber-green"
+                  className="flex-1 bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs font-mono text-white placeholder-gray-500 focus:outline-none focus:border-cyber-green disabled:opacity-50 transition-all"
                 />
                 <button
                   type="submit"
-                  className="btn-cyber p-2.5 border-cyber-green text-cyber-green rounded-xl hover:bg-cyber-green hover:text-black transition-all cursor-pointer"
+                  disabled={isLoading || !input.trim()}
+                  className="btn-cyber p-2.5 border-cyber-green text-cyber-green rounded-xl hover:bg-cyber-green hover:text-black disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-cyber-green transition-all cursor-pointer"
                 >
                   <Send className="w-4 h-4" />
                 </button>

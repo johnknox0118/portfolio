@@ -109,7 +109,7 @@ export default function ArchitectureDiagram() {
   const [selectedNode, setSelectedNode] = useState<ArchitectureNode | null>(null);
 
   return (
-    <section id="architecture" className="space-y-6 scroll-mt-24">
+    <section id="architecture" className="space-y-6 scroll-mt-20">
       <div className="flex items-center gap-3">
         <h2 className="font-orbitron text-2xl md:text-3xl font-black text-white flex items-center gap-2">
           <Network className="w-6 h-6 text-cyber-green animate-pulse" />

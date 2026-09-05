@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Code, Award, Folder, User, Terminal, ExternalLink, X, FileText } from "lucide-react";
+import { smoothScrollTo } from "./SmoothScrollProvider";
 
 interface CommandPaletteProps {
   data?: any;
@@ -16,6 +17,7 @@ export default function CommandPalette({ data, isOpen, onClose }: CommandPalette
   // Keyboard shortcut listener for Ctrl+K / Cmd+K
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!e.key) return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         if (isOpen) {
@@ -64,8 +66,7 @@ export default function CommandPalette({ data, isOpen, onClose }: CommandPalette
   const handleSelect = (item: any) => {
     onClose();
     if (item.sectionId) {
-      const elem = document.getElementById(item.sectionId);
-      if (elem) elem.scrollIntoView({ behavior: "smooth" });
+      smoothScrollTo(`#${item.sectionId}`, { offset: 0, duration: 1.0 });
     } else if (item.url) {
       window.open(item.url, "_blank");
     }

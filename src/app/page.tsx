@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Shield, ShieldCheck, Terminal, Code, Award, Trophy, Flag, Flame, Cpu, 
@@ -9,7 +10,7 @@ import {
   Lock, Download, Eye, Loader2, Check, ChevronUp, Camera, FileText,
   Box, ShieldAlert, Laptop, Server, Wifi, Unlock, Key, FileCheck, Layers, GitBranch,
   Search, Zap, Play, Pause, HelpCircle, AlertTriangle, Coffee, CodeXml, FileJson,
-  Fingerprint, MessagesSquare, Crown, Volume2, VolumeX, Printer, Sparkles
+  Fingerprint, MessagesSquare, Crown
 } from "lucide-react";
 import AntiGravityCanvas from "@/components/AntiGravityCanvas";
 import BootLoader from "@/components/BootLoader";
@@ -22,6 +23,35 @@ import CertificationsSection from "@/components/CertificationsSection";
 import BlogSection from "@/components/BlogSection";
 import CTFChallengeModal from "@/components/CTFChallengeModal";
 import DossierExport from "@/components/DossierExport";
+import AntiGravityFloatCard from "@/components/three/AntiGravityFloatCard";
+import SectionDivider from "@/components/SectionDivider";
+import GlobalClickRipple from "@/components/GlobalClickRipple";
+import MorphingGlassBlobs from "@/components/MorphingGlassBlobs";
+import SmoothScrollProvider, { smoothScrollTo } from "@/components/SmoothScrollProvider";
+import CyberSectionWrapper from "@/components/cyber/CyberSectionWrapper";
+import NeonBorderCard from "@/components/cyber/NeonBorderCard";
+import CascadeGrid, { CascadeCard } from "@/components/cyber/CascadeGrid";
+import AboutFloatingCard3D from "@/components/cyber/AboutFloatingCard3D";
+import Cyber3DCard from "@/components/cyber/Cyber3DCard";
+import SectionProgress from "@/components/SectionProgress";
+import ProjectStack from "@/components/ProjectStack";
+import Navbar from "@/components/Navbar";
+import Cyber3DButtonBox from "@/components/cyber/Cyber3DButtonBox";
+import { LetterFormationText, MorphingText, FlipText, IAm3DText } from "@/components/text/AnimatedTypography";
+
+const ContactNetworkOrb = dynamic(() => import("@/components/ContactNetworkOrb"), {
+  ssr: false,
+});
+
+// 3D layers are loaded client-only (no SSR) and add nothing to the initial
+// page render — they mount in as a decorative background once the browser
+// confirms WebGL is available, so the existing design/layout never changes.
+const HeroNetworkGlobe = dynamic(() => import("@/components/three/HeroNetworkGlobe"), {
+  ssr: false,
+});
+const SkillsOrbitField = dynamic(() => import("@/components/three/SkillsOrbitField"), {
+  ssr: false,
+});
 
 
 const IconMap: { [key: string]: any } = {
@@ -74,34 +104,30 @@ export default function PublicPortfolio() {
     return [];
   };
 
+  // Helper to ensure all external URLs start with a valid protocol
+  const ensureUrl = (url?: string) => {
+    if (!url) return "#";
+    const trimmed = url.trim();
+    if (
+      trimmed.startsWith("http://") ||
+      trimmed.startsWith("https://") ||
+      trimmed.startsWith("mailto:") ||
+      trimmed.startsWith("#")
+    ) {
+      return trimmed;
+    }
+    return `https://${trimmed}`;
+  };
+
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [cursorPos, setCursorPos] = useState({ x: -100, y: -100 });
-  const [certFilter, setCertFilter] = useState("all");
   const [selectedProject, setSelectedProject] = useState<any>(null);
+  const [originBounds, setOriginBounds] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
   const [projectTab, setProjectTab] = useState("details");
   
-  // Command Palette & Terminal & Mobile Nav States
+  // Command Palette & Terminal States
   const [isPaletteOpen, setIsPaletteOpen] = useState(false);
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-
-  // Smooth Scroll Click Handler with Fixed Header Offset
-  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
-    e.preventDefault();
-    setIsMobileNavOpen(false);
-    const element = document.getElementById(targetId);
-    if (element) {
-      const headerOffset = 90;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      });
-    }
-  };
 
   // CTF Challenge Modal & Achievement Badge State
   const [ctfModalOpen, setCtfModalOpen] = useState(false);
@@ -110,6 +136,7 @@ export default function PublicPortfolio() {
   // Keyboard shortcut listener for Ctrl+K / Cmd+K and `~` key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!e.key) return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         setIsPaletteOpen((prev) => !prev);
@@ -117,6 +144,9 @@ export default function PublicPortfolio() {
       if (e.key === "`" || e.key === "~") {
         e.preventDefault();
         setIsTerminalOpen((prev) => !prev);
+      }
+      if (e.key === "Escape") {
+        setSelectedProject(null);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -150,6 +180,7 @@ export default function PublicPortfolio() {
 
     // Block keyboard shortcuts: Ctrl+S (Save), Ctrl+U (Source), Ctrl+C (Copy outside input)
     const handleSecurityKeys = (e: KeyboardEvent) => {
+      if (!e.key) return;
       const key = e.key.toLowerCase();
       const isCmdOrCtrl = e.ctrlKey || e.metaKey;
       const target = e.target as HTMLElement;
@@ -187,23 +218,62 @@ export default function PublicPortfolio() {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
-    // Fetch aggregate portfolio data
-    fetch("/api/public/data?t=" + Date.now())
-      .then((res) => res.json())
-      .then((payload) => {
-        setData(payload);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setLoading(false);
-        console.error("Failed to load portfolio:", err);
-      });
-
-    // Custom Cursor tracking
-    const handleMouseMove = (e: MouseEvent) => {
-      setCursorPos({ x: e.clientX, y: e.clientY });
+    // Fetch aggregate portfolio data with automatic retry
+    const loadPortfolioData = (attempt = 1) => {
+      fetch("/api/public/data?t=" + Date.now())
+        .then((res) => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then((payload) => {
+          setData(payload);
+          setLoading(false);
+        })
+        .catch((err) => {
+          console.warn(`Portfolio data fetch attempt ${attempt} failed:`, err);
+          if (attempt < 3) {
+            setTimeout(() => loadPortfolioData(attempt + 1), 600);
+          } else {
+            setLoading(false);
+            console.error("Failed to load portfolio after retries:", err);
+          }
+        });
     };
-    window.addEventListener("mousemove", handleMouseMove);
+
+    loadPortfolioData();
+
+    // Live Cross-Tab & Admin Synchronization
+    let syncChannel: BroadcastChannel | null = null;
+    if (typeof BroadcastChannel !== "undefined") {
+      try {
+        syncChannel = new BroadcastChannel("portfolio_sync");
+        syncChannel.onmessage = () => {
+          loadPortfolioData();
+        };
+      } catch (e) {
+        // Fallback gracefully if BroadcastChannel is blocked
+      }
+    }
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === "portfolio_sync_timestamp") {
+        loadPortfolioData();
+      }
+    };
+
+    const handleWindowFocus = () => {
+      loadPortfolioData();
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        loadPortfolioData();
+      }
+    };
+
+    window.addEventListener("focus", handleWindowFocus);
+    window.addEventListener("storage", handleStorage);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Scroll display scroll-to-top button
     const handleScroll = () => {
@@ -212,8 +282,13 @@ export default function PublicPortfolio() {
     window.addEventListener("scroll", handleScroll);
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("focus", handleWindowFocus);
+      window.removeEventListener("storage", handleStorage);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (syncChannel) {
+        syncChannel.close();
+      }
     };
   }, []);
 
@@ -243,62 +318,24 @@ export default function PublicPortfolio() {
     }
   };
 
-  // Typist intro text
-  const [typedText, setTypedText] = useState("");
-  const rawPhrases = data?.profile?.typingPhrases;
-
-  useEffect(() => {
-    if (loading) return;
-
-    const typingTexts = (() => {
-      if (rawPhrases) {
-        const parsed = rawPhrases
-          .split(",")
-          .map((s: string) => s.trim())
-          .filter(Boolean);
-        if (parsed.length > 0) return parsed;
-      }
-      return [
-        "Compiling secure architectures...",
-        "Emulating threat payloads...",
-        "Auditing system kernels...",
-        "Defending endpoints..."
-      ];
-    })();
-
-    let isDeleting = false;
-    let text = "";
-    let loopIndex = 0;
-    let timer: any;
-
-    const tick = () => {
-      const fullText = typingTexts[loopIndex % typingTexts.length];
-      if (isDeleting) {
-        text = fullText.substring(0, text.length - 1);
-      } else {
-        text = fullText.substring(0, text.length + 1);
-      }
-
-      setTypedText(text);
-
-      let delta = 100 - Math.random() * 50;
-      if (isDeleting) delta /= 2;
-
-      if (!isDeleting && text === fullText) {
-        delta = 2000;
-        isDeleting = true;
-      } else if (isDeleting && text === "") {
-        isDeleting = false;
-        loopIndex++;
-        delta = 500;
-      }
-
-      timer = setTimeout(tick, delta);
-    };
-
-    timer = setTimeout(tick, 500);
-    return () => clearTimeout(timer);
-  }, [loading, rawPhrases]);
+  // Professional roles for MorphingText (#7)
+  const morphingPhrases = (() => {
+    if (data?.profile?.typingPhrases) {
+      const parsed = data.profile.typingPhrases
+        .split(",")
+        .map((s: string) => s.trim())
+        .filter(Boolean);
+      if (parsed.length > 0) return parsed;
+    }
+    const roleTitle = data?.profile?.title?.toUpperCase();
+    return [
+      roleTitle || "CYBERSECURITY ENGINEER",
+      "DEFENSIVE SYSTEMS ARCHITECT",
+      "FULL-STACK SOFTWARE DEVELOPER",
+      "CLOUD & API SECURITY SPECIALIST",
+      "VULNERABILITY & THREAT RESEARCHER",
+    ];
+  })();
 
   if (loading) {
     return (
@@ -338,9 +375,6 @@ export default function PublicPortfolio() {
 
   const { profile, settings, education, skills, projects, certifications, articles } = data;
 
-  // Filter lists
-  const filteredCerts = certifications.filter((c: any) => certFilter === "all" || c.category === certFilter);
-
   // Find current pursuing qualification CGPA based on timeline keywords (Expected, Present, Pursuing)
   const currentCgpa = (() => {
     if (!education || education.length === 0) return "N/A";
@@ -352,373 +386,250 @@ export default function PublicPortfolio() {
   })();
 
   return (
-    <AntiGravityCanvas>
-      <BootLoader />
-      <div id="top-portal" className="min-h-screen relative overflow-hidden select-none">
-        {/* Background elements */}
-        <div className="scanlines"></div>
-        <div className="animated-bg"></div>
-      
-      {/* Aurora Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#00FF9D]/5 rounded-full blur-[120px] pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#00C8FF]/5 rounded-full blur-[120px] pointer-events-none"></div>
-      
-      {/* Dynamic Cursor Glow */}
-      <div
-        className="fixed hidden md:block pointer-events-none z-50 w-6 h-6 rounded-full border border-cyber-green/40 -translate-x-1/2 -translate-y-1/2 transition-transform duration-75 mix-blend-screen bg-cyber-green/5"
-        style={{ left: cursorPos.x, top: cursorPos.y }}
-      />
-      <div
-        className="fixed hidden md:block pointer-events-none z-40 w-72 h-72 rounded-full blur-[80px] -translate-x-1/2 -translate-y-1/2 bg-cyber-blue/5"
-        style={{ left: cursorPos.x, top: cursorPos.y }}
-      />
+    <SmoothScrollProvider>
+      <GlobalClickRipple />
+      <AntiGravityCanvas>
+        <BootLoader />
+        <div id="portal-root" className="min-h-screen relative overflow-hidden select-none">
+          {/* Morphing glass blobs for atmospheric depth */}
+          <MorphingGlassBlobs />
 
-      {/* HEADER NAVIGATION */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-[#07111F]/60 backdrop-blur-md border-b border-white/5 px-6 py-4 flex items-center justify-between max-w-7xl mx-auto rounded-b-[20px]">
-        <a 
-          href="#top-portal" 
-          onClick={(e) => {
-            e.preventDefault();
-            document.getElementById("top-portal")?.scrollIntoView({ behavior: "smooth" });
-          }}
-          className="flex items-center gap-2 cursor-pointer group"
-        >
-          <Shield className="text-cyber-green w-6 h-6 animate-pulse group-hover:scale-105 transition-transform" />
-          <span className="font-orbitron font-black text-sm tracking-widest bg-gradient-to-r from-cyber-green to-cyber-blue bg-clip-text text-transparent group-hover:opacity-85 transition-opacity">
-            {profile.name?.toUpperCase() || "GRID_AGENT"}
-          </span>
-        </a>
-        <div className="flex items-center gap-6">
-          <nav className="hidden md:flex items-center gap-6 text-xs font-orbitron font-semibold tracking-wider text-gray-400">
-            <a href="#about" onClick={(e) => handleNavClick(e, "about")} className="hover:text-cyber-green transition-colors">ABOUT</a>
-            <a href="#qualifications" onClick={(e) => handleNavClick(e, "qualifications")} className="hover:text-cyber-green transition-colors">QUALIFICATIONS</a>
-            <a href="#skills" onClick={(e) => handleNavClick(e, "skills")} className="hover:text-cyber-green transition-colors">SKILLS</a>
-            <a href="#projects" onClick={(e) => handleNavClick(e, "projects")} className="hover:text-cyber-green transition-colors">PROJECTS</a>
-            <a href="#certifications" onClick={(e) => handleNavClick(e, "certifications")} className="hover:text-cyber-green transition-colors">CERTIFICATES</a>
-            <a href="#contact" onClick={(e) => handleNavClick(e, "contact")} className="hover:text-cyber-green transition-colors">CONTACT</a>
-          </nav>
-          <div className="flex items-center gap-2">
-            {/* CTF Security Challenge Trigger */}
-            <button
-              onClick={() => setCtfModalOpen(true)}
-              className="px-2.5 py-1.5 rounded-lg border border-cyber-blue/40 bg-black/40 text-cyber-blue hover:bg-cyber-blue/10 transition-all flex items-center gap-1.5 text-xs font-mono cursor-pointer"
-              title="Launch CTF Security Audit Challenge"
-            >
-              <ShieldAlert className="w-3.5 h-3.5 text-cyber-blue" />
-              <span className="hidden lg:inline">CTF AUDIT</span>
-            </button>
+          {/* Background elements */}
+          <div className="animated-bg"></div>
+        
+          {/* Aurora Background Glows */}
+          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#00FF9D]/5 rounded-full blur-[120px] pointer-events-none"></div>
+          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#00C8FF]/5 rounded-full blur-[120px] pointer-events-none"></div>
 
-            <button
-              onClick={() => setIsPaletteOpen(true)}
-              className="px-2.5 py-1.5 rounded-lg border border-white/10 hover:border-cyber-green/40 bg-black/40 text-gray-400 hover:text-cyber-green transition-all flex items-center gap-1.5 text-xs font-mono"
-              title="Search Dossier (Ctrl + K)"
-            >
-              <Search className="w-3.5 h-3.5 text-cyber-green" />
-              <span className="hidden sm:inline">Search</span>
-              <kbd className="hidden sm:inline px-1 py-0.5 rounded bg-white/10 text-[9px]">Ctrl+K</kbd>
-            </button>
+          {/* HEADER NAVIGATION */}
+          <Navbar
+            profile={profile}
+            onCtfClick={() => setCtfModalOpen(true)}
+            onSearchClick={() => setIsPaletteOpen(true)}
+            onTerminalClick={() => setIsTerminalOpen(true)}
+            ctfBadgeUnlocked={ctfBadgeUnlocked}
+          />
 
-            <button
-              onClick={() => setIsTerminalOpen(true)}
-              className="p-1.5 rounded-lg border border-white/10 hover:border-cyber-green/40 bg-black/40 text-gray-400 hover:text-cyber-green transition-all"
-              title="Open Hacker Console (~)"
-            >
-              <Terminal className="w-4 h-4 text-cyber-green" />
-            </button>
+      {/* Floating Section Progress Navigation (Animation #64) */}
+      <SectionProgress />
 
-            <a href="/admin/login" className="btn-cyber flex items-center gap-1.5 px-3.5 py-1.5 border-cyber-blue/50 text-cyber-blue text-xs hover:shadow-[0_0_15px_#00C8FF]">
-              <Lock className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">ADMIN</span>
-            </a>
-
-            {/* Mobile Navigation Toggle Button */}
-            <button
-              onClick={() => setIsMobileNavOpen((prev) => !prev)}
-              className="p-1.5 rounded-lg border border-white/10 hover:border-cyber-green/40 bg-black/40 text-gray-400 hover:text-cyber-green transition-all md:hidden"
-              aria-label="Toggle Mobile Navigation Menu"
-            >
-              {isMobileNavOpen ? <X className="w-5 h-5 text-cyber-green" /> : <Menu className="w-5 h-5 text-cyber-green" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Navigation Drawer */}
-        <AnimatePresence>
-          {isMobileNavOpen && (
-            <motion.nav
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="md:hidden mt-4 pt-4 border-t border-white/10 flex flex-col gap-3 font-orbitron text-xs font-semibold tracking-wider text-gray-300 bg-[#07111F]/95 p-4 rounded-xl shadow-2xl"
-            >
-              <a
-                href="#about"
-                onClick={(e) => handleNavClick(e, "about")}
-                className="hover:text-cyber-green transition-colors py-1.5 border-b border-white/5"
-              >
-                ABOUT
-              </a>
-              <a
-                href="#qualifications"
-                onClick={(e) => handleNavClick(e, "qualifications")}
-                className="hover:text-cyber-green transition-colors py-1.5 border-b border-white/5"
-              >
-                QUALIFICATIONS
-              </a>
-              <a
-                href="#skills"
-                onClick={(e) => handleNavClick(e, "skills")}
-                className="hover:text-cyber-green transition-colors py-1.5 border-b border-white/5"
-              >
-                SKILLS
-              </a>
-              <a
-                href="#projects"
-                onClick={(e) => handleNavClick(e, "projects")}
-                className="hover:text-cyber-green transition-colors py-1.5 border-b border-white/5"
-              >
-                PROJECTS
-              </a>
-              <a
-                href="#certifications"
-                onClick={(e) => handleNavClick(e, "certifications")}
-                className="hover:text-cyber-green transition-colors py-1.5 border-b border-white/5"
-              >
-                CERTIFICATES
-              </a>
-              <a
-                href="#contact"
-                onClick={(e) => handleNavClick(e, "contact")}
-                className="hover:text-cyber-green transition-colors py-1.5"
-              >
-                CONTACT
-              </a>
-            </motion.nav>
-          )}
-        </AnimatePresence>
-      </header>
-
-      <main className="max-w-7xl mx-auto px-6 pt-28 pb-16 space-y-24">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-28 pb-16 space-y-24 overflow-x-hidden">
         {/* HERO SECTION */}
-        <section className="min-h-[75vh] flex flex-col md:flex-row items-center justify-between gap-12 py-8 relative">
-          <div className="flex-1 space-y-6 text-left">
-            <div className="flex flex-wrap gap-2 items-center">
-              <div className="cyber-tag flex gap-1.5 items-center w-fit">
-                <span className="w-1.5 h-1.5 bg-cyber-green rounded-full animate-pulse"></span>
-                STATUS: GRID SECURE // ACTIVE
-              </div>
-              {ctfBadgeUnlocked && (
-                <div className="cyber-tag border-cyber-green bg-cyber-green/10 text-cyber-green flex items-center gap-1 font-bold text-[10px] animate-bounce">
-                  <ShieldCheck className="w-3.5 h-3.5" /> INTERNAL SECURITY VERIFIED
+        <section id="top-portal" className="min-h-[75vh] py-8 relative">
+          {/* 3D wireframe network globe — decorative background layer only */}
+          <HeroNetworkGlobe />
+
+          <div className="w-full relative flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-12 z-20">
+            <div className="flex-1 lg:flex-[1.4] space-y-0 text-left relative z-20 pointer-events-auto max-w-3xl">
+              <div className="flex flex-wrap gap-2 items-center mb-6">
+                <div className="cyber-tag flex gap-1.5 items-center w-fit">
+                  <span className="w-1.5 h-1.5 bg-cyber-green rounded-full animate-pulse"></span>
+                  STATUS: GRID SECURE // ACTIVE
                 </div>
-              )}
-            </div>
+                {ctfBadgeUnlocked && (
+                  <div className="cyber-tag border-cyber-green bg-cyber-green/10 text-cyber-green flex items-center gap-1 font-bold text-[10px] animate-bounce">
+                    <ShieldCheck className="w-3.5 h-3.5" /> INTERNAL SECURITY VERIFIED
+                  </div>
+                )}
+              </div>
 
+              <div className="mb-2" style={{ perspective: 1000, transformStyle: "preserve-3d" }}>
+                <IAm3DText />
+              </div>
 
-            <h1 className="text-4xl md:text-6xl font-orbitron font-black text-white leading-tight">
-              I am <span className="holo-text">{profile.name}</span>
-            </h1>
-            <div className="font-mono text-sm md:text-lg text-cyber-blue h-8 flex items-center">
-              <span>{typedText}</span>
-              <span className="w-2 h-4 bg-cyber-blue ml-1 animate-pulse"></span>
+              <h1 
+                aria-label={profile.name || "Johnknox Kalle"}
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-[3.75rem] xl:text-[4.25rem] leading-[1.1] select-text mb-6"
+              >
+                <LetterFormationText text={profile.name || "Johnknox Kalle"} />
+              </h1>
+
+              <div className="min-h-8 md:min-h-10 flex items-center mb-7">
+                <MorphingText phrases={morphingPhrases} glowColor="cyan" />
+              </div>
+
+              <p className="font-bold text-gray-200 text-sm md:text-base leading-relaxed max-w-xl mb-8 tracking-wide">
+                {profile.tagline}
+              </p>
+
+              <div className="flex flex-wrap gap-5 pt-2 relative z-40 pointer-events-auto">
+                <Cyber3DButtonBox
+                  href={ensureUrl(profile.resumeUrl)}
+                  download="Johnknox_Kalle_Resume.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  label="DOWNLOAD RESUME"
+                  icon={<Download className="w-4 h-4" />}
+                  variant="green"
+                  floatDelay={0}
+                  onClick={(e) => {
+                    if (!profile.resumeUrl) return;
+                    e.preventDefault();
+                    const resumeUrl = ensureUrl(profile.resumeUrl);
+                    const filename = profile.resumeUrl.split("/").pop() || "Johnknox_Kalle_Resume.pdf";
+                    fetch(resumeUrl)
+                      .then((res) => {
+                        if (!res.ok) throw new Error("Failed to fetch file");
+                        return res.blob();
+                      })
+                      .then((blob) => {
+                        const blobUrl = window.URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = blobUrl;
+                        a.download = filename.toLowerCase().endsWith(".pdf") ? filename : `${filename}.pdf`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        window.URL.revokeObjectURL(blobUrl);
+                      })
+                      .catch(() => {
+                        window.open(resumeUrl, "_blank", "noopener,noreferrer");
+                      });
+                  }}
+                />
+                <Cyber3DButtonBox
+                  href="#contact"
+                  label="CONTACT GATEWAY"
+                  icon={<Mail className="w-4 h-4" />}
+                  variant="blue"
+                  floatDelay={0.75}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    smoothScrollTo("#contact", { offset: 0, duration: 1.2 });
+                  }}
+                />
+              </div>
             </div>
-            <p className="text-gray-400 text-sm md:text-base leading-relaxed max-w-xl">
-              {profile.tagline}
-            </p>
-            <div className="flex flex-wrap gap-4 pt-4">
-              <a href={profile.resumeUrl} download className="btn-cyber flex items-center gap-2">
-                <Download className="w-4 h-4" /> DOWNLOAD RESUME
-              </a>
-              <a href="#contact" className="btn-cyber btn-cyber-blue flex items-center gap-2">
-                <Mail className="w-4 h-4" /> CONTACT GATEWAY
-              </a>
-            </div>
-          </div>
-          <div className="flex-1 flex justify-center relative">
-            <div className="absolute inset-[-10px] border border-cyber-green/20 rounded-[20px] pointer-events-none"></div>
-            <div className="absolute inset-[-20px] border border-cyber-blue/10 rounded-[20px] pointer-events-none"></div>
-            <div 
-              className="w-72 h-72 md:w-96 md:h-96 rounded-[20px] overflow-hidden glass-card hud-box p-3 relative transition-all duration-500"
-              style={{
-                borderColor: profile.profileImageBorderColor || '#00FF9D',
-                boxShadow: `0 0 20px ${profile.profileImageBorderColor || '#00FF9D'}`
-              }}
-            >
-              <div className="absolute inset-0 bg-cyber-green/5 mix-blend-color pointer-events-none z-10"></div>
-              <img
-                src={profile.profileImageUrl || "/placeholder_profile.png"}
-                alt={profile.name}
-                className="w-full h-full object-cover rounded-[12px] transition-all duration-500"
-                style={{
-                  filter: `grayscale(${profile.profileImageGrayscale ?? 100}%)`,
-                  transform: `scale(${profile.profileImageScale ?? 1.0})`
-                }}
-              />
+            <div className="flex-1 lg:flex-[0.8] flex justify-center relative z-10 mt-8 lg:mt-0">
+              <AntiGravityFloatCard>
+                <div className="relative">
+                  <div className="absolute inset-[-10px] border border-cyber-green/20 rounded-[20px] pointer-events-none"></div>
+                  <div className="absolute inset-[-20px] border border-cyber-blue/10 rounded-[20px] pointer-events-none"></div>
+                  <div 
+                    className="w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 max-w-[85vw] max-h-[85vw] rounded-[20px] overflow-hidden glass-card hud-box p-3 relative transition-all duration-500"
+                    style={{
+                      borderColor: profile.profileImageBorderColor || '#00FF9D',
+                      boxShadow: `0 0 20px ${profile.profileImageBorderColor || '#00FF9D'}`
+                    }}
+                  >
+                    <div className="absolute inset-0 bg-cyber-green/5 mix-blend-color pointer-events-none z-10"></div>
+                    {/* Realistic Continuous Diagonal Glass Shine Reflection Sweep (Top-Right to Bottom-Left) */}
+                    <div className="pointer-events-none absolute inset-0 rounded-[20px] overflow-hidden z-25">
+                      <div className="glass-shine-beam" />
+                    </div>
+                    <img
+                      src={profile.profileImageUrl || "/uploads/1783845930934_johnknox__2_.jpg"}
+                      alt={profile.name}
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.src.includes("johnknox__2_")) {
+                          target.src = "/uploads/1783845930934_johnknox__2_.jpg";
+                        }
+                      }}
+                      className="w-full h-full object-cover rounded-[12px] transition-all duration-500"
+                      style={{
+                        filter: `grayscale(${profile.profileImageGrayscale ?? 100}%)`,
+                        transform: `scale(${profile.profileImageScale ?? 1.0})`
+                      }}
+                    />
+                  </div>
+                </div>
+              </AntiGravityFloatCard>
             </div>
           </div>
         </section>
 
         {/* ACHIEVEMENTS / COUNTERS */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <CascadeGrid className="focus-depth-group grid grid-cols-1 md:grid-cols-3 gap-6" staggerDelay={0.16}>
           {/* Card 1: Certifications */}
-          <div className="glass-card hud-box p-6 flex flex-col items-center justify-center text-center gap-2">
-            <div className="text-cyber-green mb-1">{getIcon("Award")}</div>
-            <span className="font-orbitron font-black text-2xl md:text-4xl text-white shadow-glow">
-              {certifications?.length || 0}
-            </span>
-            <span className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">
-              Certifications Verified
-            </span>
-          </div>
+          <CascadeCard index={0}>
+            <div className="focus-depth-item h-full">
+              <NeonBorderCard glowColor="green">
+                <div className="glass-card hud-box card-spotlight p-6 flex flex-col items-center justify-center text-center gap-2 h-full">
+                  <div className="text-cyber-green mb-1">{getIcon("Award")}</div>
+                  <span className="font-orbitron font-black text-2xl md:text-4xl text-white shadow-glow">
+                    {certifications?.length || 0}
+                  </span>
+                  <span className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">
+                    Certifications Verified
+                  </span>
+                </div>
+              </NeonBorderCard>
+            </div>
+          </CascadeCard>
 
           {/* Card 2: Projects */}
-          <div className="glass-card hud-box p-6 flex flex-col items-center justify-center text-center gap-2">
-            <div className="text-cyber-green mb-1">{getIcon("Code")}</div>
-            <span className="font-orbitron font-black text-2xl md:text-4xl text-white shadow-glow">
-              {projects?.length || 0}
-            </span>
-            <span className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">
-              Security Projects Completed
-            </span>
-          </div>
+          <CascadeCard index={1}>
+            <div className="focus-depth-item h-full">
+              <NeonBorderCard glowColor="green">
+                <div className="glass-card hud-box card-spotlight p-6 flex flex-col items-center justify-center text-center gap-2 h-full">
+                  <div className="text-cyber-green mb-1">{getIcon("Code")}</div>
+                  <span className="font-orbitron font-black text-2xl md:text-4xl text-white shadow-glow">
+                    {projects?.length || 0}
+                  </span>
+                  <span className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">
+                    Security Projects Completed
+                  </span>
+                </div>
+              </NeonBorderCard>
+            </div>
+          </CascadeCard>
 
           {/* Card 3: Current CGPA */}
-          <div className="glass-card hud-box p-6 flex flex-col items-center justify-center text-center gap-2">
-            <div className="text-cyber-green mb-1">{getIcon("BookOpen")}</div>
-            <span className="font-orbitron font-black text-2xl md:text-4xl text-white shadow-glow">
-              {currentCgpa}
-            </span>
-            <span className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">
-              Current Qualification CGPA
-            </span>
-          </div>
-        </section>
+          <CascadeCard index={2}>
+            <div className="focus-depth-item h-full">
+              <NeonBorderCard glowColor="green">
+                <div className="glass-card hud-box card-spotlight p-6 flex flex-col items-center justify-center text-center gap-2 h-full">
+                  <div className="text-cyber-green mb-1">{getIcon("BookOpen")}</div>
+                  <span className="font-orbitron font-black text-2xl md:text-4xl text-white shadow-glow">
+                    {currentCgpa}
+                  </span>
+                  <span className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">
+                    Current Qualification CGPA
+                  </span>
+                </div>
+              </NeonBorderCard>
+            </div>
+          </CascadeCard>
+        </CascadeGrid>
 
         {/* ABOUT ME SECTION */}
-        <section id="about" className="space-y-6 scroll-mt-24">
-          <div className="flex items-center gap-3">
-            <h2 className="font-orbitron text-2xl md:text-3xl font-black text-white">SYSTEM_DOSSIER // ABOUT</h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-cyber-green/40 to-transparent"></div>
+        <CyberSectionWrapper id="about" className="space-y-6" variant="cinematic">
+          <div className="space-y-3">
+            <FlipText as="h2" text="SYSTEM DOSSIER" subtitle="// ABOUT" className="text-2xl md:text-3xl" />
+            <SectionDivider color="green" />
           </div>
-          <div className="glass-card p-6 md:p-8 space-y-6 leading-relaxed text-gray-300 text-sm">
-            <p>{profile.bio}</p>
-            <div className="border-t border-white/5 pt-6 space-y-3 font-mono text-xs">
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between py-2 border-b border-white/5 gap-2">
-                <span className="text-gray-400 font-bold shrink-0">OBJECTIVE:</span>
-                <span className="text-white text-left max-w-xl leading-relaxed">{profile.careerObjective}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-white/5">
-                <span className="text-gray-400 font-bold">LOCATION:</span>
-                <span className="text-white">{profile.location}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-white/5">
-                <span className="text-gray-400 font-bold">EMAIL:</span>
-                <span className="text-cyber-blue font-bold">{profile.email}</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="text-gray-400 font-bold">PHONE:</span>
-                <span className="text-white">{profile.phone}</span>
-              </div>
-            </div>
-          </div>
-        </section>
+          <AboutFloatingCard3D profile={profile} />
+        </CyberSectionWrapper>
 
         {/* ACADEMIC LOG // QUALIFICATIONS */}
         <TimelineSection education={education} />
 
         {/* SKILLS SECTION */}
-        <SkillsVisualization skills={skills} />
+        <div className="relative">
+          {/* 3D orbiting constellation — subtle decorative background layer only */}
+          <SkillsOrbitField />
+          <div className="relative z-10">
+            <SkillsVisualization skills={skills} />
+          </div>
+        </div>
 
         {/* PROJECTS SECTION */}
-        <section id="projects" className="space-y-6 scroll-mt-24">
-          <div className="flex items-center gap-3">
-            <h2 className="font-orbitron text-2xl md:text-3xl font-black text-white">ENGINEERING_LOGS // PROJECTS</h2>
-            <div className="flex-1 h-px bg-gradient-to-r from-cyber-blue/40 to-transparent"></div>
+        <CyberSectionWrapper id="projects" className="space-y-6" variant="cinematic">
+          <div className="space-y-3">
+            <FlipText as="h2" text="ENGINEERING LOGS" subtitle="// PROJECTS" className="text-2xl md:text-3xl" />
+            <SectionDivider color="blue" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {projects.map((project: any) => (
-              <div key={project.id} className="glass-card hud-box p-6 flex flex-col gap-4">
-                <div className="aspect-video w-full rounded-xl overflow-hidden border border-white/5 bg-black/40 relative group">
-                  <div className="absolute inset-0 bg-[#07111F]/80 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-3 transition-all duration-300 backdrop-blur-sm z-20 p-3 flex-wrap">
-                    <button
-                      onClick={() => {
-                        setSelectedProject(project);
-                        setProjectTab("details");
-                      }}
-                      className="btn-cyber flex items-center gap-1.5 px-3 py-2 border-cyber-green text-cyber-green text-xs"
-                    >
-                      <Eye className="w-4 h-4" /> VIEW SPEC
-                    </button>
-                    {project.liveUrl && (
-                      <a
-                        href={project.liveUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="btn-cyber flex items-center gap-1.5 px-3.5 py-2 bg-cyber-green/20 border-cyber-green text-cyber-green text-xs font-bold shadow-[0_0_10px_rgba(0,255,157,0.3)] hover:bg-cyber-green hover:text-black transition-all"
-                      >
-                        <Globe className="w-4 h-4" /> VIEW PROJECT
-                      </a>
-                    )}
-                    {project.githubUrl && (
-                      <a href={project.githubUrl} target="_blank" rel="noreferrer" className="btn-cyber btn-cyber-blue flex items-center gap-1.5 px-3 py-2 text-xs">
-                        <ExternalLink className="w-4 h-4" /> SOURCE
-                      </a>
-                    )}
-                  </div>
-                  <img
-                    src={project.imageUrl || "/placeholder_project.jpg"}
-                    alt={project.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute top-3 left-3 z-10 px-2 py-1 rounded bg-[#07111F]/90 border border-cyber-blue/40 text-[9px] font-mono text-cyber-blue font-bold tracking-widest uppercase">
-                    {project.category}
-                  </div>
-                </div>
-                <div className="space-y-2 flex-1 flex flex-col justify-between">
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-start gap-2">
-                      <h3 className="font-orbitron font-bold text-lg text-white group-hover:text-cyber-green transition-colors">{project.title}</h3>
-                      <span className="cyber-tag text-[9px] border-emerald-500/20 text-cyber-green">{project.status?.toUpperCase()}</span>
-                    </div>
-                    <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{project.description}</p>
-                    <div className="flex flex-wrap gap-2 pt-2">
-                      {ensureArray(project.tags).map((tag: string) => (
-                        <span key={tag} className="cyber-tag text-[8.5px] border-white/10 text-gray-300">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-3 border-t border-white/5 font-mono text-xs mt-2">
-                    {project.liveUrl ? (
-                      <a
-                        href={project.liveUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 text-cyber-green hover:underline font-bold text-[11px]"
-                      >
-                        <Globe className="w-3.5 h-3.5" /> VIEW PROJECT <ExternalLink className="w-3 h-3" />
-                      </a>
-                    ) : (
-                      <span className="text-gray-500 text-[10px]">INTERNAL DOSSIER</span>
-                    )}
-                    {project.githubUrl && (
-                      <a
-                        href={project.githubUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1 text-cyber-blue hover:underline text-[11px]"
-                      >
-                        <Code className="w-3.5 h-3.5" /> REPOSITORY
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
+          <ProjectStack
+            projects={projects}
+            onSelectProject={(project, bounds) => {
+              setOriginBounds(bounds || null);
+              setSelectedProject(project);
+              setProjectTab("details");
+            }}
+            ensureArray={ensureArray}
+          />
+        </CyberSectionWrapper>
 
 
 
@@ -733,110 +644,125 @@ export default function PublicPortfolio() {
 
 
         {/* CONTACT SECTION */}
-        <section id="contact" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start scroll-mt-24">
-          <div className="lg:col-span-5 space-y-6">
-            <div className="flex items-center gap-3">
-              <h2 className="font-orbitron text-2xl md:text-3xl font-black text-white">SECURE_CHANNEL // CONTACT</h2>
-              <div className="flex-1 h-px bg-gradient-to-r from-cyber-green/40 to-transparent"></div>
-            </div>
-            <div className="glass-card p-6 md:p-8 space-y-6">
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Secure communications protocol initialized. Submit the adjacent packet form to route messages to {profile.name || "Alex Thorne"}'s mailbox. Cryptographic signature and source IP verification logged on transmit.
-              </p>
-              <div className="space-y-4 font-mono text-xs text-gray-300">
+        <CyberSectionWrapper id="contact" variant="fadeUp">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="lg:col-span-5 space-y-6">
+              <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <Mail className="w-4 h-4 text-cyber-green" />
-                  <a href={`mailto:${profile.email}`} className="hover:underline">{profile.email}</a>
+                  <FlipText as="h2" text="SECURE CHANNEL" subtitle="// CONTACT" className="text-2xl md:text-3xl" />
                 </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="w-4 h-4 text-cyber-green" />
-                  <span>{profile.phone}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-4 h-4 text-cyber-green" />
-                  <span>{profile.location}</span>
-                </div>
+                <SectionDivider color="green" />
               </div>
+              <Cyber3DCard glowColor="green" index={0} depth={220} className="h-full">
+                <div className="glass-card animated-gradient-border p-6 md:p-8 space-y-6">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Secure communications protocol initialized. Submit the adjacent packet form to route messages to {profile.name || "John Knox"}'s mailbox. Cryptographic signature and source IP verification logged on transmit.
+                    </p>
+                    <div className="shrink-0 flex items-center justify-center">
+                      <ContactNetworkOrb />
+                    </div>
+                  </div>
+                  <div className="space-y-4 font-mono text-xs text-gray-300 pt-3 border-t border-white/5">
+                    <div className="flex items-center gap-3">
+                      <Mail className="w-4 h-4 text-cyber-green" />
+                      <a href={`mailto:${profile.email}`} className="hover:underline">{profile.email}</a>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Phone className="w-4 h-4 text-cyber-green" />
+                      <span>{profile.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <MapPin className="w-4 h-4 text-cyber-green" />
+                      <span>{profile.location}</span>
+                    </div>
+                  </div>
+                </div>
+              </Cyber3DCard>
+            </div>
+            <div className="lg:col-span-7 space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <FlipText as="h2" text="TRANSMIT PACKET" subtitle="// INPUT" className="text-2xl md:text-3xl" />
+                </div>
+                <SectionDivider color="blue" />
+              </div>
+              <Cyber3DCard glowColor="blue" index={1} depth={220} className="h-full">
+                <form onSubmit={handleContactSubmit} className="glass-card p-6 md:p-8 space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-gray-400 uppercase">Agent Name</label>
+                      <input
+                        type="text"
+                        value={contactForm.name}
+                        onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                        placeholder="Enter name"
+                        className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-gray-400 uppercase">Routing Email</label>
+                      <input
+                        type="email"
+                        value={contactForm.email}
+                        onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                        placeholder="Enter email address"
+                        className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-gray-400 uppercase">Payload Subject</label>
+                    <input
+                      type="text"
+                      value={contactForm.subject}
+                      onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
+                      placeholder="Enter message header"
+                      className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-mono text-gray-400 uppercase">Message Block</label>
+                    <textarea
+                      rows={4}
+                      value={contactForm.message}
+                      onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                      placeholder="Enter message logs..."
+                      className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all resize-none"
+                    />
+                  </div>
+                  
+                  <div className="flex flex-col md:flex-row items-center gap-4 justify-between pt-2">
+                    <div className="text-xs font-mono">
+                      {formStatus.type === "success" && (
+                        <span className="text-cyber-green font-bold">{formStatus.text}</span>
+                      )}
+                      {formStatus.type === "error" && (
+                        <span className="text-rose-500 font-bold">{formStatus.text}</span>
+                      )}
+                      {formStatus.type === "submitting" && (
+                        <span className="text-cyber-blue flex items-center gap-1.5 animate-pulse">
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" /> {formStatus.text}
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={formStatus.type === "submitting"}
+                      className="btn-cyber flex items-center gap-2 self-end"
+                    >
+                      TRANSMIT PACKET
+                    </button>
+                  </div>
+                </form>
+              </Cyber3DCard>
             </div>
           </div>
-          <div className="lg:col-span-7 space-y-6">
-            <div className="flex items-center gap-3">
-              <h2 className="font-orbitron text-2xl md:text-3xl font-black text-white">TRANSMIT_PACKET // INPUT</h2>
-              <div className="flex-1 h-px bg-gradient-to-r from-cyber-blue/40 to-transparent"></div>
-            </div>
-            <form onSubmit={handleContactSubmit} className="glass-card p-6 md:p-8 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-gray-400 uppercase">Agent Name</label>
-                  <input
-                    type="text"
-                    value={contactForm.name}
-                    onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                    placeholder="Enter name"
-                    className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-gray-400 uppercase">Routing Email</label>
-                  <input
-                    type="email"
-                    value={contactForm.email}
-                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                    placeholder="Enter email address"
-                    className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-mono text-gray-400 uppercase">Payload Subject</label>
-                <input
-                  type="text"
-                  value={contactForm.subject}
-                  onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
-                  placeholder="Enter message header"
-                  className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-mono text-gray-400 uppercase">Message Block</label>
-                <textarea
-                  rows={4}
-                  value={contactForm.message}
-                  onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                  placeholder="Enter message logs..."
-                  className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all resize-none"
-                />
-              </div>
-              
-              <div className="flex flex-col md:flex-row items-center gap-4 justify-between pt-2">
-                <div className="text-xs font-mono">
-                  {formStatus.type === "success" && (
-                    <span className="text-cyber-green font-bold">{formStatus.text}</span>
-                  )}
-                  {formStatus.type === "error" && (
-                    <span className="text-rose-500 font-bold">{formStatus.text}</span>
-                  )}
-                  {formStatus.type === "submitting" && (
-                    <span className="text-cyber-blue flex items-center gap-1.5 animate-pulse">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> {formStatus.text}
-                    </span>
-                  )}
-                </div>
-                <button
-                  type="submit"
-                  disabled={formStatus.type === "submitting"}
-                  className="btn-cyber flex items-center gap-2 self-end"
-                >
-                  TRANSMIT PACKET
-                </button>
-              </div>
-            </form>
-          </div>
-        </section>
+        </CyberSectionWrapper>
       </main>
 
       {/* FOOTER */}
-      <footer className="border-t border-white/5 bg-[#040a12]/60 py-12 px-6">
+      <footer className="relative z-20 border-t border-white/5 bg-[#040a12]/80 py-12 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
             <Shield className="text-cyber-green w-5 h-5" />
@@ -844,55 +770,61 @@ export default function PublicPortfolio() {
               {settings.footerText || "Grid Security Matrix"}
             </span>
           </div>
-          <div className="flex flex-wrap items-center gap-6 font-mono text-[11px] text-gray-400">
+          <div className="flex flex-wrap items-center gap-4 font-mono text-[11px] text-gray-400 relative z-30 pointer-events-auto">
             <a
-              href={profile.github}
+              href={ensureUrl(profile.github || "https://github.com/johnknox0118")}
               target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 hover:text-cyber-green transition-colors group"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-cyber-green/10 hover:border-cyber-green/50 hover:text-cyber-green social-icon-hover cursor-pointer transition-all duration-200"
             >
-              <svg className="w-4 h-4 fill-current text-gray-400 group-hover:text-cyber-green transition-colors" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 fill-current transition-colors" viewBox="0 0 24 24">
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
               </svg>
               <span>GITHUB</span>
             </a>
 
             <a
-              href={profile.linkedin}
+              href={ensureUrl(profile.linkedin || "https://www.linkedin.com/in/john-knox-kalle-309b15301/")}
               target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 hover:text-cyber-blue transition-colors group"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-cyber-blue/10 hover:border-cyber-blue/50 hover:text-cyber-blue social-icon-hover cursor-pointer transition-all duration-200"
             >
-              <svg className="w-4 h-4 fill-current text-gray-400 group-hover:text-cyber-blue transition-colors" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 fill-current transition-colors" viewBox="0 0 24 24">
                 <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
               </svg>
               <span>LINKEDIN</span>
             </a>
 
             <a
-              href={profile.twitter}
+              href={ensureUrl(profile.twitter || "https://x.com/johnknox0118")}
               target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 hover:text-cyber-blue transition-colors group"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-white/10 hover:border-white/50 hover:text-white social-icon-hover cursor-pointer transition-all duration-200"
             >
-              <svg className="w-4 h-4 fill-current text-gray-400 group-hover:text-cyber-blue transition-colors" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 fill-current transition-colors" viewBox="0 0 24 24">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
               <span>TWITTER</span>
             </a>
 
             <a
-              href={`mailto:${profile.email}`}
-              className="inline-flex items-center gap-2 hover:text-cyber-green transition-colors group"
+              href={`mailto:${profile.email || "johnknox.kalle@gmail.com"}`}
+              onClick={() => {
+                if (profile.email) {
+                  navigator.clipboard?.writeText(profile.email);
+                }
+              }}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-cyber-green/10 hover:border-cyber-green/50 hover:text-cyber-green social-icon-hover cursor-pointer transition-all duration-200"
+              title={`Send email to ${profile.email || "johnknox.kalle@gmail.com"} (copies to clipboard)`}
             >
-              <svg className="w-4 h-4 fill-current text-gray-400 group-hover:text-cyber-green transition-colors" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 fill-current transition-colors" viewBox="0 0 24 24">
                 <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z" />
               </svg>
               <span>EMAIL</span>
             </a>
           </div>
           <div className="text-[10px] font-mono text-gray-600">
-            © {new Date().getFullYear()} {profile.name || "Alex Thorne"}. All operations verified.
+            © {new Date().getFullYear()} {profile.name || "John Knox"}. All operations verified.
           </div>
         </div>
       </footer>
@@ -904,7 +836,7 @@ export default function PublicPortfolio() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            onClick={() => smoothScrollTo(0, { duration: 1.0 })}
             className="fixed bottom-20 right-6 z-40 p-3 rounded-full bg-[#07111F]/90 border border-cyber-green/50 text-cyber-green hover:bg-cyber-green/20 transition-all shadow-[0_0_15px_#00FF9D] cursor-pointer"
             title="Scroll back to top"
           >
@@ -915,23 +847,72 @@ export default function PublicPortfolio() {
 
       {/* PROJECT DETAILED SPEC MODAL */}
       <AnimatePresence>
-        {selectedProject && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-          >
+        {selectedProject && (() => {
+          const flipInitial = (() => {
+            if (!originBounds || typeof window === "undefined") {
+              return { scale: 0.94, opacity: 0, y: 20, x: 0 };
+            }
+            const modalTargetW = Math.min(896, window.innerWidth * 0.92);
+            const modalTargetH = Math.min(window.innerHeight * 0.85, 750);
+            const modalCenterX = window.innerWidth / 2;
+            const modalCenterY = window.innerHeight / 2;
+
+            const cardCenterX = originBounds.left + originBounds.width / 2;
+            const cardCenterY = originBounds.top + originBounds.height / 2;
+
+            const deltaX = cardCenterX - modalCenterX;
+            const deltaY = cardCenterY - modalCenterY;
+            const scale = Math.max(0.2, Math.min(originBounds.width / modalTargetW, originBounds.height / modalTargetH));
+
+            return {
+              x: deltaX,
+              y: deltaY,
+              scale: scale,
+              opacity: 0.6,
+            };
+          })();
+
+          const flipExit = (() => {
+            if (!originBounds || typeof window === "undefined") {
+              return { scale: 0.94, opacity: 0, y: 20, x: 0 };
+            }
+            const modalTargetW = Math.min(896, window.innerWidth * 0.92);
+            const modalTargetH = Math.min(window.innerHeight * 0.85, 750);
+            const modalCenterX = window.innerWidth / 2;
+            const modalCenterY = window.innerHeight / 2;
+
+            const cardCenterX = originBounds.left + originBounds.width / 2;
+            const cardCenterY = originBounds.top + originBounds.height / 2;
+
+            return {
+              x: cardCenterX - modalCenterX,
+              y: cardCenterY - modalCenterY,
+              scale: Math.max(0.2, Math.min(originBounds.width / modalTargetW, originBounds.height / modalTargetH)) * 0.85,
+              opacity: 0,
+            };
+          })();
+
+          return (
             <motion.div
-              initial={{ scale: 0.95, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.95, y: 20 }}
-              className="w-full max-w-4xl glass-card border-cyber-green/30 bg-[#07111F]/95 p-6 md:p-8 flex flex-col max-h-[90vh] overflow-y-auto relative hud-box"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              onClick={() => setSelectedProject(null)}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
             >
-              <button
-                onClick={() => setSelectedProject(null)}
-                className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
+              <motion.div
+                initial={flipInitial}
+                animate={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+                exit={flipExit}
+                transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-4xl glass-card border-cyber-green/30 bg-[#07111F]/95 p-6 md:p-8 flex flex-col max-h-[90vh] overflow-y-auto relative hud-box shadow-[0_0_60px_rgba(0,255,157,0.18)] will-change-transform"
               >
+                <button
+                  onClick={() => setSelectedProject(null)}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors cursor-pointer"
+                >
                 <X className="w-6 h-6" />
               </button>
 
@@ -1045,14 +1026,16 @@ export default function PublicPortfolio() {
               </div>
             </motion.div>
           </motion.div>
-        )}
+        );
+      })()}
       </AnimatePresence>
 
       <CommandPalette data={data} isOpen={isPaletteOpen} onClose={() => setIsPaletteOpen(false)} />
       <TerminalModal data={data} isOpen={isTerminalOpen} onClose={() => setIsTerminalOpen(false)} />
       <AIAssistantWidget data={data} />
       <CTFChallengeModal isOpen={ctfModalOpen} onClose={() => setCtfModalOpen(false)} onSuccessBadge={() => setCtfBadgeUnlocked(true)} />
-    </div>
-    </AntiGravityCanvas>
+      </div>
+      </AntiGravityCanvas>
+    </SmoothScrollProvider>
   );
 }
