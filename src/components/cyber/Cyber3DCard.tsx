@@ -221,7 +221,7 @@ export default function Cyber3DCard({
         {/* 2. Anti-Gravity Ambient Floating Layer */}
         <motion.div
           animate={
-            enableFloat
+            enableFloat && !isMobile
               ? {
                   y: [-4, 4, -4],
                   rotateX: [-0.8, 0.8, -0.8],
@@ -235,11 +235,11 @@ export default function Cyber3DCard({
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          style={{ transformStyle: "preserve-3d" }}
+          style={{ transformStyle: isMobile ? "flat" : "preserve-3d" }}
           className="relative w-full h-full"
         >
           {/* Grounding Floor Glow Shadow */}
-          {enableFloat && (
+          {enableFloat && !isMobile && (
             <motion.div
               animate={{
                 scale: [0.92, 1.05, 0.92],
@@ -267,7 +267,7 @@ export default function Cyber3DCard({
             style={{
               rotateX: enableTilt && !isMobile ? cursorRotateX : 0,
               rotateY: enableTilt && !isMobile ? cursorRotateY : 0,
-              transformStyle: "preserve-3d",
+              transformStyle: isMobile ? "flat" : "preserve-3d",
             }}
             className="group/cyber3d relative w-full h-full"
           >
@@ -291,7 +291,7 @@ export default function Cyber3DCard({
             )}
 
             {/* Inner Card Content */}
-            <div className="relative z-20 w-full h-full" style={{ transformStyle: "preserve-3d" }}>
+            <div className="relative z-20 w-full h-full" style={{ transformStyle: isMobile ? "flat" : "preserve-3d" }}>
               {children}
             </div>
           </motion.div>

@@ -21,17 +21,15 @@ export default function useCanRender3D() {
       const reducedMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)"
       ).matches;
-      const isMobileScreen = window.innerWidth < 768;
-      const isTouchOnly =
-        window.matchMedia("(pointer: coarse)").matches &&
-        !window.matchMedia("(pointer: fine)").matches;
 
-      // Heavy 3D WebGL scenes are restricted to desktop displays to prevent mobile GPU OOM crashes
-      if (!reducedMotion && !isMobileScreen && !isTouchOnly) {
+      // Enable WebGL across all devices when hardware support is detected
+      // and user has not requested reduced motion
+      if (!reducedMotion) {
         const canvas = document.createElement("canvas");
         const gl =
-          canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
-        supported = !!gl;
+          canvas.getContext("webgl", { powerPreference: "low-power" }) ||
+          canvas.getContext("experimental-webgl");
+        supported = Boolean(gl);
       }
     } catch {
       supported = false;

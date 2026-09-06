@@ -147,16 +147,18 @@ export default function FloatingResumeCard({
           glowColor="#00FF9D"
         />
 
-        {/* Grounding Cyber Floor Glow Shadow */}
-        <motion.div
-          className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 w-[92%] h-12 blur-xl -z-10 rounded-full"
-          style={{
-            scale: shadowScale,
-            opacity: shadowOpacity,
-            background:
-              "radial-gradient(ellipse at center, rgba(0, 255, 157, 0.45) 0%, rgba(0, 200, 255, 0.2) 45%, transparent 75%)",
-          }}
-        />
+        {/* Grounding Cyber Floor Glow Shadow on desktop */}
+        {!isMobile && (
+          <motion.div
+            className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 w-[92%] h-12 blur-xl -z-10 rounded-full"
+            style={{
+              scale: shadowScale,
+              opacity: shadowOpacity,
+              background:
+                "radial-gradient(ellipse at center, rgba(0, 255, 157, 0.45) 0%, rgba(0, 200, 255, 0.2) 45%, transparent 75%)",
+            }}
+          />
+        )}
 
         <div className="relative z-10 w-full pointer-events-auto">
           {children}

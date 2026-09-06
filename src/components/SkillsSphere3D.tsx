@@ -45,24 +45,26 @@ function getSpherePoints(count: number, radius: number) {
 }
 
 // Helper to create a crisp 2D canvas texture for skill labels with dynamic sizing & status LED
-function createTextTexture(text: string, color: string = "#00FF9D"): THREE.CanvasTexture {
+function createTextTexture(text: string, color: string = "#00FF9D", isMobile: boolean = false): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
-  canvas.width = 512;
-  canvas.height = 130;
+  canvas.width = isMobile ? 256 : 512;
+  canvas.height = isMobile ? 65 : 130;
   const ctx = canvas.getContext("2d");
 
   if (ctx) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    const scale = isMobile ? 0.5 : 1.0;
     // Auto-fit font size based on text length
-    const fontSize = text.length > 15 ? 26 : text.length > 11 ? 30 : 34;
+    const rawFontSize = text.length > 15 ? 26 : text.length > 11 ? 30 : 34;
+    const fontSize = Math.round(rawFontSize * scale);
     ctx.font = `bold ${fontSize}px 'Oxanium', 'Orbitron', monospace, sans-serif`;
 
     // Calculate dynamic pill dimensions with generous breathing room
     const textWidth = ctx.measureText(text).width;
-    const paddingX = 36;
-    const pillW = Math.min(canvas.width - 24, Math.max(190, textWidth + paddingX * 2 + 28));
-    const pillH = 88;
+    const paddingX = Math.round(36 * scale);
+    const pillW = Math.min(canvas.width - 16, Math.max(Math.round(190 * scale), textWidth + paddingX * 2 + Math.round(28 * scale)));
+    const pillH = Math.round(88 * scale);
     const x = (canvas.width - pillW) / 2;
     const y = (canvas.height - pillH) / 2;
     const r = pillH / 2;
@@ -79,18 +81,18 @@ function createTextTexture(text: string, color: string = "#00FF9D"): THREE.Canva
     ctx.fill();
 
     // Delicate neon border with controlled glow
-    ctx.lineWidth = 2.0;
+    ctx.lineWidth = isMobile ? 1.5 : 2.0;
     ctx.strokeStyle = color;
     ctx.shadowColor = color;
-    ctx.shadowBlur = 10;
+    ctx.shadowBlur = isMobile ? 5 : 10;
     ctx.stroke();
 
     // Status LED beacon dot on the left
-    const ledRadius = 5.5;
-    const ledX = x + 24;
+    const ledRadius = Math.round(5.5 * scale);
+    const ledX = x + Math.round(24 * scale);
     const ledY = y + pillH / 2;
     ctx.fillStyle = color;
-    ctx.shadowBlur = 12;
+    ctx.shadowBlur = isMobile ? 6 : 12;
     ctx.shadowColor = color;
     ctx.beginPath();
     ctx.arc(ledX, ledY, ledRadius, 0, Math.PI * 2);
@@ -101,11 +103,13 @@ function createTextTexture(text: string, color: string = "#00FF9D"): THREE.Canva
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#ffffff";
     ctx.shadowColor = color;
-    ctx.shadowBlur = 6;
-    ctx.fillText(text, ledX + 16, y + pillH / 2 + 1);
+    ctx.shadowBlur = isMobile ? 3 : 6;
+    ctx.fillText(text, ledX + Math.round(16 * scale), y + pillH / 2 + 1);
   }
 
   const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
   texture.needsUpdate = true;
   return texture;
 }
@@ -115,9 +119,19 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
   const canRender = useCanRender3D();
   const isVisibleRef = useRef(true);
   const lastRotationRef = useRef({ x: 0, y: 0 });
+  const [isMobileScreen, setIsMobileScreen] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobileScreen(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // Extract all unique skill names from data or fallback to defaults
+  // On mobile screens, clamp to top 16 skills to ensure clean layout & 75% less texture RAM
   const skillNames = useMemo(() => {
+    const maxSkills = isMobileScreen ? 16 : 36;
     if (skills && Array.isArray(skills) && skills.length > 0) {
       const extracted = skills
         .map((s: any) => {
@@ -139,12 +153,11 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
       }
 
       if (unique.length > 0) {
-        // Automatically include all user skills from database up to 36 items
-        return unique.slice(0, 36);
+        return unique.slice(0, maxSkills);
       }
     }
-    return DEFAULT_SKILLS;
-  }, [skills]);
+    return DEFAULT_SKILLS.slice(0, maxSkills);
+  }, [skills, isMobileScreen]);
 
   // Serialization key to detect skill additions, deletions, or edits
   const skillNamesKey = useMemo(() => skillNames.join("||"), [skillNames]);
@@ -170,10 +183,10 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
     const width = container.clientWidth || 600;
     const height = container.clientHeight || 450;
 
-    const isMobile = width < 640;
+    const isMobile = width < 640 || isMobileScreen;
     const skillCount = skillNames.length;
     // Dynamic sphere radius scaling to ensure comfortable spacing as skills increase
-    const baseRadius = isMobile ? 2.0 : 2.3;
+    const baseRadius = isMobile ? 1.95 : 2.3;
     const sphereRadius =
       skillCount > 22
         ? baseRadius * 1.15
@@ -193,11 +206,11 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
 
     const renderer = new THREE.WebGLRenderer({
       alpha: true,
-      antialias: true,
-      powerPreference: "high-performance",
+      antialias: !isMobile,
+      powerPreference: isMobile ? "low-power" : "high-performance",
     });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1 : 1.5));
+    renderer.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio, 1.5));
 
     // Clear any previous canvas element before mounting new one
     while (container.firstChild) {
@@ -213,7 +226,11 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
     scene.add(group);
 
     // 1. Inner Luminous Core (translucent dark glass with deep interior blue glow)
-    const coreGeo = new THREE.SphereGeometry(sphereRadius * 0.58, 32, 32);
+    const coreGeo = new THREE.SphereGeometry(
+      sphereRadius * 0.58,
+      isMobile ? 16 : 32,
+      isMobile ? 16 : 32
+    );
     geometriesToDispose.push(coreGeo);
     const coreMat = new THREE.MeshStandardMaterial({
       color: "#041528",
@@ -243,7 +260,7 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
     scene.add(dirLight2);
 
     // 2. Geodesic Cyber Wireframe Shell
-    const wireGeo = new THREE.IcosahedronGeometry(sphereRadius * 0.98, 3);
+    const wireGeo = new THREE.IcosahedronGeometry(sphereRadius * 0.98, isMobile ? 1 : 2);
     geometriesToDispose.push(wireGeo);
     const wireMat = new THREE.MeshBasicMaterial({
       color: "#00C8FF",
@@ -286,7 +303,7 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
     group.add(meshLines);
 
     // 4. Dual Rotating Orbital Gyro-Rings
-    const ring1Geo = new THREE.TorusGeometry(sphereRadius * 1.12, 0.009, 8, 96);
+    const ring1Geo = new THREE.TorusGeometry(sphereRadius * 1.12, 0.009, 6, isMobile ? 48 : 96);
     geometriesToDispose.push(ring1Geo);
     const ring1Mat = new THREE.MeshBasicMaterial({
       color: "#00FF9D",
@@ -299,7 +316,7 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
     ring1.rotation.y = Math.PI / 7;
     group.add(ring1);
 
-    const ring2Geo = new THREE.TorusGeometry(sphereRadius * 1.18, 0.009, 8, 96);
+    const ring2Geo = new THREE.TorusGeometry(sphereRadius * 1.18, 0.009, 6, isMobile ? 48 : 96);
     geometriesToDispose.push(ring2Geo);
     const ring2Mat = new THREE.MeshBasicMaterial({
       color: "#00C8FF",
@@ -326,7 +343,7 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
     group.add(packet2);
 
     // 5. Floating Ambient Cyber Particles (Starfield Dust)
-    const particleCount = 75;
+    const particleCount = isMobile ? 22 : 75;
     const particlePositions = new Float32Array(particleCount * 3);
     for (let i = 0; i < particleCount; i++) {
       const pR = sphereRadius * (0.85 + Math.random() * 0.65);
@@ -365,8 +382,8 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
       node.position.copy(p);
       group.add(node);
 
-      // High-DPI dynamic text sprite
-      const texture = createTextTexture(name, color);
+      // High-DPI dynamic text sprite (with 256x65 resolution on mobile)
+      const texture = createTextTexture(name, color, isMobile);
       texturesToDispose.push(texture);
 
       const spriteMat = new THREE.SpriteMaterial({
@@ -381,7 +398,7 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
       sprite.position.copy(spritePos);
       const scaleMultiplier = skillCount > 24 ? 0.86 : skillCount > 18 ? 0.92 : 1.0;
       const spriteScaleW = (isMobile ? 1.45 : 1.70) * scaleMultiplier;
-      sprite.scale.set(spriteScaleW, spriteScaleW * (130 / 512), 1);
+      sprite.scale.set(spriteScaleW, spriteScaleW * (65 / 256), 1);
       group.add(sprite);
       sprites.push(sprite);
     });
@@ -424,6 +441,7 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
     dom.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
 
     // Resize handler
     const onResize = () => {
@@ -436,13 +454,18 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
     };
     window.addEventListener("resize", onResize);
 
+    const handleVisibilityChange = () => {
+      isVisibleRef.current = !document.hidden;
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     // Animation Loop
     let animId: number;
     let elapsed = 0;
     const animate = () => {
       animId = requestAnimationFrame(animate);
 
-      if (!isVisibleRef.current) return;
+      if (!isVisibleRef.current || document.hidden) return;
       elapsed += 0.015;
 
       if (!isDragging) {
@@ -506,9 +529,11 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
     // Cleanup
     return () => {
       cancelAnimationFrame(animId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       dom.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
       window.removeEventListener("resize", onResize);
 
       if (container.contains(dom)) {

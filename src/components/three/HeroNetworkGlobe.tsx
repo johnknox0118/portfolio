@@ -26,17 +26,18 @@ function useSpherePoints(count: number, radius: number) {
 interface GlobeInnerProps {
   pointerRef: React.MutableRefObject<{ x: number; y: number }>;
   isVisible: boolean;
+  isMobile?: boolean;
 }
 
-function NetworkGlobeScene({ pointerRef, isVisible }: GlobeInnerProps) {
+function NetworkGlobeScene({ pointerRef, isVisible, isMobile = false }: GlobeInnerProps) {
   const groupRef = useRef<THREE.Group>(null);
   const coreRef = useRef<THREE.Mesh>(null);
-  const nodes = useSpherePoints(48, 2.2);
+  const nodes = useSpherePoints(isMobile ? 24 : 48, 2.2);
 
   // Connect nearby nodes to form a cybersecurity mesh
   const linePositions = useMemo(() => {
     const positions: number[] = [];
-    const maxDist = 1.18;
+    const maxDist = isMobile ? 1.35 : 1.18;
     for (let i = 0; i < nodes.length; i++) {
       for (let j = i + 1; j < nodes.length; j++) {
         if (nodes[i].distanceTo(nodes[j]) < maxDist) {
@@ -48,14 +49,14 @@ function NetworkGlobeScene({ pointerRef, isVisible }: GlobeInnerProps) {
       }
     }
     return new Float32Array(positions);
-  }, [nodes]);
+  }, [nodes, isMobile]);
 
   // Target rotation for subtle scoped pointer parallax
   const targetRotation = useRef({ x: 0, y: 0 });
   const elapsedRef = useRef(0);
 
   useFrame((_, delta) => {
-    if (!isVisible || !groupRef.current) return;
+    if (!isVisible || !groupRef.current || document.hidden) return;
     elapsedRef.current += delta;
 
     // Slow continuous ambient rotation
@@ -88,7 +89,7 @@ function NetworkGlobeScene({ pointerRef, isVisible }: GlobeInnerProps) {
 
       {/* Transparent Glass-like Inner Core */}
       <mesh ref={coreRef}>
-        <sphereGeometry args={[1.5, 24, 24]} />
+        <sphereGeometry args={[1.5, isMobile ? 16 : 24, isMobile ? 16 : 24]} />
         <meshStandardMaterial
           color="#071828"
           roughness={0.1}
@@ -100,7 +101,7 @@ function NetworkGlobeScene({ pointerRef, isVisible }: GlobeInnerProps) {
 
       {/* Outer Wireframe Geodesic Shell */}
       <mesh>
-        <icosahedronGeometry args={[2.2, 2]} />
+        <icosahedronGeometry args={[2.2, isMobile ? 1 : 2]} />
         <meshBasicMaterial
           color="#00FF9D"
           wireframe
@@ -143,6 +144,14 @@ export default function HeroNetworkGlobe() {
   const containerRef = useRef<HTMLDivElement>(null);
   const pointerRef = useRef({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // Viewport visibility detection (pause rendering when scrolled past hero)
   useEffect(() => {
@@ -190,10 +199,10 @@ export default function HeroNetworkGlobe() {
         <Canvas
           style={{ pointerEvents: "none" }}
           camera={{ position: [0, 0, 6.2], fov: 45 }}
-          dpr={[1, 1.5]}
-          gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
+          dpr={isMobile ? 1 : [1, 1.5]}
+          gl={{ alpha: true, antialias: !isMobile, powerPreference: isMobile ? "low-power" : "high-performance" }}
         >
-          <NetworkGlobeScene pointerRef={pointerRef} isVisible={isVisible} />
+          <NetworkGlobeScene pointerRef={pointerRef} isVisible={isVisible} isMobile={isMobile} />
         </Canvas>
       </Scene3DBoundary>
     </div>

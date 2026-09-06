@@ -69,7 +69,7 @@ export default function AntiGravityCanvas({ children }: AntiGravityCanvasProps) 
     window.addEventListener("resize", handleResize);
 
     // Particle pool: optimized for mobile to save GPU memory
-    const particleCount = isMobile ? 18 : Math.min(Math.floor((width * height) / 18000), 50);
+    const particleCount = isMobile ? 12 : Math.min(Math.floor((width * height) / 18000), 50);
     const particles = Array.from({ length: particleCount }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -81,6 +81,11 @@ export default function AntiGravityCanvas({ children }: AntiGravityCanvasProps) 
     }));
 
     const render = () => {
+      if (document.hidden) {
+        animationFrameId = requestAnimationFrame(render);
+        return;
+      }
+
       ctx.clearRect(0, 0, width, height);
 
       // Render drifting stars / particles

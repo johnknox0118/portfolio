@@ -42,6 +42,39 @@ export default function LuminousCardBorder({
   enableGlassShine = true,
 }: LuminousCardBorderProps) {
   const active = isHovered && cursorX !== null && cursorY !== null;
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const mq = window.matchMedia("(max-width: 768px), (pointer: coarse)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  // On mobile/touch devices, use a lightweight, hardware-accelerated CSS luminous border
+  // without 360° rotating conic-gradient masks or heavy blurs. This completely prevents
+  // WebKit compositing layer explosions and memory crashes on iOS Safari across 25+ cards.
+  if (isMobile) {
+    return (
+      <>
+        {/* Mobile Non-Stop Green Luminous Border & Soft Outer Glow */}
+        <div
+          className={`pointer-events-none absolute -inset-[1px] ${borderRadius} z-20 border border-[#00FF9D]/60 shadow-[0_0_12px_rgba(0,255,157,0.30)]`}
+        />
+
+        {/* Mobile Synchronized Realistic Glass Shine Reflection */}
+        {enableGlassShine && (
+          <div
+            className={`pointer-events-none absolute inset-0 ${borderRadius} overflow-hidden z-25`}
+            style={{ transform: "translateZ(0)" }}
+          >
+            <div className="glass-shine-beam" />
+          </div>
+        )}
+      </>
+    );
+  }
 
   return (
     <>

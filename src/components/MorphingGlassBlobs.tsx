@@ -5,20 +5,31 @@ import { motion } from "framer-motion";
 
 export default function MorphingGlassBlobs() {
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mobileQuery = window.matchMedia("(max-width: 768px)");
     setReducedMotion(mediaQuery.matches);
+    setIsMobile(mobileQuery.matches);
+
     const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    const mobHandler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+
     mediaQuery.addEventListener("change", handler);
-    return () => mediaQuery.removeEventListener("change", handler);
+    mobileQuery.addEventListener("change", mobHandler);
+    return () => {
+      mediaQuery.removeEventListener("change", handler);
+      mobileQuery.removeEventListener("change", mobHandler);
+    };
   }, []);
 
-  if (reducedMotion) {
+  if (reducedMotion || isMobile) {
     return (
       <div className="fixed inset-0 pointer-events-none z-[-2] overflow-hidden opacity-30">
-        <div className="absolute top-[10%] left-[10%] w-[35vw] h-[35vw] rounded-full bg-[#00FF9D]/5 blur-[90px]" />
-        <div className="absolute top-[50%] right-[10%] w-[35vw] h-[35vw] rounded-full bg-[#00C8FF]/5 blur-[90px]" />
+        <div className="absolute top-[8%] left-[5%] w-[45vw] h-[45vw] rounded-full bg-[#00FF9D]/[0.05] blur-[40px]" />
+        <div className="absolute top-[45%] right-[5%] w-[45vw] h-[45vw] rounded-full bg-[#00C8FF]/[0.05] blur-[40px]" />
+        <div className="absolute bottom-[5%] left-[10%] w-[40vw] h-[40vw] rounded-full bg-[#00FF9D]/[0.04] blur-[40px]" />
       </div>
     );
   }

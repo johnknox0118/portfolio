@@ -200,36 +200,42 @@ export default function AboutFloatingCard3D({
       >
         {/* 2. Anti-Gravity Ambient Floating Layer */}
         <motion.div
-          animate={{
-            y: [-5, 5, -5],
-            rotateX: [-1, 1, -1],
-            rotateZ: [-0.6, 0.6, -0.6],
-          }}
+          animate={
+            !isMobile
+              ? {
+                  y: [-5, 5, -5],
+                  rotateX: [-1, 1, -1],
+                  rotateZ: [-0.6, 0.6, -0.6],
+                }
+              : {}
+          }
           transition={{
             duration: 6,
             repeat: Infinity,
             ease: "easeInOut",
           }}
-          style={{ transformStyle: "preserve-3d" }}
+          style={{ transformStyle: isMobile ? "flat" : "preserve-3d" }}
           className="relative w-full"
         >
-          {/* Grounding Floor Glow Shadow - breathes with floating levitation */}
-          <motion.div
-            animate={{
-              scale: [0.92, 1.05, 0.92],
-              opacity: [0.35, 0.55, 0.35],
-            }}
-            transition={{
-              duration: 6,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 w-[92%] h-10 blur-xl -z-10 rounded-full"
-            style={{
-              background:
-                "radial-gradient(ellipse at center, rgba(0, 255, 157, 0.38) 0%, rgba(0, 200, 255, 0.18) 45%, transparent 72%)",
-            }}
-          />
+          {/* Grounding Floor Glow Shadow - breathes with floating levitation on desktop */}
+          {!isMobile && (
+            <motion.div
+              animate={{
+                scale: [0.92, 1.05, 0.92],
+                opacity: [0.35, 0.55, 0.35],
+              }}
+              transition={{
+                duration: 6,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 w-[92%] h-10 blur-xl -z-10 rounded-full"
+              style={{
+                background:
+                  "radial-gradient(ellipse at center, rgba(0, 255, 157, 0.38) 0%, rgba(0, 200, 255, 0.18) 45%, transparent 72%)",
+              }}
+            />
+          )}
 
           {/* 3. Interactive Cursor Motion & 3D Tilt Card Shell */}
           <motion.div
@@ -240,7 +246,7 @@ export default function AboutFloatingCard3D({
             style={{
               rotateX: !isMobile ? cursorRotateX : 0,
               rotateY: !isMobile ? cursorRotateY : 0,
-              transformStyle: "preserve-3d",
+              transformStyle: isMobile ? "flat" : "preserve-3d",
             }}
             className="group relative rounded-2xl glass-card p-6 md:p-8 space-y-6 leading-relaxed text-gray-300 text-sm border border-cyber-green/20 hover:border-cyber-green/45 shadow-[0_12px_40px_rgba(0,0,0,0.65)] hover:shadow-[0_20px_50px_rgba(0,255,157,0.18)] transition-colors duration-300"
           >
