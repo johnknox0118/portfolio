@@ -452,7 +452,7 @@ export default function AIAssistantWidget({ data }: AIAssistantWidgetProps) {
                   placeholder={isLoading ? "J.A.M.S. is synthesizing..." : "Ask J.A.M.S. to find/open projects, certs, skills..."}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  className="flex-1 bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs font-mono text-white placeholder-gray-500 focus:outline-none focus:border-cyber-green disabled:opacity-50 transition-all"
+                  className="flex-1 bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-base sm:text-xs font-mono text-white placeholder-gray-500 focus:outline-none focus:border-cyber-green disabled:opacity-50 transition-all"
                 />
                 <button
                   type="submit"

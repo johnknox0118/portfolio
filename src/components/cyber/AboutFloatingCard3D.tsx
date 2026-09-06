@@ -30,16 +30,26 @@ export default function AboutFloatingCard3D({
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
 
-  // Check user motion preferences
+  // Check user motion and viewport preferences
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mobMq = window.matchMedia("(max-width: 768px)");
     setPrefersReducedMotion(mq.matches);
+    setIsMobile(mobMq.matches);
+
     const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    const mobHandler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+
     mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
+    mobMq.addEventListener("change", mobHandler);
+    return () => {
+      mq.removeEventListener("change", handler);
+      mobMq.removeEventListener("change", mobHandler);
+    };
   }, []);
 
   // ==========================================
@@ -178,11 +188,11 @@ export default function AboutFloatingCard3D({
       {/* 1. Scroll-Driven 3D Depth Layer */}
       <motion.div
         style={{
-          z,
-          scale,
-          rotateX: rotateXScroll,
-          opacity,
-          filter,
+          z: !isMobile ? z : 0,
+          scale: !isMobile ? scale : 1,
+          rotateX: !isMobile ? rotateXScroll : 0,
+          opacity: !isMobile ? opacity : 1,
+          filter: !isMobile ? filter : "none",
           transformStyle: "preserve-3d",
           willChange: "transform, opacity, filter",
         }}
@@ -228,8 +238,8 @@ export default function AboutFloatingCard3D({
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             style={{
-              rotateX: cursorRotateX,
-              rotateY: cursorRotateY,
+              rotateX: !isMobile ? cursorRotateX : 0,
+              rotateY: !isMobile ? cursorRotateY : 0,
               transformStyle: "preserve-3d",
             }}
             className="group relative rounded-2xl glass-card p-6 md:p-8 space-y-6 leading-relaxed text-gray-300 text-sm border border-cyber-green/20 hover:border-cyber-green/45 shadow-[0_12px_40px_rgba(0,0,0,0.65)] hover:shadow-[0_20px_50px_rgba(0,255,157,0.18)] transition-colors duration-300"

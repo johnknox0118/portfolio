@@ -121,12 +121,15 @@ export default function TerminalModal({ data, isOpen, onClose }: TerminalModalPr
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-[110] flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md">
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="w-full max-w-3xl glass-card border-cyber-green/40 bg-[#040912]/95 rounded-2xl p-6 shadow-[0_0_60px_rgba(0,255,157,0.2)] hud-box flex flex-col h-[75vh] max-h-[600px] relative"
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+          className="w-full max-w-3xl glass-card border-cyber-green/40 bg-[#040912]/95 rounded-2xl p-4 sm:p-6 shadow-[0_0_60px_rgba(0,255,157,0.2)] hud-box flex flex-col h-[75vh] max-h-[600px] relative"
         >
           {/* Header Bar */}
           <div className="flex items-center justify-between border-b border-white/10 pb-3">
@@ -136,13 +139,18 @@ export default function TerminalModal({ data, isOpen, onClose }: TerminalModalPr
                 HACKER_CONSOLE // TERMINAL v2.0
               </span>
             </div>
-            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors cursor-pointer">
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Terminal Console Output Scroll Region */}
-          <div className="flex-1 overflow-y-auto font-mono text-xs p-4 my-3 bg-black/70 border border-white/5 rounded-xl space-y-4 leading-relaxed text-gray-300">
+          <div
+            data-lenis-prevent="true"
+            onWheel={(e) => e.stopPropagation()}
+            onTouchMove={(e) => e.stopPropagation()}
+            className="flex-1 overflow-y-auto font-mono text-xs p-3 sm:p-4 my-3 bg-black/70 border border-white/5 rounded-xl space-y-4 leading-relaxed text-gray-300"
+          >
             {history.map((item, idx) => (
               <div key={idx} className="space-y-1">
                 <div className="flex items-center gap-2 text-cyber-green font-bold">
@@ -166,9 +174,9 @@ export default function TerminalModal({ data, isOpen, onClose }: TerminalModalPr
               placeholder="Type command ('help', 'projects', 'skills', 'about', 'clear')..."
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              className="w-full bg-transparent font-mono text-xs text-white placeholder-gray-500 focus:outline-none"
+              className="w-full bg-transparent font-mono text-base sm:text-xs text-white placeholder-gray-500 focus:outline-none"
             />
-            <button type="submit" className="btn-cyber px-3 py-1 text-[10px]">
+            <button type="submit" className="btn-cyber px-3 py-1 text-[10px] cursor-pointer">
               EXECUTE
             </button>
           </form>

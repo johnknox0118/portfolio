@@ -70,15 +70,25 @@ export default function Cyber3DCard({
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mobMq = window.matchMedia("(max-width: 768px)");
     setPrefersReducedMotion(mq.matches);
+    setIsMobile(mobMq.matches);
+
     const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    const mobHandler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+
     mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
+    mobMq.addEventListener("change", mobHandler);
+    return () => {
+      mq.removeEventListener("change", handler);
+      mobMq.removeEventListener("change", mobHandler);
+    };
   }, []);
 
   const colorConfig = COLOR_MAP[glowColor] || COLOR_MAP.green;
@@ -198,11 +208,11 @@ export default function Cyber3DCard({
       {/* 1. Scroll Depth Plane */}
       <motion.div
         style={{
-          z: enableScrollDepth ? z : 0,
-          scale: enableScrollDepth ? scale : 1,
-          rotateX: enableScrollDepth ? rotateXScroll : 0,
-          opacity: enableScrollDepth ? opacity : 1,
-          filter: enableScrollDepth ? filter : "none",
+          z: enableScrollDepth && !isMobile ? z : 0,
+          scale: enableScrollDepth && !isMobile ? scale : 1,
+          rotateX: enableScrollDepth && !isMobile ? rotateXScroll : 0,
+          opacity: enableScrollDepth && !isMobile ? opacity : 1,
+          filter: enableScrollDepth && !isMobile ? filter : "none",
           transformStyle: "preserve-3d",
           willChange: "transform, opacity, filter",
         }}
@@ -255,8 +265,8 @@ export default function Cyber3DCard({
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
             style={{
-              rotateX: enableTilt ? cursorRotateX : 0,
-              rotateY: enableTilt ? cursorRotateY : 0,
+              rotateX: enableTilt && !isMobile ? cursorRotateX : 0,
+              rotateY: enableTilt && !isMobile ? cursorRotateY : 0,
               transformStyle: "preserve-3d",
             }}
             className="group/cyber3d relative w-full h-full"

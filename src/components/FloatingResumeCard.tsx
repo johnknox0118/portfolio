@@ -21,15 +21,25 @@ export default function FloatingResumeCard({
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const mobMq = window.matchMedia("(max-width: 768px)");
     setPrefersReducedMotion(mq.matches);
+    setIsMobile(mobMq.matches);
+
     const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    const mobHandler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+
     mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
+    mobMq.addEventListener("change", mobHandler);
+    return () => {
+      mq.removeEventListener("change", handler);
+      mobMq.removeEventListener("change", mobHandler);
+    };
   }, []);
 
   // ==========================================
@@ -119,11 +129,11 @@ export default function FloatingResumeCard({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={handleMouseLeave}
         style={{
-          z,
-          scale,
-          rotateX,
-          opacity,
-          filter,
+          z: !isMobile ? z : 0,
+          scale: !isMobile ? scale : 1,
+          rotateX: !isMobile ? rotateX : 0,
+          opacity: !isMobile ? opacity : 1,
+          filter: !isMobile ? filter : "none",
           transformStyle: "preserve-3d",
         }}
         className="relative w-full pointer-events-auto z-20"

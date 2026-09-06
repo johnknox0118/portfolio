@@ -477,7 +477,7 @@ export default function DossierExport({ data: initialData }: DossierExportProps)
   // Renderable Resume Document (Reusable in Modal and Inline Preview)
   const renderResumeDocument = () => (
     <div
-      className={`w-full max-w-[820px] mx-auto rounded-xl p-5 sm:p-8 md:p-10 shadow-2xl transition-all border ${
+      className={`w-full max-w-[820px] mx-auto rounded-xl p-4 sm:p-8 md:p-10 shadow-2xl transition-all border overflow-x-auto ${
         previewTheme === "ats"
           ? "bg-white text-slate-900 border-slate-300"
           : "bg-[#050C16] text-slate-100 border-cyber-blue/40 shadow-[0_0_30px_rgba(0,200,255,0.12)]"
@@ -860,10 +860,10 @@ export default function DossierExport({ data: initialData }: DossierExportProps)
 
           {/* Live Sync Telemetry Badge */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-cyber-green/40 bg-cyber-green/10 text-cyber-green font-mono text-[11px] shadow-[0_0_12px_rgba(0,255,157,0.15)]">
-              <span className="w-2 h-2 rounded-full bg-cyber-green animate-ping" />
+            <div className="flex flex-wrap items-center gap-2 px-3 py-1.5 rounded-lg border border-cyber-green/40 bg-cyber-green/10 text-cyber-green font-mono text-[10px] sm:text-[11px] shadow-[0_0_12px_rgba(0,255,157,0.15)]">
+              <span className="w-2 h-2 rounded-full bg-cyber-green animate-ping shrink-0" />
               <span className="font-bold">LIVE SYNC ACTIVE</span>
-              <span className="text-gray-400">•</span>
+              <span className="text-gray-400 hidden sm:inline">•</span>
               <span className="text-gray-300">
                 {skills.length} Skills • {projects.length} Projects • {certs.length} Certs • {internships.length} Exps
               </span>
@@ -885,7 +885,7 @@ export default function DossierExport({ data: initialData }: DossierExportProps)
 
       <FloatingResumeCard>
         {/* CONTROL DECK (Category Presets + JD Scanner + Export Controls) */}
-        <div className="glass-card p-6 md:p-8 space-y-6 print:hidden rounded-2xl border border-cyber-green/30 bg-[#07111F]/95 relative z-20 pointer-events-auto">
+        <div className="glass-card p-4 sm:p-6 md:p-8 space-y-6 print:hidden rounded-2xl border border-cyber-green/30 bg-[#07111F]/95 relative z-20 pointer-events-auto">
           {/* Top Control Header */}
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 border-b border-white/10 pb-5">
             <div className="space-y-1.5 max-w-2xl">

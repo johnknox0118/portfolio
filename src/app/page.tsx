@@ -153,59 +153,7 @@ export default function PublicPortfolio() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Content & Media Theft Protection Event Listeners
-  useEffect(() => {
-    // Disable right-click context menu across site
-    const handleContextMenu = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) {
-        return;
-      }
-      e.preventDefault();
-    };
 
-    // Disable dragging images/media out of browser
-    const handleDragStart = (e: DragEvent) => {
-      e.preventDefault();
-    };
-
-    // Disable text copying (except inside form inputs & textareas)
-    const handleCopy = (e: ClipboardEvent) => {
-      const target = e.target as HTMLElement;
-      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA")) {
-        return;
-      }
-      e.preventDefault();
-    };
-
-    // Block keyboard shortcuts: Ctrl+S (Save), Ctrl+U (Source), Ctrl+C (Copy outside input)
-    const handleSecurityKeys = (e: KeyboardEvent) => {
-      if (!e.key) return;
-      const key = e.key.toLowerCase();
-      const isCmdOrCtrl = e.ctrlKey || e.metaKey;
-      const target = e.target as HTMLElement;
-      const isInput = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
-
-      if (isCmdOrCtrl && (key === "s" || key === "u")) {
-        e.preventDefault();
-      }
-      if (isCmdOrCtrl && key === "c" && !isInput) {
-        e.preventDefault();
-      }
-    };
-
-    window.addEventListener("contextmenu", handleContextMenu);
-    window.addEventListener("dragstart", handleDragStart);
-    window.addEventListener("copy", handleCopy);
-    window.addEventListener("keydown", handleSecurityKeys);
-
-    return () => {
-      window.removeEventListener("contextmenu", handleContextMenu);
-      window.removeEventListener("dragstart", handleDragStart);
-      window.removeEventListener("copy", handleCopy);
-      window.removeEventListener("keydown", handleSecurityKeys);
-    };
-  }, []);
   
   // Contact Form State
   const [contactForm, setContactForm] = useState({ name: "", email: "", subject: "", message: "" });
@@ -413,7 +361,7 @@ export default function PublicPortfolio() {
       {/* Floating Section Progress Navigation (Animation #64) */}
       <SectionProgress />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-28 pb-16 space-y-24 overflow-x-hidden">
+      <main className="max-w-7xl mx-auto px-3 sm:px-6 pt-24 sm:pt-28 pb-16 space-y-16 sm:space-y-24 overflow-x-hidden">
         {/* HERO SECTION */}
         <section id="top-portal" className="min-h-[75vh] py-8 relative">
           {/* 3D wireframe network globe — decorative background layer only */}
@@ -439,7 +387,7 @@ export default function PublicPortfolio() {
 
               <h1 
                 aria-label={profile.name || "Johnknox Kalle"}
-                className="text-4xl sm:text-5xl md:text-6xl lg:text-[3.75rem] xl:text-[4.25rem] leading-[1.1] select-text mb-6"
+                className="text-3xl sm:text-5xl md:text-6xl lg:text-[3.75rem] xl:text-[4.25rem] leading-[1.15] select-text mb-5 sm:mb-6"
               >
                 <LetterFormationText text={profile.name || "Johnknox Kalle"} />
               </h1>
@@ -452,7 +400,7 @@ export default function PublicPortfolio() {
                 {profile.tagline}
               </p>
 
-              <div className="flex flex-wrap gap-5 pt-2 relative z-40 pointer-events-auto">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-5 pt-2 relative z-40 pointer-events-auto w-full sm:w-auto">
                 <Cyber3DButtonBox
                   href={ensureUrl(profile.resumeUrl)}
                   download="Johnknox_Kalle_Resume.pdf"
@@ -697,7 +645,7 @@ export default function PublicPortfolio() {
                         value={contactForm.name}
                         onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
                         placeholder="Enter name"
-                        className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
+                        className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-base sm:text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
                       />
                     </div>
                     <div className="space-y-2">
@@ -707,7 +655,7 @@ export default function PublicPortfolio() {
                         value={contactForm.email}
                         onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
                         placeholder="Enter email address"
-                        className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
+                        className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-base sm:text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
                       />
                     </div>
                   </div>
@@ -718,7 +666,7 @@ export default function PublicPortfolio() {
                       value={contactForm.subject}
                       onChange={(e) => setContactForm({ ...contactForm, subject: e.target.value })}
                       placeholder="Enter message header"
-                      className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
+                      className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-base sm:text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -728,7 +676,7 @@ export default function PublicPortfolio() {
                       value={contactForm.message}
                       onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
                       placeholder="Enter message logs..."
-                      className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all resize-none"
+                      className="w-full bg-[#040a12]/80 border border-white/10 rounded-lg px-4 py-3 text-base sm:text-xs font-mono text-white placeholder-gray-600 focus:outline-none focus:border-cyber-green focus:shadow-[0_0_10px_rgba(0,255,157,0.1)] transition-all resize-none"
                     />
                   </div>
                   
@@ -899,7 +847,7 @@ export default function PublicPortfolio() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
               onClick={() => setSelectedProject(null)}
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md"
+              className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/85 backdrop-blur-md"
             >
               <motion.div
                 initial={flipInitial}
@@ -907,7 +855,10 @@ export default function PublicPortfolio() {
                 exit={flipExit}
                 transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
                 onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-4xl glass-card border-cyber-green/30 bg-[#07111F]/95 p-6 md:p-8 flex flex-col max-h-[90vh] overflow-y-auto relative hud-box shadow-[0_0_60px_rgba(0,255,157,0.18)] will-change-transform"
+                data-lenis-prevent="true"
+                onWheel={(e) => e.stopPropagation()}
+                onTouchMove={(e) => e.stopPropagation()}
+                className="w-full max-w-4xl glass-card border-cyber-green/30 bg-[#07111F]/95 p-4 sm:p-6 md:p-8 flex flex-col max-h-[90vh] overflow-y-auto relative hud-box shadow-[0_0_60px_rgba(0,255,157,0.18)] will-change-transform"
               >
                 <button
                   onClick={() => setSelectedProject(null)}
@@ -922,16 +873,16 @@ export default function PublicPortfolio() {
                     <div className="cyber-tag text-[9px] border-cyber-blue/30 text-cyber-blue font-bold uppercase tracking-wider mb-2">
                       PROJECT DATA DOSSIER // {selectedProject.id}
                     </div>
-                    <h2 className="font-orbitron font-black text-2xl md:text-3xl text-white">{selectedProject.title}</h2>
+                    <h2 className="font-orbitron font-black text-xl sm:text-2xl md:text-3xl text-white break-words">{selectedProject.title}</h2>
                     <p className="font-mono text-[10px] text-cyber-green uppercase mt-1">{selectedProject.role}</p>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
                     {selectedProject.liveUrl && (
                       <a
                         href={selectedProject.liveUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="btn-cyber flex items-center gap-2 px-5 py-2.5 bg-cyber-green/20 border-cyber-green text-cyber-green font-bold hover:bg-cyber-green hover:text-black transition-all shadow-[0_0_15px_rgba(0,255,157,0.3)] text-xs"
+                        className="btn-cyber flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-cyber-green/20 border-cyber-green text-cyber-green font-bold hover:bg-cyber-green hover:text-black transition-all shadow-[0_0_15px_rgba(0,255,157,0.3)] text-xs"
                       >
                         <Globe className="w-4 h-4" /> VIEW DEPLOYED PROJECT <ExternalLink className="w-3.5 h-3.5" />
                       </a>
@@ -941,7 +892,7 @@ export default function PublicPortfolio() {
                         href={selectedProject.githubUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="btn-cyber btn-cyber-blue flex items-center gap-2 px-4 py-2.5 text-xs"
+                        className="btn-cyber btn-cyber-blue flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 text-xs"
                       >
                         <Code className="w-4 h-4" /> REPOSITORY
                       </a>

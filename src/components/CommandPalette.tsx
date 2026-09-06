@@ -74,11 +74,14 @@ export default function CommandPalette({ data, isOpen, onClose }: CommandPalette
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[110] flex items-start justify-center pt-20 px-4 bg-black/75 backdrop-blur-md">
+      <div className="fixed inset-0 z-[110] flex items-start justify-center pt-16 sm:pt-20 px-3 sm:px-4 bg-black/75 backdrop-blur-md">
         <motion.div
           initial={{ scale: 0.95, opacity: 0, y: -20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0, y: -20 }}
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
           className="w-full max-w-xl glass-card border-cyber-green/40 bg-[#07111F]/95 rounded-2xl p-4 shadow-[0_0_50px_rgba(0,255,157,0.2)] hud-box flex flex-col gap-4"
         >
           {/* Search Bar Input */}
@@ -90,9 +93,9 @@ export default function CommandPalette({ data, isOpen, onClose }: CommandPalette
               placeholder="Type to search projects, skills, certificates, pages... [ESC to close]"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full bg-transparent text-sm font-mono text-white placeholder-gray-500 focus:outline-none"
+              className="w-full bg-transparent text-base sm:text-sm font-mono text-white placeholder-gray-500 focus:outline-none"
             />
-            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors cursor-pointer">
               <X className="w-5 h-5" />
             </button>
           </div>

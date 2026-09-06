@@ -129,6 +129,16 @@ export function CascadeCard({
   index = 0,
 }: CascadeCardProps) {
   const context = useContext(CascadeContext);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mobMq = window.matchMedia("(max-width: 768px)");
+    setIsMobile(mobMq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mobMq.addEventListener("change", handler);
+    return () => mobMq.removeEventListener("change", handler);
+  }, []);
+
   const fallbackProgress = useMotionValue(1);
   const rawProgress = context?.scrollYProgress ?? fallbackProgress;
 
@@ -166,7 +176,7 @@ export function CascadeCard({
   const shadowOpacity = useTransform(scale, [0.58, 1], [0, 0.45]);
   const shadowScale = useTransform(scale, [0.58, 1], [0.45, 1]);
 
-  if (context?.prefersReducedMotion) {
+  if (context?.prefersReducedMotion || isMobile) {
     return <div className={`relative h-full ${className}`}>{children}</div>;
   }
 

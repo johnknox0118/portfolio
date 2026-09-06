@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
-import { Shield, Menu, X } from "lucide-react";
+import { Shield, Menu, X, ShieldAlert, Search, Terminal, Lock } from "lucide-react";
 import NavLink from "./cyber/NavLink";
 import { CTFAuditButton, SearchTrigger, TerminalTrigger, AdminButton } from "./cyber/NavButtons";
 import NavbarGlassShine from "./cyber/NavbarGlassShine";
@@ -154,7 +154,7 @@ export default function Navbar({
       variants={containerVariants}
       onMouseEnter={() => setIsNavbarHovered(true)}
       onMouseLeave={() => setIsNavbarHovered(false)}
-      className={`fixed top-0 left-0 right-0 z-40 max-w-7xl mx-auto px-6 py-3.5 flex items-center justify-between rounded-b-[20px] transition-all duration-300 select-none ${
+      className={`fixed top-0 left-0 right-0 z-40 max-w-7xl mx-auto px-3 sm:px-6 py-2.5 sm:py-3.5 flex items-center justify-between rounded-b-[20px] transition-all duration-300 select-none ${
         isScrolled
           ? "bg-[#07111F]/85 backdrop-blur-lg border-b border-cyber-blue/15 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.6)]"
           : "bg-[#07111F]/50 backdrop-blur-md border-b border-white/5"
@@ -258,20 +258,20 @@ export default function Navbar({
       </nav>
 
       {/* 3. RIGHT UTILITY BUTTONS (CTF, SEARCH, TERMINAL, ADMIN, MOBILE MENU) */}
-      <div className="flex items-center gap-2 sm:gap-2.5 relative z-10">
+      <div className="flex items-center gap-1.5 sm:gap-2.5 relative z-10">
         <motion.div variants={itemVariants}>
           <CTFAuditButton onClick={onCtfClick} unlocked={ctfBadgeUnlocked} />
         </motion.div>
 
-        <motion.div variants={itemVariants}>
+        <motion.div variants={itemVariants} className="hidden sm:block">
           <SearchTrigger onClick={onSearchClick} />
         </motion.div>
 
-        <motion.div variants={itemVariants}>
+        <motion.div variants={itemVariants} className="hidden sm:block">
           <TerminalTrigger onClick={onTerminalClick} />
         </motion.div>
 
-        <motion.div variants={itemVariants}>
+        <motion.div variants={itemVariants} className="hidden sm:block">
           <AdminButton />
         </motion.div>
 
@@ -304,8 +304,11 @@ export default function Navbar({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.25, ease: CUBIC_EASE }}
-            className="md:hidden absolute top-full left-0 right-0 mt-2 mx-4 p-4 border border-white/10 flex flex-col gap-2.5 font-orbitron text-xs font-semibold tracking-wider text-gray-300 bg-[#07111F]/95 backdrop-blur-xl rounded-xl shadow-2xl z-50"
+            className="md:hidden absolute top-full left-0 right-0 mt-2 mx-3 p-4 border border-white/10 flex flex-col gap-2.5 font-orbitron text-xs font-semibold tracking-wider text-gray-300 bg-[#07111F]/98 backdrop-blur-2xl rounded-2xl shadow-2xl z-50 max-h-[80vh] overflow-y-auto"
           >
+            <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest px-1 pb-1">
+              PORTAL NAVIGATION
+            </div>
             {NAV_LINKS.map((link) => {
               const isActive = activeSection === link.id;
               return (
@@ -313,19 +316,67 @@ export default function Navbar({
                   key={link.id}
                   href={`#${link.id}`}
                   onClick={(e) => handleNavClick(e, link.id)}
-                  className={`py-2 px-3 rounded-lg flex items-center justify-between transition-colors border-b border-white/5 ${
+                  className={`py-2.5 px-3 rounded-xl flex items-center justify-between transition-colors border ${
                     isActive
-                      ? "text-cyber-green bg-cyber-green/10 font-bold"
-                      : "hover:text-cyber-green hover:bg-white/5"
+                      ? "text-cyber-green bg-cyber-green/10 border-cyber-green/30 font-bold shadow-[0_0_10px_rgba(0,255,157,0.15)]"
+                      : "border-white/5 hover:text-cyber-green hover:bg-white/5"
                   }`}
                 >
                   <span>{link.label}</span>
                   {isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-cyber-green shadow-[0_0_8px_#00FF9D]" />
+                    <span className="w-2 h-2 rounded-full bg-cyber-green shadow-[0_0_8px_#00FF9D]" />
                   )}
                 </a>
               );
             })}
+
+            {/* Quick Actions Panel in Mobile Menu */}
+            <div className="pt-3 border-t border-white/10 grid grid-cols-2 gap-2 mt-1 font-mono">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileNavOpen(false);
+                  onCtfClick();
+                }}
+                className="flex items-center gap-2 p-2.5 rounded-xl bg-cyber-green/10 border border-cyber-green/30 text-cyber-green text-[11px] font-bold cursor-pointer hover:bg-cyber-green/20 transition-colors"
+              >
+                <ShieldAlert className="w-4 h-4 text-cyber-green shrink-0" />
+                <span>CTF AUDIT</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileNavOpen(false);
+                  onSearchClick();
+                }}
+                className="flex items-center gap-2 p-2.5 rounded-xl bg-black/60 border border-white/10 text-gray-300 hover:text-white text-[11px] cursor-pointer hover:border-cyber-green/40 transition-colors"
+              >
+                <Search className="w-4 h-4 text-cyber-green shrink-0" />
+                <span>SEARCH</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileNavOpen(false);
+                  onTerminalClick();
+                }}
+                className="flex items-center gap-2 p-2.5 rounded-xl bg-black/60 border border-white/10 text-gray-300 hover:text-white text-[11px] cursor-pointer hover:border-cyber-green/40 transition-colors"
+              >
+                <Terminal className="w-4 h-4 text-cyber-green shrink-0" />
+                <span>TERMINAL</span>
+              </button>
+
+              <a
+                href="/admin/login"
+                onClick={() => setIsMobileNavOpen(false)}
+                className="flex items-center gap-2 p-2.5 rounded-xl bg-cyber-blue/10 border border-cyber-blue/40 text-cyber-blue text-[11px] font-bold cursor-pointer hover:bg-cyber-blue/20 transition-colors"
+              >
+                <Lock className="w-4 h-4 shrink-0" />
+                <span>ADMIN</span>
+              </a>
+            </div>
           </motion.nav>
         )}
       </AnimatePresence>

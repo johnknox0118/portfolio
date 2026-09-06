@@ -105,11 +105,13 @@ export default function SmoothScrollProvider({ children }: SmoothScrollProviderP
       return;
     }
 
+    const isTouchOnly = window.matchMedia("(pointer: coarse)").matches && !window.matchMedia("(pointer: fine)").matches;
+
     const lenis = new Lenis({
       lerp: 0.09,
       smoothWheel: true,
       wheelMultiplier: 1.0,
-      touchMultiplier: 1.0,
+      touchMultiplier: isTouchOnly ? 0 : 1.0,
       syncTouch: false,
     });
 
@@ -120,11 +122,13 @@ export default function SmoothScrollProvider({ children }: SmoothScrollProviderP
       (window as any).__portfolioLenis = lenis;
     }
 
+    let lastNativeScrollY = typeof window !== "undefined" ? window.scrollY : 0;
+
     // Track scroll velocity, direction, and sync with GSAP ScrollTrigger
     const handleScroll = (e: any) => {
-      const vel = typeof e.velocity === "number" ? e.velocity : 0;
-      const dir = typeof e.direction === "number" ? e.direction : vel >= 0 ? 1 : -1;
-      const scrollPos = typeof e.scroll === "number" ? e.scroll : window.scrollY;
+      const vel = typeof e?.velocity === "number" ? e.velocity : 0;
+      const dir = typeof e?.direction === "number" ? e.direction : vel >= 0 ? 1 : -1;
+      const scrollPos = typeof e?.scroll === "number" ? e.scroll : window.scrollY;
 
       directionRef.current = dir !== 0 ? dir : directionRef.current;
       velocityRef.current = vel;
@@ -148,7 +152,22 @@ export default function SmoothScrollProvider({ children }: SmoothScrollProviderP
       }
     };
 
+    // Native scroll listener fallback for mobile touch devices
+    const handleNativeScroll = () => {
+      const currentY = window.scrollY;
+      const delta = currentY - lastNativeScrollY;
+      lastNativeScrollY = currentY;
+      handleScroll({
+        scroll: currentY,
+        velocity: delta,
+        direction: delta >= 0 ? 1 : -1,
+      });
+    };
+
     lenis.on("scroll", handleScroll);
+    if (isTouchOnly) {
+      window.addEventListener("scroll", handleNativeScroll, { passive: true });
+    }
 
     // Native hardware display-sync requestAnimationFrame loop
     let rafId: number;
@@ -184,6 +203,9 @@ export default function SmoothScrollProvider({ children }: SmoothScrollProviderP
 
     return () => {
       document.removeEventListener("click", handleAnchorClick);
+      if (isTouchOnly) {
+        window.removeEventListener("scroll", handleNativeScroll);
+      }
       cancelAnimationFrame(rafId);
       lenis.destroy();
       lenisRef.current = null;

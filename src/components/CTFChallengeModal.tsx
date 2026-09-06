@@ -271,12 +271,15 @@ export default function CTFChallengeModal({ isOpen, onClose, onSuccessBadge }: C
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-[110] flex items-center justify-center p-2 sm:p-4 bg-black/80 backdrop-blur-md">
         <motion.div
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
-          className="w-full max-w-xl glass-card border-cyber-green/40 bg-[#07111F]/95 rounded-2xl p-6 shadow-[0_0_60px_rgba(0,255,157,0.25)] hud-box flex flex-col gap-5 relative max-h-[92vh] overflow-y-auto"
+          data-lenis-prevent="true"
+          onWheel={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+          className="w-full max-w-xl glass-card border-cyber-green/40 bg-[#07111F]/95 rounded-2xl p-4 sm:p-6 shadow-[0_0_60px_rgba(0,255,157,0.25)] hud-box flex flex-col gap-5 relative max-h-[92vh] overflow-y-auto"
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-white/10 pb-3">
@@ -347,7 +350,7 @@ export default function CTFChallengeModal({ isOpen, onClose, onSuccessBadge }: C
                     placeholder="e.g. Alex Hunter or Google Security Scout"
                     value={participant.name}
                     onChange={(e) => setParticipant({ ...participant, name: e.target.value })}
-                    className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                    className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-base sm:text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
                   />
                 </div>
 
@@ -359,7 +362,7 @@ export default function CTFChallengeModal({ isOpen, onClose, onSuccessBadge }: C
                     <select
                       value={participant.role}
                       onChange={(e) => setParticipant({ ...participant, role: e.target.value })}
-                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-3 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-blue"
+                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-3 py-2.5 text-base sm:text-xs font-mono text-white focus:outline-none focus:border-cyber-blue"
                     >
                       <option value="Recruiter / Talent Scout">Recruiter / Talent Scout</option>
                       <option value="Security Engineer / Architect">Security Engineer / Architect</option>
@@ -379,7 +382,7 @@ export default function CTFChallengeModal({ isOpen, onClose, onSuccessBadge }: C
                       placeholder="e.g. hunter@company.com"
                       value={participant.email}
                       onChange={(e) => setParticipant({ ...participant, email: e.target.value })}
-                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-cyan"
+                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-base sm:text-xs font-mono text-white focus:outline-none focus:border-cyber-cyan"
                     />
                   </div>
                 </div>
@@ -469,7 +472,7 @@ export default function CTFChallengeModal({ isOpen, onClose, onSuccessBadge }: C
                     placeholder="Enter decoded string or solution flag..."
                     value={textInput}
                     onChange={(e) => setTextInput(e.target.value)}
-                    className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
+                    className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-2.5 text-base sm:text-xs font-mono text-white focus:outline-none focus:border-cyber-green"
                   />
                   <button
                     type="submit"

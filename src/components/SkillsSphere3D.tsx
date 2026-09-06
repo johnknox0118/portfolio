@@ -203,6 +203,7 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
     while (container.firstChild) {
       container.removeChild(container.firstChild);
     }
+    renderer.domElement.style.touchAction = "pan-y";
     container.appendChild(renderer.domElement);
 
     const group = new THREE.Group();
@@ -542,7 +543,7 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
       {/* 3D Canvas Container without native OS tooltip */}
       <div
         ref={containerRef}
-        className="w-full h-[380px] sm:h-[440px] md:h-[500px] max-w-4xl relative cursor-grab active:cursor-grabbing touch-none"
+        className="w-full h-[380px] sm:h-[440px] md:h-[500px] max-w-4xl relative cursor-grab active:cursor-grabbing touch-pan-y"
       />
       <div className="text-[11px] font-mono text-gray-400 tracking-wider flex items-center gap-2 mt-2 select-none">
         <span className="w-1.5 h-1.5 rounded-full bg-cyber-green animate-ping" />
