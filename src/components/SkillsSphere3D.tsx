@@ -119,13 +119,37 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
   const canRender = useCanRender3D();
   const isVisibleRef = useRef(true);
   const lastRotationRef = useRef({ x: 0, y: 0 });
-  const [isMobileScreen, setIsMobileScreen] = useState(false);
+  const [isMobileScreen, setIsMobileScreen] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
+  const [shouldMountScene, setShouldMountScene] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth >= 768 : true
+  );
 
   useEffect(() => {
     const check = () => setIsMobileScreen(window.innerWidth < 768);
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // On mobile screens, only mount the Three.js scene when within 300px of the viewport.
+  // When scrolled away, unmount and dispose WebGL context so it never competes with other sections.
+  useEffect(() => {
+    if (!containerRef.current) return;
+    if (window.innerWidth >= 768) {
+      setShouldMountScene(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setShouldMountScene(entry.isIntersecting);
+      },
+      { rootMargin: "300px" }
+    );
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
   }, []);
 
   // Extract all unique skill names from data or fallback to defaults
@@ -177,7 +201,7 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
 
   // Three.js Scene Setup & Lifecycle
   useEffect(() => {
-    if (!canRender || !containerRef.current) return;
+    if (!canRender || !containerRef.current || !shouldMountScene) return;
 
     const container = containerRef.current;
     const width = container.clientWidth || 600;
@@ -545,7 +569,7 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
       materialsToDispose.forEach((m) => m.dispose());
       texturesToDispose.forEach((t) => t.dispose());
     };
-  }, [canRender, skillNamesKey]);
+  }, [canRender, skillNamesKey, shouldMountScene]);
 
   // High-Performance Mobile & Reduced-Motion Knowledge Matrix
   if (!canRender) {
@@ -581,8 +605,15 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
       {/* 3D Canvas Container without native OS tooltip */}
       <div
         ref={containerRef}
-        className="w-full h-[380px] sm:h-[440px] md:h-[500px] max-w-4xl relative cursor-grab active:cursor-grabbing touch-pan-y"
-      />
+        className="w-full h-[380px] sm:h-[440px] md:h-[500px] max-w-4xl relative cursor-grab active:cursor-grabbing touch-pan-y flex items-center justify-center"
+      >
+        {!shouldMountScene && (
+          <div className="font-mono text-[11px] text-cyber-green/60 tracking-wider flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-cyber-green animate-ping" />
+            INITIALIZING 3D SPHERE...
+          </div>
+        )}
+      </div>
       <div className="text-[11px] font-mono text-gray-400 tracking-wider flex items-center gap-2 mt-2 select-none">
         <span className="w-1.5 h-1.5 rounded-full bg-cyber-green animate-ping" />
         <span className="text-cyber-green font-semibold">INTERACTIVE 3D KNOWLEDGE SPHERE</span>

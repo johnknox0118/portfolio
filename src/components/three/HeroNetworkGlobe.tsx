@@ -144,7 +144,9 @@ export default function HeroNetworkGlobe() {
   const containerRef = useRef<HTMLDivElement>(null);
   const pointerRef = useRef({ x: 0, y: 0 });
   const [isVisible, setIsVisible] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);

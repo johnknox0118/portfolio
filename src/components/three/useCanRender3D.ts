@@ -12,29 +12,45 @@ import { useEffect, useState } from "react";
  * (or nothing) until/unless this returns true, so the existing design
  * is never blocked or altered while we wait to confirm 3D is safe.
  */
+let cachedCanRender: boolean | null = null;
+
+function checkWebGLSupport(): boolean {
+  if (typeof window === "undefined") return false;
+  if (cachedCanRender !== null) return cachedCanRender;
+
+  try {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reducedMotion) {
+      cachedCanRender = false;
+      return false;
+    }
+
+    const canvas = document.createElement("canvas");
+    const gl =
+      canvas.getContext("webgl", { powerPreference: "low-power" }) ||
+      (canvas.getContext("experimental-webgl") as WebGLRenderingContext | null);
+
+    const supported = Boolean(gl);
+    if (gl) {
+      const loseExt = gl.getExtension("WEBGL_lose_context");
+      if (loseExt) {
+        loseExt.loseContext();
+      }
+    }
+
+    cachedCanRender = supported;
+    return supported;
+  } catch {
+    cachedCanRender = false;
+    return false;
+  }
+}
+
 export default function useCanRender3D() {
   const [canRender, setCanRender] = useState(false);
 
   useEffect(() => {
-    let supported = false;
-    try {
-      const reducedMotion = window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
-      ).matches;
-
-      // Enable WebGL across all devices when hardware support is detected
-      // and user has not requested reduced motion
-      if (!reducedMotion) {
-        const canvas = document.createElement("canvas");
-        const gl =
-          canvas.getContext("webgl", { powerPreference: "low-power" }) ||
-          canvas.getContext("experimental-webgl");
-        supported = Boolean(gl);
-      }
-    } catch {
-      supported = false;
-    }
-    setCanRender(supported);
+    setCanRender(checkWebGLSupport());
   }, []);
 
   return canRender;

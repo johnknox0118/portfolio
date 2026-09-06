@@ -8,7 +8,9 @@ export default function ContactNetworkOrb() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canRender = useCanRender3D();
   const [isVisible, setIsVisible] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -29,16 +31,8 @@ export default function ContactNetworkOrb() {
     return () => observer.disconnect();
   }, []);
 
-  if (isMobile) {
-    return (
-      <div className="w-16 h-16 rounded-full border border-cyber-green/40 bg-cyber-green/5 flex items-center justify-center shadow-[0_0_12px_rgba(0,255,157,0.2)]">
-        <div className="w-8 h-8 rounded-full border border-dashed border-cyber-blue/50 animate-spin" style={{ animationDuration: "8s" }} />
-      </div>
-    );
-  }
-
   useEffect(() => {
-    if (!canRender || !containerRef.current) return;
+    if (isMobile || !canRender || !containerRef.current) return;
 
     const container = containerRef.current;
     const size = Math.min(container.clientWidth || 180, 200);
@@ -176,7 +170,15 @@ export default function ContactNetworkOrb() {
       nodeMat2.dispose();
       lineMat.dispose();
     };
-  }, [canRender, isVisible]);
+  }, [canRender, isVisible, isMobile]);
+
+  if (isMobile) {
+    return (
+      <div className="w-16 h-16 rounded-full border border-cyber-green/40 bg-cyber-green/5 flex items-center justify-center shadow-[0_0_12px_rgba(0,255,157,0.2)]">
+        <div className="w-8 h-8 rounded-full border border-dashed border-cyber-blue/50 animate-spin" style={{ animationDuration: "8s" }} />
+      </div>
+    );
+  }
 
   if (!canRender) {
     return (

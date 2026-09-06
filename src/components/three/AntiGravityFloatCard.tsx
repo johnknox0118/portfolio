@@ -30,10 +30,21 @@ export default function AntiGravityFloatCard({
   const [floatEnabled, setFloatEnabled] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
 
   useEffect(() => {
-    setFloatEnabled(!reducedMotion);
-  }, [reducedMotion]);
+    const mobMq = window.matchMedia("(max-width: 768px)");
+    setIsMobile(mobMq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mobMq.addEventListener("change", handler);
+    return () => mobMq.removeEventListener("change", handler);
+  }, []);
+
+  useEffect(() => {
+    setFloatEnabled(!reducedMotion && !isMobile);
+  }, [reducedMotion, isMobile]);
 
   // ==========================================
   // 1. SCROLL-DRIVEN 3D DEPTH (FORWARD & BACKWARD)
@@ -94,6 +105,23 @@ export default function AntiGravityFloatCard({
     setIsHovered(false);
     setCursorPos(null);
   };
+
+  if (reducedMotion || isMobile) {
+    return (
+      <div ref={containerRef} className={`relative ${className}`}>
+        <div ref={cardRef} className="relative">
+          <LuminousCardBorder
+            cursorX={null}
+            cursorY={null}
+            isHovered={false}
+            borderRadius="rounded-[20px]"
+            glowColor="#00FF9D"
+          />
+          {children}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
