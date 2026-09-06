@@ -54,16 +54,22 @@ export default function AntiGravityCanvas({ children }: AntiGravityCanvasProps) 
     let animationFrameId: number;
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
+    const isMobile = window.innerWidth < 768;
 
     const handleResize = () => {
       if (!canvas) return;
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+      const newW = window.innerWidth;
+      const newH = window.innerHeight;
+      // On mobile devices, ignore small height changes caused by browser navigation bar collapsing
+      if (Math.abs(width - newW) > 10 || Math.abs(height - newH) > 120) {
+        width = canvas.width = newW;
+        height = canvas.height = newH;
+      }
     };
     window.addEventListener("resize", handleResize);
 
-    // Particle pool
-    const particleCount = Math.min(Math.floor((width * height) / 18000), 70);
+    // Particle pool: optimized for mobile to save GPU memory
+    const particleCount = isMobile ? 18 : Math.min(Math.floor((width * height) / 18000), 50);
     const particles = Array.from({ length: particleCount }, () => ({
       x: Math.random() * width,
       y: Math.random() * height,
@@ -93,8 +99,12 @@ export default function AntiGravityCanvas({ children }: AntiGravityCanvasProps) 
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
         ctx.globalAlpha = p.alpha;
-        ctx.shadowBlur = 8;
-        ctx.shadowColor = p.color;
+        if (!isMobile) {
+          ctx.shadowBlur = 6;
+          ctx.shadowColor = p.color;
+        } else {
+          ctx.shadowBlur = 0;
+        }
         ctx.fill();
       });
 

@@ -42,10 +42,6 @@ import { LetterFormationText, MorphingText, FlipText, IAm3DText } from "@/compon
 const ContactNetworkOrb = dynamic(() => import("@/components/ContactNetworkOrb"), {
   ssr: false,
 });
-
-// 3D layers are loaded client-only (no SSR) and add nothing to the initial
-// page render — they mount in as a decorative background once the browser
-// confirms WebGL is available, so the existing design/layout never changes.
 const HeroNetworkGlobe = dynamic(() => import("@/components/three/HeroNetworkGlobe"), {
   ssr: false,
 });
@@ -166,8 +162,12 @@ export default function PublicPortfolio() {
   const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
+    let isFetching = false;
+
     // Fetch aggregate portfolio data with automatic retry
     const loadPortfolioData = (attempt = 1) => {
+      if (isFetching) return;
+      isFetching = true;
       fetch("/api/public/data?t=" + Date.now())
         .then((res) => {
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -176,9 +176,11 @@ export default function PublicPortfolio() {
         .then((payload) => {
           setData(payload);
           setLoading(false);
+          isFetching = false;
         })
         .catch((err) => {
           console.warn(`Portfolio data fetch attempt ${attempt} failed:`, err);
+          isFetching = false;
           if (attempt < 3) {
             setTimeout(() => loadPortfolioData(attempt + 1), 600);
           } else {
@@ -209,31 +211,17 @@ export default function PublicPortfolio() {
       }
     };
 
-    const handleWindowFocus = () => {
-      loadPortfolioData();
-    };
-
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        loadPortfolioData();
-      }
-    };
-
-    window.addEventListener("focus", handleWindowFocus);
     window.addEventListener("storage", handleStorage);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // Scroll display scroll-to-top button
     const handleScroll = () => {
       setShowScrollTop(window.scrollY > 500);
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      window.removeEventListener("focus", handleWindowFocus);
       window.removeEventListener("storage", handleStorage);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
       if (syncChannel) {
         syncChannel.close();
       }

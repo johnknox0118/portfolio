@@ -478,11 +478,11 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
 
       // Clean Backface Culling & Depth Occlusion for Skill Badges
       // Completely eliminates overlapping text chaos from labels on the back
+      const tempWorldPos = new THREE.Vector3();
       sprites.forEach((sprite) => {
-        const worldPos = new THREE.Vector3();
-        sprite.getWorldPosition(worldPos);
+        sprite.getWorldPosition(tempWorldPos);
 
-        const normalizedDepth = worldPos.z / sphereRadius;
+        const normalizedDepth = tempWorldPos.z / sphereRadius;
 
         if (normalizedDepth > 0.20) {
           // Front hemisphere: fully visible, sharp and prominent
@@ -522,18 +522,31 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
     };
   }, [canRender, skillNamesKey]);
 
-  // WebGL Fallback if 3D is disabled
+  // High-Performance Mobile & Reduced-Motion Knowledge Matrix
   if (!canRender) {
     return (
-      <div className="w-full py-8 flex flex-wrap gap-2.5 justify-center items-center">
-        {skillNames.map((name, i) => (
-          <div
-            key={i}
-            className="px-4 py-2 rounded-xl bg-[#07111F]/80 border border-cyber-green/30 text-white font-orbitron text-xs shadow-[0_0_10px_rgba(0,255,157,0.1)]"
-          >
-            {name}
-          </div>
-        ))}
+      <div className="w-full py-4 flex flex-col items-center gap-3 select-none">
+        <div className="flex flex-wrap gap-2 justify-center items-center max-w-2xl px-2">
+          {skillNames.map((name, i) => (
+            <div
+              key={i}
+              className={`px-3 py-1.5 rounded-xl border text-xs font-mono transition-all flex items-center gap-2 ${
+                i % 2 === 0
+                  ? "bg-[#040F1E]/90 border-cyber-green/40 text-cyber-green shadow-[0_0_12px_rgba(0,255,157,0.12)]"
+                  : "bg-[#040F1E]/90 border-cyber-blue/40 text-cyber-blue shadow-[0_0_12px_rgba(0,200,255,0.12)]"
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${i % 2 === 0 ? "bg-cyber-green" : "bg-cyber-blue"} animate-pulse`} />
+              <span className="font-semibold text-white tracking-wide text-[11px]">{name}</span>
+            </div>
+          ))}
+        </div>
+        <div className="text-[10px] font-mono text-gray-400 tracking-wider flex items-center gap-2 mt-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-cyber-green animate-ping" />
+          <span className="text-cyber-green font-semibold">VERIFIED TECHNICAL MATRIX</span>
+          <span className="text-gray-500">//</span>
+          <span className="text-gray-400">{skillNames.length} SKILLS ACTIVE</span>
+        </div>
       </div>
     );
   }

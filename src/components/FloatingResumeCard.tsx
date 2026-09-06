@@ -121,7 +121,7 @@ export default function FloatingResumeCard({
     <div
       ref={containerRef}
       className={`relative w-full py-4 z-20 pointer-events-auto ${className}`}
-      style={{ perspective: 1200 }}
+      style={{ perspective: isMobile ? undefined : 1200 }}
     >
       <motion.div
         ref={cardRef}
@@ -134,7 +134,7 @@ export default function FloatingResumeCard({
           rotateX: !isMobile ? rotateX : 0,
           opacity: !isMobile ? opacity : 1,
           filter: !isMobile ? filter : "none",
-          transformStyle: "preserve-3d",
+          transformStyle: isMobile ? "flat" : "preserve-3d",
         }}
         className="relative w-full pointer-events-auto z-20"
       >

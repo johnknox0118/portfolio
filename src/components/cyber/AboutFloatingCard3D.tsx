@@ -181,8 +181,8 @@ export default function AboutFloatingCard3D({
       ref={containerRef}
       className={`relative w-full py-2 ${className}`}
       style={{
-        perspective: 1200,
-        transformStyle: "preserve-3d",
+        perspective: isMobile ? undefined : 1200,
+        transformStyle: isMobile ? "flat" : "preserve-3d",
       }}
     >
       {/* 1. Scroll-Driven 3D Depth Layer */}
@@ -193,8 +193,8 @@ export default function AboutFloatingCard3D({
           rotateX: !isMobile ? rotateXScroll : 0,
           opacity: !isMobile ? opacity : 1,
           filter: !isMobile ? filter : "none",
-          transformStyle: "preserve-3d",
-          willChange: "transform, opacity, filter",
+          transformStyle: isMobile ? "flat" : "preserve-3d",
+          willChange: isMobile ? "auto" : "transform, opacity, filter",
         }}
         className="w-full relative"
       >

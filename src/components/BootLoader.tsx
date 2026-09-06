@@ -20,9 +20,13 @@ export default function BootLoader() {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    // Check if boot sequence has already run in current browser session
-    const hasBooted = sessionStorage.getItem("cyber_boot_done");
-    if (hasBooted) {
+    try {
+      const hasBooted = typeof window !== "undefined" && window.sessionStorage?.getItem("cyber_boot_done");
+      if (hasBooted) {
+        setVisible(false);
+        return;
+      }
+    } catch (e) {
       setVisible(false);
       return;
     }
@@ -46,7 +50,11 @@ export default function BootLoader() {
         if (prev >= 100) {
           clearInterval(progressInterval);
           setTimeout(() => {
-            sessionStorage.setItem("cyber_boot_done", "true");
+            try {
+              sessionStorage.setItem("cyber_boot_done", "true");
+            } catch (e) {
+              // Ignore private browsing storage restriction
+            }
             setVisible(false);
           }, 400);
           return 100;

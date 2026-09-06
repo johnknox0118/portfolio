@@ -201,8 +201,8 @@ export default function Cyber3DCard({
       ref={containerRef}
       className={`relative h-full ${className}`}
       style={{
-        perspective: 1200,
-        transformStyle: "preserve-3d",
+        perspective: isMobile ? undefined : 1200,
+        transformStyle: isMobile ? "flat" : "preserve-3d",
       }}
     >
       {/* 1. Scroll Depth Plane */}
@@ -213,8 +213,8 @@ export default function Cyber3DCard({
           rotateX: enableScrollDepth && !isMobile ? rotateXScroll : 0,
           opacity: enableScrollDepth && !isMobile ? opacity : 1,
           filter: enableScrollDepth && !isMobile ? filter : "none",
-          transformStyle: "preserve-3d",
-          willChange: "transform, opacity, filter",
+          transformStyle: isMobile ? "flat" : "preserve-3d",
+          willChange: isMobile ? "auto" : "transform, opacity, filter",
         }}
         className="w-full h-full relative"
       >

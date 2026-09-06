@@ -21,8 +21,13 @@ export default function useCanRender3D() {
       const reducedMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)"
       ).matches;
+      const isMobileScreen = window.innerWidth < 768;
+      const isTouchOnly =
+        window.matchMedia("(pointer: coarse)").matches &&
+        !window.matchMedia("(pointer: fine)").matches;
 
-      if (!reducedMotion) {
+      // Heavy 3D WebGL scenes are restricted to desktop displays to prevent mobile GPU OOM crashes
+      if (!reducedMotion && !isMobileScreen && !isTouchOnly) {
         const canvas = document.createElement("canvas");
         const gl =
           canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
