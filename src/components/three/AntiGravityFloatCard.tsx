@@ -106,7 +106,7 @@ export default function AntiGravityFloatCard({
     setCursorPos(null);
   };
 
-  if (reducedMotion || isMobile) {
+  if (reducedMotion) {
     return (
       <div ref={containerRef} className={`relative ${className}`}>
         <div ref={cardRef} className="relative">
@@ -119,6 +119,33 @@ export default function AntiGravityFloatCard({
           />
           {children}
         </div>
+      </div>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <div ref={containerRef} className={`relative ${className}`}>
+        {/* Anti-Gravity Ambient Floating Motion on Mobile */}
+        <motion.div
+          ref={cardRef}
+          animate={{ y: [0, -10, 0] }}
+          transition={{
+            duration: 4.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="relative"
+        >
+          <LuminousCardBorder
+            cursorX={null}
+            cursorY={null}
+            isHovered={false}
+            borderRadius="rounded-[20px]"
+            glowColor="#00FF9D"
+          />
+          {children}
+        </motion.div>
       </div>
     );
   }

@@ -176,8 +176,30 @@ export function CascadeCard({
   const shadowOpacity = useTransform(scale, [0.58, 1], [0, 0.45]);
   const shadowScale = useTransform(scale, [0.58, 1], [0.45, 1]);
 
-  if (context?.prefersReducedMotion || isMobile) {
+  if (context?.prefersReducedMotion) {
     return <div className={`relative h-full ${className}`}>{children}</div>;
+  }
+
+  if (isMobile) {
+    const floatDuration = 5.0 + (index % 3) * 0.6;
+    const floatDelay = (index % 3) * 0.25;
+
+    return (
+      <div className={`relative h-full ${className}`}>
+        <motion.div
+          animate={{ y: [-4, 4, -4] }}
+          transition={{
+            duration: floatDuration,
+            delay: floatDelay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="h-full relative"
+        >
+          {children}
+        </motion.div>
+      </div>
+    );
   }
 
   // Accent glows for floor reflection

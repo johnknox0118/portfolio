@@ -111,7 +111,7 @@ export default function FloatingResumeCard({
     setCursorPos(null);
   };
 
-  if (prefersReducedMotion || isMobile) {
+  if (prefersReducedMotion) {
     return (
       <div className={`relative w-full py-4 z-20 pointer-events-auto ${className}`}>
         <div className="relative w-full pointer-events-auto z-20">
@@ -126,6 +126,34 @@ export default function FloatingResumeCard({
             {children}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <div ref={containerRef} className={`relative w-full py-4 z-20 pointer-events-auto ${className}`}>
+        {/* Anti-Gravity Ambient Floating Motion on Mobile */}
+        <motion.div
+          animate={{ y: [-5, 5, -5] }}
+          transition={{
+            duration: 5.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="relative w-full pointer-events-auto z-20"
+        >
+          <LuminousCardBorder
+            cursorX={null}
+            cursorY={null}
+            isHovered={false}
+            borderRadius="rounded-2xl"
+            glowColor="#00FF9D"
+          />
+          <div className="relative z-10 w-full pointer-events-auto">
+            {children}
+          </div>
+        </motion.div>
       </div>
     );
   }

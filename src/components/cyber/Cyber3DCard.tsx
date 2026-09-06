@@ -194,7 +194,7 @@ export default function Cyber3DCard({
   const floatDuration = 5.5 + (index % 4) * 0.5;
   const floatDelay = (index % 5) * 0.25;
 
-  if (prefersReducedMotion || isMobile) {
+  if (prefersReducedMotion) {
     return (
       <div ref={containerRef} className={`relative h-full ${className}`}>
         <div className="group/cyber3d relative w-full h-full">
@@ -209,6 +209,39 @@ export default function Cyber3DCard({
             {children}
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <div ref={containerRef} className={`relative h-full ${className}`}>
+        {/* Anti-Gravity Ambient Floating Motion on Mobile */}
+        <motion.div
+          animate={
+            enableFloat
+              ? { y: [-5, 5, -5] }
+              : { y: 0 }
+          }
+          transition={{
+            duration: floatDuration,
+            delay: floatDelay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="group/cyber3d relative w-full h-full"
+        >
+          <LuminousCardBorder
+            cursorX={null}
+            cursorY={null}
+            isHovered={false}
+            borderRadius={borderRadius}
+            glowColor="#00FF9D"
+          />
+          <div className="relative z-20 w-full h-full">
+            {children}
+          </div>
+        </motion.div>
       </div>
     );
   }

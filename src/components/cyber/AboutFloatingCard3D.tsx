@@ -151,8 +151,7 @@ export default function AboutFloatingCard3D({
     mouseY.set(0);
   };
 
-  // If reduced motion or mobile device, render clean lightweight card with luminous border
-  if (prefersReducedMotion || isMobile) {
+  if (prefersReducedMotion) {
     return (
       <div className={`relative rounded-2xl glass-card p-6 md:p-8 space-y-6 leading-relaxed text-gray-300 text-sm border border-cyber-green/20 ${className}`}>
         <LuminousCardBorder
@@ -181,6 +180,56 @@ export default function AboutFloatingCard3D({
             <span className="text-white">{profile.phone}</span>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (isMobile) {
+    return (
+      <div ref={containerRef} className={`relative w-full py-2 ${className}`}>
+        {/* Anti-Gravity Ambient Floating Motion on Mobile */}
+        <motion.div
+          animate={{ y: [-6, 6, -6] }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+          className="relative rounded-2xl glass-card p-6 md:p-8 space-y-6 leading-relaxed text-gray-300 text-sm border border-cyber-green/20"
+        >
+          <LuminousCardBorder
+            cursorX={null}
+            cursorY={null}
+            isHovered={false}
+            borderRadius="rounded-2xl"
+            glowColor="#00FF9D"
+          />
+          {/* Holographic corner HUD brackets */}
+          <div className="absolute top-2.5 left-2.5 w-3.5 h-3.5 border-t-2 border-l-2 border-cyber-green/60 pointer-events-none" />
+          <div className="absolute top-2.5 right-2.5 w-3.5 h-3.5 border-t-2 border-r-2 border-cyber-green/60 pointer-events-none" />
+          <div className="absolute bottom-2.5 left-2.5 w-3.5 h-3.5 border-b-2 border-l-2 border-cyber-green/60 pointer-events-none" />
+          <div className="absolute bottom-2.5 right-2.5 w-3.5 h-3.5 border-b-2 border-r-2 border-cyber-green/60 pointer-events-none" />
+
+          <p className="relative z-10 leading-relaxed text-gray-200">{profile.bio}</p>
+          <div className="relative z-10 border-t border-white/10 pt-6 space-y-3 font-mono text-xs">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between py-2 border-b border-white/5 gap-2">
+              <span className="text-gray-400 font-bold shrink-0 tracking-wider">OBJECTIVE:</span>
+              <span className="text-white text-left max-w-xl leading-relaxed">{profile.careerObjective}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-white/5">
+              <span className="text-gray-400 font-bold tracking-wider">LOCATION:</span>
+              <span className="text-white">{profile.location}</span>
+            </div>
+            <div className="flex justify-between py-2 border-b border-white/5">
+              <span className="text-gray-400 font-bold tracking-wider">EMAIL:</span>
+              <a href={`mailto:${profile.email}`} className="text-cyber-blue font-bold hover:underline">{profile.email}</a>
+            </div>
+            <div className="flex justify-between py-2">
+              <span className="text-gray-400 font-bold tracking-wider">PHONE:</span>
+              <span className="text-white">{profile.phone}</span>
+            </div>
+          </div>
+        </motion.div>
       </div>
     );
   }
