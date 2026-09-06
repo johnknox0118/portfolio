@@ -127,6 +127,8 @@ function ProjectCardItem({
               <img
                 src={project.imageUrl || "/uploads/1784277682063_Screenshot_2026-07-17_141041.png"}
                 alt={project.title}
+                loading="lazy"
+                decoding="async"
                 onError={(e) => {
                   const target = e.currentTarget;
                   if (!target.src.includes("Screenshot_2026-07-17_141041.png")) {

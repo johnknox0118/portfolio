@@ -29,8 +29,6 @@ import GlobalClickRipple from "@/components/GlobalClickRipple";
 import MorphingGlassBlobs from "@/components/MorphingGlassBlobs";
 import SmoothScrollProvider, { smoothScrollTo } from "@/components/SmoothScrollProvider";
 import CyberSectionWrapper from "@/components/cyber/CyberSectionWrapper";
-import NeonBorderCard from "@/components/cyber/NeonBorderCard";
-import CascadeGrid, { CascadeCard } from "@/components/cyber/CascadeGrid";
 import AboutFloatingCard3D from "@/components/cyber/AboutFloatingCard3D";
 import Cyber3DCard from "@/components/cyber/Cyber3DCard";
 import SectionProgress from "@/components/SectionProgress";
@@ -476,58 +474,46 @@ export default function PublicPortfolio() {
         </section>
 
         {/* ACHIEVEMENTS / COUNTERS */}
-        <CascadeGrid className="focus-depth-group grid grid-cols-1 md:grid-cols-3 gap-6" staggerDelay={0.16}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Card 1: Certifications */}
-          <CascadeCard index={0}>
-            <div className="focus-depth-item h-full">
-              <NeonBorderCard glowColor="green">
-                <div className="glass-card hud-box card-spotlight p-6 flex flex-col items-center justify-center text-center gap-2 h-full">
-                  <div className="text-cyber-green mb-1">{getIcon("Award")}</div>
-                  <span className="font-orbitron font-black text-2xl md:text-4xl text-white shadow-glow">
-                    {certifications?.length || 0}
-                  </span>
-                  <span className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">
-                    Certifications Verified
-                  </span>
-                </div>
-              </NeonBorderCard>
+          <Cyber3DCard glowColor="green" index={0} depth={180} className="h-full">
+            <div className="glass-card hud-box glass-shine card-spotlight p-6 flex flex-col items-center justify-center text-center gap-2 h-full">
+              <div className="text-cyber-green mb-1">{getIcon("Award")}</div>
+              <span className="font-orbitron font-black text-2xl md:text-4xl text-white shadow-glow">
+                {certifications?.length || 0}
+              </span>
+              <span className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">
+                Certifications Verified
+              </span>
             </div>
-          </CascadeCard>
+          </Cyber3DCard>
 
           {/* Card 2: Projects */}
-          <CascadeCard index={1}>
-            <div className="focus-depth-item h-full">
-              <NeonBorderCard glowColor="green">
-                <div className="glass-card hud-box card-spotlight p-6 flex flex-col items-center justify-center text-center gap-2 h-full">
-                  <div className="text-cyber-green mb-1">{getIcon("Code")}</div>
-                  <span className="font-orbitron font-black text-2xl md:text-4xl text-white shadow-glow">
-                    {projects?.length || 0}
-                  </span>
-                  <span className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">
-                    Security Projects Completed
-                  </span>
-                </div>
-              </NeonBorderCard>
+          <Cyber3DCard glowColor="green" index={1} depth={180} className="h-full">
+            <div className="glass-card hud-box glass-shine card-spotlight p-6 flex flex-col items-center justify-center text-center gap-2 h-full">
+              <div className="text-cyber-green mb-1">{getIcon("Code")}</div>
+              <span className="font-orbitron font-black text-2xl md:text-4xl text-white shadow-glow">
+                {projects?.length || 0}
+              </span>
+              <span className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">
+                Security Projects Completed
+              </span>
             </div>
-          </CascadeCard>
+          </Cyber3DCard>
 
           {/* Card 3: Current CGPA */}
-          <CascadeCard index={2}>
-            <div className="focus-depth-item h-full">
-              <NeonBorderCard glowColor="green">
-                <div className="glass-card hud-box card-spotlight p-6 flex flex-col items-center justify-center text-center gap-2 h-full">
-                  <div className="text-cyber-green mb-1">{getIcon("BookOpen")}</div>
-                  <span className="font-orbitron font-black text-2xl md:text-4xl text-white shadow-glow">
-                    {currentCgpa}
-                  </span>
-                  <span className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">
-                    Current Qualification CGPA
-                  </span>
-                </div>
-              </NeonBorderCard>
+          <Cyber3DCard glowColor="green" index={2} depth={180} className="h-full">
+            <div className="glass-card hud-box glass-shine card-spotlight p-6 flex flex-col items-center justify-center text-center gap-2 h-full">
+              <div className="text-cyber-green mb-1">{getIcon("BookOpen")}</div>
+              <span className="font-orbitron font-black text-2xl md:text-4xl text-white shadow-glow">
+                {currentCgpa}
+              </span>
+              <span className="font-mono text-[10px] text-gray-400 uppercase tracking-widest">
+                Current Qualification CGPA
+              </span>
             </div>
-          </CascadeCard>
-        </CascadeGrid>
+          </Cyber3DCard>
+        </div>
 
         {/* ABOUT ME SECTION */}
         <CyberSectionWrapper id="about" className="space-y-6" variant="cinematic">

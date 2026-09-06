@@ -117,7 +117,7 @@ function createTextTexture(text: string, color: string = "#00FF9D", isMobile: bo
 export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canRender = useCanRender3D();
-  const isVisibleRef = useRef(true);
+  const isVisibleRef = useRef(false);
   const lastRotationRef = useRef({ x: 0, y: 0 });
   const [isMobileScreen, setIsMobileScreen] = useState(() =>
     typeof window !== "undefined" ? window.innerWidth < 768 : false
@@ -164,7 +164,7 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
   // Serialization key to detect skill additions, deletions, or edits
   const skillNamesKey = useMemo(() => skillNames.join("||"), [skillNames]);
 
-  // Viewport intersection observer: pauses RAF without tearing down WebGL scene
+  // Viewport intersection observer: strictly pauses RAF when not visible to prevent dual WebGL load
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new IntersectionObserver(
@@ -174,8 +174,20 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
       { threshold: 0.05 }
     );
     observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
+
+    const checkScroll = () => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const inView = rect.bottom > -50 && rect.top < window.innerHeight + 50;
+      isVisibleRef.current = inView;
+    };
+    window.addEventListener("scroll", checkScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", checkScroll);
+    };
+  }, [canRender]);
 
   // Three.js Scene Setup & Lifecycle
   useEffect(() => {
@@ -461,9 +473,16 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
     };
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
+    const handleContextLost = (e: Event) => {
+      e.preventDefault();
+      cancelAnimationFrame(animId);
+    };
+    dom.addEventListener("webglcontextlost", handleContextLost, false);
+
     // Animation Loop
     let animId: number;
     let elapsed = 0;
+    const tempWorldPos = new THREE.Vector3();
     const animate = () => {
       animId = requestAnimationFrame(animate);
 
@@ -503,7 +522,6 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
 
       // Clean Backface Culling & Depth Occlusion for Skill Badges
       // Completely eliminates overlapping text chaos from labels on the back
-      const tempWorldPos = new THREE.Vector3();
       sprites.forEach((sprite) => {
         sprite.getWorldPosition(tempWorldPos);
 
@@ -532,6 +550,7 @@ export default function SkillsSphere3D({ skills }: SkillsSphereProps) {
     return () => {
       cancelAnimationFrame(animId);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      dom.removeEventListener("webglcontextlost", handleContextLost);
       dom.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);

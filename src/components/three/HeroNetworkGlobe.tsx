@@ -165,8 +165,20 @@ export default function HeroNetworkGlobe() {
       { threshold: 0.05 }
     );
     observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
+
+    const checkScroll = () => {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const inView = rect.bottom > -50 && rect.top < window.innerHeight + 50;
+      setIsVisible(inView);
+    };
+    window.addEventListener("scroll", checkScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", checkScroll);
+    };
+  }, [canRender]);
 
   // Scoped pointer handler ONLY when pointer moves over the globe container
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -197,18 +209,17 @@ export default function HeroNetworkGlobe() {
       ref={containerRef}
       className="absolute inset-0 pointer-events-none [&_*]:pointer-events-none z-0 opacity-85"
     >
-      {(!isMobile || isVisible) && (
-        <Scene3DBoundary>
-          <Canvas
-            style={{ pointerEvents: "none" }}
-            camera={{ position: [0, 0, 6.2], fov: 45 }}
-            dpr={isMobile ? 1 : [1, 1.5]}
-            gl={{ alpha: true, antialias: !isMobile, powerPreference: isMobile ? "low-power" : "high-performance" }}
-          >
-            <NetworkGlobeScene pointerRef={pointerRef} isVisible={isVisible} isMobile={isMobile} />
-          </Canvas>
-        </Scene3DBoundary>
-      )}
+      <Scene3DBoundary>
+        <Canvas
+          frameloop={isVisible ? "always" : "never"}
+          style={{ pointerEvents: "none" }}
+          camera={{ position: [0, 0, 6.2], fov: 45 }}
+          dpr={isMobile ? 1 : [1, 1.5]}
+          gl={{ alpha: true, antialias: !isMobile, powerPreference: isMobile ? "low-power" : "high-performance" }}
+        >
+          <NetworkGlobeScene pointerRef={pointerRef} isVisible={isVisible} isMobile={isMobile} />
+        </Canvas>
+      </Scene3DBoundary>
     </div>
   );
 }
