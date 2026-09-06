@@ -261,7 +261,13 @@ export async function POST(request: Request) {
     const context = await fetchLivePortfolioContext();
     const systemPrompt = buildSystemPrompt(context);
 
-    const geminiKey = process.env.GEMINI_API_KEY;
+    // Google Gemini API key resolution: check all standard environment variable names
+    const geminiKey =
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_API_KEY ||
+      process.env.GOOGLE_GEMINI_API_KEY ||
+      process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
     const openaiKey = process.env.OPENAI_API_KEY;
     const groqKey = process.env.GROQ_API_KEY;
 
@@ -276,12 +282,18 @@ export async function POST(request: Request) {
           { role: 'user', parts: [{ text: message }] },
         ];
 
-        const candidateModels = ['gemini-3.6-flash', 'gemini-3.7-flash', 'gemini-flash-latest'];
+        // Verified active Google Gemini models supporting generateContent
+        const candidateModels = [
+          'gemini-3.6-flash',
+          'gemini-3.7-flash',
+          'gemini-flash-latest',
+          'gemini-3.5-flash',
+        ];
 
         for (const model of candidateModels) {
           try {
             const geminiRes = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`,
               {
                 method: 'POST',
                 headers: {
@@ -416,16 +428,11 @@ export async function POST(request: Request) {
     }
 
     // 5. Intelligent Live-Database Grounding Fallback
-    // If no external API key is present or all external calls fail, answer from live database directly!
+    // If external calls fail, answer from live database directly
     const { reply, actions } = executeLocalGroundingEngine(message, context);
 
-    const hint =
-      !geminiKey && !openaiKey && !groqKey
-        ? '\n\n*(⚡ J.A.M.S. is currently operating in Live Database Grounding Mode. Add `GEMINI_API_KEY` to your `.env` to unlock full conversational LLM reasoning.)*'
-        : '';
-
     return NextResponse.json({
-      reply: reply + hint,
+      reply,
       actions,
       provider: 'local-database-grounding',
       liveDataSynced: true,
