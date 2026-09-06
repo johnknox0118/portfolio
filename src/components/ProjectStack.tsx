@@ -74,12 +74,12 @@ function ProjectCardItem({
   return (
     <div
       ref={cardContainerRef}
-      className="project-card-container w-full will-change-transform h-full"
+      className="project-card-container w-full h-full"
     >
       <Cyber3DCard glowColor="green" index={pIdx} depth={220} className="h-full">
         <div
           className={`group/project rounded-2xl h-full ${
-            pIdx === 0 ? "animated-gradient-border" : ""
+            pIdx === 0 ? "md:animated-gradient-border" : ""
           }`}
         >
           <motion.div
@@ -94,7 +94,7 @@ function ProjectCardItem({
               className="aspect-video w-full rounded-xl overflow-hidden border border-white/5 bg-black/40 relative"
             >
               {/* Smooth Hover Action Options Overlay */}
-              <div className="absolute inset-0 bg-[#07111F]/85 opacity-0 group-hover/project:opacity-100 flex items-center justify-center gap-3 transition-opacity duration-300 backdrop-blur-md z-30 p-3 flex-wrap pointer-events-none group-hover/project:pointer-events-auto">
+              <div className="absolute inset-0 bg-[#07111F]/85 opacity-0 group-hover/project:opacity-100 flex items-center justify-center gap-3 transition-opacity duration-300 md:backdrop-blur-md z-30 p-3 flex-wrap pointer-events-none group-hover/project:pointer-events-auto">
                 <button
                   onClick={handleOpenModal}
                   className="btn-cyber flex items-center gap-1.5 px-3.5 py-2 border-cyber-green text-cyber-green text-xs font-bold cursor-pointer hover:bg-cyber-green hover:text-black transition-all hover:scale-105 shadow-[0_0_12px_rgba(0,255,157,0.35)]"

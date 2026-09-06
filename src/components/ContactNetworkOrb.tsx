@@ -8,6 +8,14 @@ export default function ContactNetworkOrb() {
   const containerRef = useRef<HTMLDivElement>(null);
   const canRender = useCanRender3D();
   const [isVisible, setIsVisible] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -20,6 +28,14 @@ export default function ContactNetworkOrb() {
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
+
+  if (isMobile) {
+    return (
+      <div className="w-16 h-16 rounded-full border border-cyber-green/40 bg-cyber-green/5 flex items-center justify-center shadow-[0_0_12px_rgba(0,255,157,0.2)]">
+        <div className="w-8 h-8 rounded-full border border-dashed border-cyber-blue/50 animate-spin" style={{ animationDuration: "8s" }} />
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!canRender || !containerRef.current) return;

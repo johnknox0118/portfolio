@@ -149,10 +149,17 @@ export default function AboutFloatingCard3D({
     mouseY.set(0);
   };
 
-  // If reduced motion is requested, render clean accessible static card
-  if (prefersReducedMotion) {
+  // If reduced motion or mobile device, render clean lightweight card with luminous border
+  if (prefersReducedMotion || isMobile) {
     return (
-      <div className={`glass-card p-6 md:p-8 space-y-6 leading-relaxed text-gray-300 text-sm ${className}`}>
+      <div className={`relative rounded-2xl glass-card p-6 md:p-8 space-y-6 leading-relaxed text-gray-300 text-sm border border-cyber-green/20 ${className}`}>
+        <LuminousCardBorder
+          cursorX={null}
+          cursorY={null}
+          isHovered={false}
+          borderRadius="rounded-2xl"
+          glowColor="#00FF9D"
+        />
         <p>{profile.bio}</p>
         <div className="border-t border-white/5 pt-6 space-y-3 font-mono text-xs">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between py-2 border-b border-white/5 gap-2">

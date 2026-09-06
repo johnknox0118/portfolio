@@ -109,10 +109,21 @@ export default function FloatingResumeCard({
     setCursorPos(null);
   };
 
-  if (prefersReducedMotion) {
+  if (prefersReducedMotion || isMobile) {
     return (
-      <div className={`relative w-full py-2 z-20 pointer-events-auto ${className}`}>
-        {children}
+      <div className={`relative w-full py-4 z-20 pointer-events-auto ${className}`}>
+        <div className="relative w-full pointer-events-auto z-20">
+          <LuminousCardBorder
+            cursorX={null}
+            cursorY={null}
+            isHovered={false}
+            borderRadius="rounded-2xl"
+            glowColor="#00FF9D"
+          />
+          <div className="relative z-10 w-full pointer-events-auto">
+            {children}
+          </div>
+        </div>
       </div>
     );
   }

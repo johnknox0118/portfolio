@@ -100,13 +100,13 @@ export default function CyberSectionWrapper({
 
   return (
     <section id={id} ref={ref} className={`relative scroll-mt-20 ${className}`}>
-      {/* Soft Ambient Background Glow */}
+      {/* Soft Ambient Background Glow on desktop */}
       {showAmbientGlow && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 0.35 } : { opacity: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-3/4 h-64 bg-radial from-cyber-blue/10 via-cyber-green/5 to-transparent blur-3xl -z-10"
+          className="pointer-events-none absolute -top-16 left-1/2 -translate-x-1/2 w-3/4 h-64 bg-radial from-cyber-blue/10 via-cyber-green/5 to-transparent blur-3xl -z-10 hidden md:block"
         />
       )}
 

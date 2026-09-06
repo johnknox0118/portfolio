@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import Scene3DBoundary from "./Scene3DBoundary";
@@ -63,8 +63,17 @@ function OrbitScene() {
 
 export default function SkillsOrbitField() {
   const canRender = useCanRender3D();
+  const [isMobile, setIsMobile] = useState(false);
 
-  if (!canRender) return null;
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  // On mobile screens, disable ambient orbit field to preserve WebGL memory for the 3D sphere
+  if (!canRender || isMobile) return null;
 
   return (
     <div className="absolute inset-0 pointer-events-none z-0 opacity-25 md:opacity-35">

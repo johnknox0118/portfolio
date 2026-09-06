@@ -195,16 +195,18 @@ export default function HeroNetworkGlobe() {
       ref={containerRef}
       className="absolute inset-0 pointer-events-none [&_*]:pointer-events-none z-0 opacity-85"
     >
-      <Scene3DBoundary>
-        <Canvas
-          style={{ pointerEvents: "none" }}
-          camera={{ position: [0, 0, 6.2], fov: 45 }}
-          dpr={isMobile ? 1 : [1, 1.5]}
-          gl={{ alpha: true, antialias: !isMobile, powerPreference: isMobile ? "low-power" : "high-performance" }}
-        >
-          <NetworkGlobeScene pointerRef={pointerRef} isVisible={isVisible} isMobile={isMobile} />
-        </Canvas>
-      </Scene3DBoundary>
+      {(!isMobile || isVisible) && (
+        <Scene3DBoundary>
+          <Canvas
+            style={{ pointerEvents: "none" }}
+            camera={{ position: [0, 0, 6.2], fov: 45 }}
+            dpr={isMobile ? 1 : [1, 1.5]}
+            gl={{ alpha: true, antialias: !isMobile, powerPreference: isMobile ? "low-power" : "high-performance" }}
+          >
+            <NetworkGlobeScene pointerRef={pointerRef} isVisible={isVisible} isMobile={isMobile} />
+          </Canvas>
+        </Scene3DBoundary>
+      )}
     </div>
   );
 }

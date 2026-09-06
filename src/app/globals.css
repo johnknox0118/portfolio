@@ -603,6 +603,12 @@ html.lenis, html.lenis body {
   z-index: 1;
 }
 
+@media (max-width: 768px) {
+  .animated-gradient-border::before {
+    display: none !important;
+  }
+}
+
 /* ANIMATION 11: Skill Card Hover */
 .skill-card-hover {
   transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),

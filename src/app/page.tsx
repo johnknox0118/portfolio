@@ -543,8 +543,10 @@ export default function PublicPortfolio() {
 
         {/* SKILLS SECTION */}
         <div className="relative">
-          {/* 3D orbiting constellation — subtle decorative background layer only */}
-          <SkillsOrbitField />
+          {/* 3D orbiting constellation — subtle decorative background layer only on desktop */}
+          <div className="hidden md:block">
+            <SkillsOrbitField />
+          </div>
           <div className="relative z-10">
             <SkillsVisualization skills={skills} />
           </div>

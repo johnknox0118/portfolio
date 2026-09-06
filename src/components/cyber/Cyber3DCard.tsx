@@ -192,8 +192,23 @@ export default function Cyber3DCard({
   const floatDuration = 5.5 + (index % 4) * 0.5;
   const floatDelay = (index % 5) * 0.25;
 
-  if (prefersReducedMotion) {
-    return <div className={`relative h-full ${className}`}>{children}</div>;
+  if (prefersReducedMotion || isMobile) {
+    return (
+      <div ref={containerRef} className={`relative h-full ${className}`}>
+        <div className="group/cyber3d relative w-full h-full">
+          <LuminousCardBorder
+            cursorX={null}
+            cursorY={null}
+            isHovered={false}
+            borderRadius={borderRadius}
+            glowColor="#00FF9D"
+          />
+          <div className="relative z-20 w-full h-full">
+            {children}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
