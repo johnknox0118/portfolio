@@ -35,8 +35,8 @@ export default function LuminousCardBorder({
   cursorY,
   isHovered,
   borderRadius = "rounded-2xl",
-  glowColor = "#00FF9D",
-  haloColor = "rgba(0, 255, 157, 0.75)",
+  glowColor = "var(--cyber-primary, #00FF9D)",
+  haloColor = "rgba(var(--cyber-primary-rgb, 0, 255, 157), 0.75)",
   borderWidth = 1.5,
   glowRadius = 320,
   enableGlassShine = true,
@@ -60,7 +60,7 @@ export default function LuminousCardBorder({
       <>
         {/* Mobile Non-Stop Green Luminous Border & Soft Outer Glow */}
         <div
-          className={`pointer-events-none absolute -inset-[1px] ${borderRadius} z-20 border border-[#00FF9D]/60 shadow-[0_0_12px_rgba(0,255,157,0.30)]`}
+          className={`pointer-events-none absolute -inset-[1px] ${borderRadius} z-20 border border-[var(--cyber-primary,#00FF9D)]/60 shadow-[0_0_12px_rgba(var(--cyber-primary-rgb,0,255,157),0.30)]`}
         />
 
         {/* Mobile Synchronized Realistic Glass Shine Reflection */}
@@ -99,7 +99,7 @@ export default function LuminousCardBorder({
           maskComposite: "exclude",
           padding: `${borderWidth}px`,
           background:
-            "linear-gradient(135deg, rgba(0, 255, 157, 0.55) 0%, rgba(0, 200, 255, 0.25) 50%, rgba(0, 255, 157, 0.55) 100%)",
+            "linear-gradient(135deg, rgba(var(--cyber-primary-rgb, 0, 255, 157), 0.55) 0%, rgba(var(--cyber-secondary-rgb, 0, 200, 255), 0.25) 50%, rgba(var(--cyber-primary-rgb, 0, 255, 157), 0.55) 100%)",
         }}
       />
 
@@ -120,7 +120,7 @@ export default function LuminousCardBorder({
           className="w-[200%] h-[200%] -translate-x-1/4 -translate-y-1/4"
           style={{
             background:
-              "conic-gradient(from 0deg, transparent 0deg, rgba(0, 255, 157, 0.75) 45deg, rgba(0, 200, 255, 0.45) 80deg, transparent 125deg, transparent 180deg, rgba(0, 255, 157, 0.5) 225deg, transparent 270deg)",
+              "conic-gradient(from 0deg, transparent 0deg, rgba(var(--cyber-primary-rgb, 0, 255, 157), 0.75) 45deg, rgba(var(--cyber-secondary-rgb, 0, 200, 255), 0.45) 80deg, transparent 125deg, transparent 180deg, rgba(var(--cyber-primary-rgb, 0, 255, 157), 0.5) 225deg, transparent 270deg)",
           }}
         />
       </div>
@@ -143,7 +143,7 @@ export default function LuminousCardBorder({
           maskComposite: "exclude",
           padding: `${borderWidth + 1}px`,
           background:
-            "linear-gradient(135deg, rgba(0, 255, 157, 0.65) 0%, rgba(0, 200, 255, 0.3) 50%, rgba(0, 255, 157, 0.65) 100%)",
+            "linear-gradient(135deg, rgba(var(--cyber-primary-rgb, 0, 255, 157), 0.65) 0%, rgba(var(--cyber-secondary-rgb, 0, 200, 255), 0.3) 50%, rgba(var(--cyber-primary-rgb, 0, 255, 157), 0.65) 100%)",
         }}
       />
 
@@ -166,7 +166,7 @@ export default function LuminousCardBorder({
           className="w-full h-full"
           style={{
             background: active
-              ? `radial-gradient(${glowRadius}px circle at ${cursorX}px ${cursorY}px, #FFFFFF 0%, ${glowColor} 20%, rgba(0, 255, 157, 0.85) 42%, rgba(0, 200, 255, 0.3) 65%, transparent 78%)`
+              ? `radial-gradient(${glowRadius}px circle at ${cursorX}px ${cursorY}px, #FFFFFF 0%, ${glowColor} 20%, rgba(var(--cyber-primary-rgb, 0, 255, 157), 0.85) 42%, rgba(var(--cyber-secondary-rgb, 0, 200, 255), 0.3) 65%, transparent 78%)`
               : "transparent",
           }}
         />
@@ -188,7 +188,7 @@ export default function LuminousCardBorder({
           className="w-full h-full"
           style={{
             background: active
-              ? `radial-gradient(${glowRadius * 0.9}px circle at ${cursorX}px ${cursorY}px, ${glowColor} 0%, ${haloColor} 38%, rgba(0, 200, 255, 0.3) 60%, transparent 75%)`
+              ? `radial-gradient(${glowRadius * 0.9}px circle at ${cursorX}px ${cursorY}px, ${glowColor} 0%, ${haloColor} 38%, rgba(var(--cyber-secondary-rgb, 0, 200, 255), 0.3) 60%, transparent 75%)`
               : "transparent",
           }}
         />

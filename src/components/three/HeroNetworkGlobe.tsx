@@ -5,6 +5,7 @@ import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import Scene3DBoundary from "./Scene3DBoundary";
 import useCanRender3D from "./useCanRender3D";
+import { useTheme } from "../ThemeProvider";
 
 // Generates points distributed on a sphere surface (Fibonacci spiral)
 function useSpherePoints(count: number, radius: number) {
@@ -30,6 +31,7 @@ interface GlobeInnerProps {
 }
 
 function NetworkGlobeScene({ pointerRef, isVisible, isMobile = false }: GlobeInnerProps) {
+  const { primaryColor, secondaryColor } = useTheme();
   const groupRef = useRef<THREE.Group>(null);
   const coreRef = useRef<THREE.Mesh>(null);
   const nodes = useSpherePoints(isMobile ? 24 : 48, 2.2);
@@ -84,8 +86,8 @@ function NetworkGlobeScene({ pointerRef, isVisible, isMobile = false }: GlobeInn
     <group ref={groupRef}>
       {/* Lighting */}
       <ambientLight intensity={0.4} />
-      <pointLight position={[5, 5, 5]} intensity={1.2} color="#00FF9D" />
-      <pointLight position={[-5, -5, -5]} intensity={1.0} color="#00C8FF" />
+      <pointLight position={[5, 5, 5]} intensity={1.2} color={primaryColor} />
+      <pointLight position={[-5, -5, -5]} intensity={1.0} color={secondaryColor} />
 
       {/* Transparent Glass-like Inner Core */}
       <mesh ref={coreRef}>
@@ -103,7 +105,7 @@ function NetworkGlobeScene({ pointerRef, isVisible, isMobile = false }: GlobeInn
       <mesh>
         <icosahedronGeometry args={[2.2, isMobile ? 1 : 2]} />
         <meshBasicMaterial
-          color="#00FF9D"
+          color={primaryColor}
           wireframe
           transparent
           opacity={0.14}
@@ -121,7 +123,7 @@ function NetworkGlobeScene({ pointerRef, isVisible, isMobile = false }: GlobeInn
             itemSize={3}
           />
         </bufferGeometry>
-        <lineBasicMaterial color="#00C8FF" transparent opacity={0.38} />
+        <lineBasicMaterial color={secondaryColor} transparent opacity={0.38} />
       </lineSegments>
 
       {/* Glowing Nodes */}
@@ -129,7 +131,7 @@ function NetworkGlobeScene({ pointerRef, isVisible, isMobile = false }: GlobeInn
         <mesh key={idx} position={p}>
           <sphereGeometry args={[0.038, 8, 8]} />
           <meshBasicMaterial
-            color={idx % 3 === 0 ? "#00C8FF" : "#00FF9D"}
+            color={idx % 3 === 0 ? secondaryColor : primaryColor}
             transparent
             opacity={0.92}
           />

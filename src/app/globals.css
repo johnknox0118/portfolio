@@ -1,17 +1,17 @@
-@import "https://fonts.googleapis.com/css2?family=Oxanium:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap";
+@import "https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Oxanium:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap";
 @import "tailwindcss";
 
 @theme {
-  --color-cyber-green: #00FF9D;
-  --color-cyber-blue: #00C8FF;
-  --color-cyber-cyan: #00e5ff;
+  --color-cyber-green: var(--cyber-primary, #00FF9D);
+  --color-cyber-blue: var(--cyber-secondary, #00C8FF);
+  --color-cyber-cyan: var(--cyber-accent, #00e5ff);
   --color-cyber-dark: #07111F;
   --color-cyber-darker: #040a12;
   --color-cyber-surface: rgba(10, 25, 47, 0.45);
   
-  --font-orbitron: "Oxanium", sans-serif;
-  --font-exo2: "Oxanium", sans-serif;
-  --font-sans: "Oxanium", sans-serif;
+  --font-orbitron: "Orbitron", sans-serif;
+  --font-exo2: "Orbitron", sans-serif;
+  --font-sans: "Inter", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   
   --animate-scanline: scanline 6s linear infinite;
@@ -54,16 +54,25 @@ html.lenis body {
 }
 
 :root {
-  --background: #07111F;
+  --cyber-primary: #00FF9D;
+  --cyber-secondary: #00C8FF;
+  --cyber-accent: #00e5ff;
+  --cyber-bg: #07111F;
+  --cyber-primary-rgb: 0, 255, 157;
+  --cyber-secondary-rgb: 0, 200, 255;
+  --cyber-accent-rgb: 0, 229, 255;
+  --cyber-bg-rgb: 7, 17, 31;
+  --background: var(--cyber-bg, #07111F);
   --foreground: #ffffff;
 }
 
 body {
-  background-color: var(--background);
+  background-color: var(--cyber-bg, var(--background, #07111F));
   color: var(--foreground);
   font-family: "Oxanium", sans-serif;
   overflow-x: hidden;
   position: relative;
+  transition: background-color 0.4s ease;
 }
 
 input, textarea, select, button {
@@ -76,6 +85,7 @@ input, textarea, select, button {
   -moz-user-select: none !important;
   -ms-user-select: none !important;
   user-select: none !important;
+  -webkit-touch-callout: none !important;
 }
 
 input, textarea, [contenteditable="true"] {
@@ -83,12 +93,14 @@ input, textarea, [contenteditable="true"] {
   -moz-user-select: text !important;
   -ms-user-select: text !important;
   user-select: text !important;
+  -webkit-touch-callout: default !important;
 }
 
 img {
   -webkit-user-drag: none !important;
   user-drag: none !important;
   pointer-events: none !important;
+  -webkit-touch-callout: none !important;
 }
 
 /* Custom Scrollbar */
@@ -100,11 +112,11 @@ img {
   background: #040a12;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 157, 0.25);
+  background: rgba(var(--cyber-primary-rgb), 0.25);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 200, 255, 0.5);
+  background: rgba(var(--cyber-secondary-rgb), 0.5);
 }
 
 /* CRT Scanlines Overlay */
@@ -141,8 +153,8 @@ img {
   transform: translate3d(0, 0, 0);
 }
 .glass-card:hover {
-  border-color: rgba(0, 255, 157, 0.3);
-  box-shadow: 0 12px 40px 0 rgba(0, 255, 157, 0.1),
+  border-color: rgba(var(--cyber-primary-rgb), 0.3);
+  box-shadow: 0 12px 40px 0 rgba(var(--cyber-primary-rgb), 0.1),
               inset 0 1px 2px rgba(255, 255, 255, 0.1);
 }
 
@@ -155,7 +167,7 @@ img {
   position: absolute;
   width: 14px;
   height: 14px;
-  border-color: #00FF9D;
+  border-color: var(--cyber-primary);
   opacity: 0.6;
   pointer-events: none;
   transition: border-color 0.3s ease;
@@ -175,13 +187,13 @@ img {
   right: 0;
 }
 .hud-box:hover::before, .hud-box:hover::after {
-  border-color: #00C8FF;
+  border-color: var(--cyber-secondary);
   opacity: 1;
 }
 
 /* Cyber Holographic text shifting */
 .holo-text {
-  background: linear-gradient(135deg, #00FF9D, #00C8FF, #00e5ff, #00FF9D);
+  background: linear-gradient(135deg, var(--cyber-primary), var(--cyber-secondary), var(--cyber-accent), var(--cyber-primary));
   background-size: 400% 400%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -189,137 +201,131 @@ img {
   animation: holo-shift 6s ease infinite;
 }
 
-/* Premium True 3D Typography System — Matching Reference Design */
+/* Premium True 3D Typography System — Orbitron Cyber Aesthetic */
 .hero-3d-name-font {
-  font-family: "Oxanium", sans-serif !important;
-  font-weight: 800 !important;
-  letter-spacing: 0.035em;
+  font-family: "Orbitron", sans-serif !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em;
 }
 
 .hero-3d-text-front {
   background: linear-gradient(
     180deg,
     #ffffff 0%,
-    #dcf7ff 18%,
-    #30d0ff 52%,
-    #009ad6 82%,
-    #0074aa 100%
+    rgba(255, 255, 255, 0.96) 20%,
+    rgba(var(--cyber-secondary-rgb), 0.95) 52%,
+    var(--cyber-primary) 82%,
+    rgba(var(--cyber-primary-rgb), 0.8) 100%
   );
   background-size: 100% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 3px rgba(0, 200, 255, 0.22));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 .hero-3d-extrusion {
-  color: #001a38;
+  color: transparent;
   text-shadow:
-    /* Solid crisp downward volumetric 3D extrusion */
-    0.5px 1px 0 #009ed0,
-    0.5px 2px 0 #008cc0,
-    0.5px 3px 0 #007bb0,
-    0.5px 4px 0 #006aa0,
-    0.5px 5px 0 #005a90,
-    0.5px 6px 0 #004b7e,
-    0.5px 7px 0 #003c6a,
-    0.5px 8px 0 #002e56,
-    0.5px 9px 0 #002244,
-    0.5px 10px 0 #001732,
-    /* Clean directional cast shadow without blurry glow cloud */
-    0 12px 14px rgba(0, 0, 0, 0.75),
-    0 18px 24px rgba(0, 10, 25, 0.6);
+    0 1px 0 rgba(var(--cyber-secondary-rgb), 0.85),
+    1px 2px 0 rgba(var(--cyber-secondary-rgb), 0.65),
+    1px 3px 0 rgba(var(--cyber-secondary-rgb), 0.45),
+    2px 4px 6px rgba(0, 0, 0, 0.75),
+    0 0 20px rgba(var(--cyber-primary-rgb), 0.35);
 }
 
 @media (max-width: 1024px) {
   .hero-3d-extrusion {
     text-shadow:
-      0.5px 1px 0 #009ed0,
-      0.5px 2px 0 #008cc0,
-      0.5px 3px 0 #007bb0,
-      0.5px 4px 0 #006aa0,
-      0.5px 5px 0 #005a90,
-      0.5px 6px 0 #004b7e,
-      0 8px 10px rgba(0, 0, 0, 0.7),
-      0 12px 18px rgba(0, 10, 25, 0.5);
+      0 1px 0 rgba(var(--cyber-secondary-rgb), 0.85),
+      1px 2px 0 rgba(var(--cyber-secondary-rgb), 0.60),
+      1px 3px 0 rgba(var(--cyber-secondary-rgb), 0.40),
+      2px 3px 5px rgba(0, 0, 0, 0.7),
+      0 0 16px rgba(var(--cyber-primary-rgb), 0.3);
   }
 }
 
 @media (max-width: 640px) {
   .hero-3d-extrusion {
     text-shadow:
-      0.5px 1px 0 #009ed0,
-      0.5px 2px 0 #007bb0,
-      0.5px 3px 0 #005a90,
-      0.5px 4px 0 #003c6a,
-      0 5px 8px rgba(0, 0, 0, 0.65);
+      0 1px 0 rgba(var(--cyber-secondary-rgb), 0.8),
+      1px 2px 0 rgba(var(--cyber-secondary-rgb), 0.5),
+      1px 3px 4px rgba(0, 0, 0, 0.65);
   }
 }
 
-.hero-3d-selectable,
-.hero-3d-selectable * {
+/* Global Anti-Theft Content Protection (Prevents text selection, dragging, and media copying) */
+*, *::before, *::after {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+}
+
+input, textarea, [contenteditable="true"] {
   -webkit-user-select: text !important;
   -moz-user-select: text !important;
   -ms-user-select: text !important;
   user-select: text !important;
 }
 
+img, picture, canvas, svg {
+  -webkit-user-drag: none !important;
+  user-drag: none !important;
+  -webkit-touch-callout: none !important;
+}
+
 /* 3D "I am" Typography System */
 .hero-iam-3d-font {
-  font-family: "Oxanium", sans-serif !important;
+  font-family: "Orbitron", sans-serif !important;
   font-weight: 800 !important;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
 }
 
 .hero-iam-3d-front {
   background: linear-gradient(
     180deg,
     #ffffff 0%,
-    #dcfce7 22%,
-    #00FF9D 55%,
-    #00c978 82%,
-    #008f52 100%
+    rgba(255, 255, 255, 0.95) 40%,
+    rgba(var(--cyber-primary-rgb), 0.85) 80%,
+    var(--cyber-primary) 100%
   );
   background-size: 100% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 2px rgba(0, 255, 157, 0.35));
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
 }
 
 .hero-iam-3d-extrusion {
-  color: #001f12;
+  color: transparent;
   text-shadow:
-    0.5px 1px 0 #00cc7a,
-    0.5px 2px 0 #00b36b,
-    0.5px 3px 0 #00995c,
-    0.5px 4px 0 #007345,
-    0.5px 5px 0 #004d2e,
-    0.5px 6px 0 #001f12,
-    0 6px 10px rgba(0, 0, 0, 0.75);
+    0 1px 0 rgba(var(--cyber-primary-rgb), 0.8),
+    1px 2px 0 rgba(var(--cyber-primary-rgb), 0.5),
+    1px 3px 4px rgba(0, 0, 0, 0.7),
+    0 0 12px rgba(var(--cyber-primary-rgb), 0.3);
 }
 
 @media (max-width: 640px) {
   .hero-iam-3d-extrusion {
     text-shadow:
-      0.5px 1px 0 #00cc7a,
-      0.5px 2px 0 #00995c,
-      0.5px 3px 0 #004d2e,
-      0 4px 6px rgba(0, 0, 0, 0.65);
+      0 1px 0 rgba(var(--cyber-primary-rgb), 0.75),
+      1px 2px 0 rgba(var(--cyber-primary-rgb), 0.45),
+      1px 2px 3px rgba(0, 0, 0, 0.65);
   }
 }
 
 /* Cyber Button Styling */
 .btn-cyber {
   position: relative;
-  font-family: "Oxanium", sans-serif;
+  font-family: "Orbitron", sans-serif;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #00FF9D;
-  background: rgba(0, 255, 157, 0.05);
-  border: 1px solid rgba(0, 255, 157, 0.4);
+  color: var(--cyber-primary);
+  background: rgba(var(--cyber-primary-rgb), 0.05);
+  border: 1px solid rgba(var(--cyber-primary-rgb), 0.4);
   border-radius: 8px;
   padding: 10px 20px;
   transition: all 0.3s ease;
@@ -353,33 +359,33 @@ img {
 }
 .btn-cyber:hover {
   color: #ffffff;
-  background: rgba(0, 255, 157, 0.15);
-  border-color: #00C8FF;
-  box-shadow: 0 0 15px rgba(0, 200, 255, 0.4);
+  background: rgba(var(--cyber-primary-rgb), 0.15);
+  border-color: var(--cyber-secondary);
+  box-shadow: 0 0 15px rgba(var(--cyber-secondary-rgb), 0.4);
 }
 .btn-cyber:hover::before {
   filter: brightness(1.3);
 }
 
 .btn-cyber-blue {
-  color: #00C8FF;
-  background: rgba(0, 200, 255, 0.05);
-  border-color: rgba(0, 200, 255, 0.4);
+  color: var(--cyber-secondary);
+  background: rgba(var(--cyber-secondary-rgb), 0.05);
+  border-color: rgba(var(--cyber-secondary-rgb), 0.4);
 }
 .btn-cyber-blue:hover {
   color: #ffffff;
-  background: rgba(0, 200, 255, 0.15);
-  border-color: #00FF9D;
-  box-shadow: 0 0 15px rgba(0, 255, 157, 0.4);
+  background: rgba(var(--cyber-secondary-rgb), 0.15);
+  border-color: var(--cyber-primary);
+  box-shadow: 0 0 15px rgba(var(--cyber-primary-rgb), 0.4);
 }
 
 /* Security Tag / Cyber badge */
 .cyber-tag {
   font-family: "JetBrains Mono", monospace;
   font-size: 0.65rem;
-  color: #00FF9D;
-  background: rgba(0, 255, 157, 0.05);
-  border: 1px solid rgba(0, 255, 157, 0.2);
+  color: var(--cyber-primary);
+  background: rgba(var(--cyber-primary-rgb), 0.05);
+  border: 1px solid rgba(var(--cyber-primary-rgb), 0.2);
   border-radius: 4px;
   padding: 3px 8px;
   letter-spacing: 0.05em;
@@ -389,10 +395,10 @@ img {
 
 /* Glow lines */
 .border-glow {
-  box-shadow: 0 0 15px rgba(0, 255, 157, 0.15);
+  box-shadow: 0 0 15px rgba(var(--cyber-primary-rgb), 0.15);
 }
 .border-glow-blue {
-  box-shadow: 0 0 15px rgba(0, 200, 255, 0.15);
+  box-shadow: 0 0 15px rgba(var(--cyber-secondary-rgb), 0.15);
 }
 
 @keyframes cyberPan {
@@ -413,14 +419,18 @@ img {
   left: 0;
   width: 100%;
   height: 100%;
-  background-image: url('/cyber_bg.png');
+  background-color: transparent;
+  background-image:
+    radial-gradient(ellipse 90% 70% at 50% -10%, rgba(var(--cyber-primary-rgb), 0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 70% 60% at 85% 65%, rgba(var(--cyber-secondary-rgb), 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 15% 75%, rgba(var(--cyber-accent-rgb), 0.08) 0%, transparent 55%),
+    url('/cyber_bg.png');
   background-size: cover;
   background-position: center;
   z-index: -1;
   pointer-events: none;
   animation: cyberPan 40s ease-in-out infinite;
-  opacity: 0.85;
-  filter: brightness(0.9);
+  opacity: 0.35;
   transform: translate3d(0, 0, 0);
   will-change: transform;
 }
@@ -670,8 +680,8 @@ html.lenis, html.lenis body {
   pointer-events: none;
   background: radial-gradient(
     320px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-    rgba(0, 200, 255, 0.12),
-    rgba(0, 255, 157, 0.05) 45%,
+    rgba(var(--cyber-secondary-rgb), 0.12),
+    rgba(var(--cyber-primary-rgb), 0.05) 45%,
     transparent 80%
   );
   opacity: var(--spotlight-opacity, 0);
@@ -695,9 +705,9 @@ html.lenis, html.lenis body {
   background: linear-gradient(
     125deg,
     transparent 20%,
-    rgba(0, 200, 255, 0.05) 35%,
-    rgba(0, 255, 157, 0.08) 50%,
-    rgba(0, 200, 255, 0.05) 65%,
+    rgba(var(--cyber-secondary-rgb), 0.05) 35%,
+    rgba(var(--cyber-primary-rgb), 0.08) 50%,
+    rgba(var(--cyber-secondary-rgb), 0.05) 65%,
     transparent 80%
   );
   opacity: 0.7;
@@ -714,15 +724,15 @@ html.lenis, html.lenis body {
   background: rgba(0, 0, 0, 0.4);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 157, 0.35);
+  background: rgba(var(--cyber-primary-rgb), 0.35);
   border-radius: 3px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 157, 0.65);
+  background: rgba(var(--cyber-primary-rgb), 0.65);
 }
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 255, 157, 0.35) rgba(0, 0, 0, 0.4);
+  scrollbar-color: rgba(var(--cyber-primary-rgb), 0.35) rgba(0, 0, 0, 0.4);
 }
 
 /* ATS Print Stylesheet for Executive PDF Dossier Export */

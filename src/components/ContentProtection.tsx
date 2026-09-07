@@ -11,68 +11,86 @@ import { useEffect } from "react";
  */
 export default function ContentProtection() {
   useEffect(() => {
-    // 1. Intercept clipboard copy event
+    const isInputElement = (el: Element | null): boolean => {
+      if (!el) return false;
+      const tag = el.tagName;
+      return (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        (el as HTMLElement).isContentEditable ||
+        Boolean(el.closest("input, textarea, [contenteditable='true']"))
+      );
+    };
+
+    // 1. Intercept clipboard copy & cut events outside inputs
     const handleCopy = (e: ClipboardEvent) => {
       const activeEl = document.activeElement;
-      const isInput =
-        activeEl &&
-        (activeEl.tagName === "INPUT" ||
-          activeEl.tagName === "TEXTAREA" ||
-          (activeEl as HTMLElement).isContentEditable);
-
-      // If copying outside form inputs, block it
-      if (!isInput) {
+      if (!isInputElement(activeEl) && !isInputElement(e.target as Element)) {
         e.preventDefault();
+        e.stopPropagation();
       }
     };
 
-    // 2. Prevent Ctrl+C / Cmd+C shortcuts on body content
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && (e.key === "c" || e.key === "C")) {
-        const activeEl = document.activeElement;
-        const isInput =
-          activeEl &&
-          (activeEl.tagName === "INPUT" ||
-            activeEl.tagName === "TEXTAREA" ||
-            (activeEl as HTMLElement).isContentEditable);
+    const handleCut = (e: ClipboardEvent) => {
+      const activeEl = document.activeElement;
+      if (!isInputElement(activeEl) && !isInputElement(e.target as Element)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    };
 
-        if (!isInput) {
+    // 2. Prevent keyboard selection & copy shortcuts outside form inputs
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const isMod = e.ctrlKey || e.metaKey;
+      if (!isMod) return;
+
+      const activeEl = document.activeElement;
+      const key = e.key.toLowerCase();
+
+      // Block Ctrl+C (Copy), Ctrl+A (Select All), Ctrl+X (Cut), Ctrl+U (View Source), Ctrl+S (Save)
+      if (key === "c" || key === "a" || key === "x" || key === "u" || key === "s") {
+        if (!isInputElement(activeEl) && !isInputElement(e.target as Element)) {
           e.preventDefault();
+          e.stopPropagation();
         }
       }
     };
 
-    // 3. Prevent dragging of images, links, or media
+    // 3. Prevent text selection dragging (selectstart) outside inputs
+    const handleSelectStart = (e: Event) => {
+      if (!isInputElement(e.target as Element)) {
+        e.preventDefault();
+      }
+    };
+
+    // 4. Prevent dragging of images, links, media, or text selections
     const handleDragStart = (e: DragEvent) => {
-      const target = e.target as HTMLElement;
-      if (target?.tagName === "IMG" || target?.closest("img") || target?.tagName === "A") {
+      if (!isInputElement(e.target as Element)) {
         e.preventDefault();
       }
     };
 
-    // 4. Prevent right-click context menu on images and protected visual assets
+    // 5. Block right-click context menu across site (except inside inputs for normal paste)
     const handleContextMenu = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (
-        target?.tagName === "IMG" ||
-        target?.closest("img") ||
-        target?.tagName === "PICTURE" ||
-        target?.tagName === "CANVAS"
-      ) {
+      if (!isInputElement(e.target as Element)) {
         e.preventDefault();
       }
     };
 
-    document.addEventListener("copy", handleCopy);
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("dragstart", handleDragStart);
-    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("copy", handleCopy, true);
+    document.addEventListener("cut", handleCut, true);
+    document.addEventListener("keydown", handleKeyDown, true);
+    document.addEventListener("selectstart", handleSelectStart, true);
+    document.addEventListener("dragstart", handleDragStart, true);
+    document.addEventListener("contextmenu", handleContextMenu, true);
 
     return () => {
-      document.removeEventListener("copy", handleCopy);
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("dragstart", handleDragStart);
-      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("copy", handleCopy, true);
+      document.removeEventListener("cut", handleCut, true);
+      document.removeEventListener("keydown", handleKeyDown, true);
+      document.removeEventListener("selectstart", handleSelectStart, true);
+      document.removeEventListener("dragstart", handleDragStart, true);
+      document.removeEventListener("contextmenu", handleContextMenu, true);
     };
   }, []);
 

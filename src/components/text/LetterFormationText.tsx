@@ -99,7 +99,7 @@ export default function LetterFormationText({
     return (
       <span
         aria-label={text}
-        className={`relative inline-flex flex-wrap items-center gap-x-4 sm:gap-x-6 md:gap-x-8 py-1 select-text hero-3d-selectable ${className}`}
+        className={`relative inline-flex flex-wrap items-center gap-x-4 sm:gap-x-6 md:gap-x-8 py-1 select-none ${className}`}
         style={{ transformStyle: "preserve-3d" }}
       >
         {words.map((word, wordIdx) => (
@@ -119,7 +119,7 @@ export default function LetterFormationText({
                   aria-hidden="true"
                   className="absolute inset-0 select-none pointer-events-none hero-3d-extrusion hero-3d-name-font"
                   style={{
-                    transform: isMobile ? "translateZ(-2px)" : "translateZ(-6px)",
+                    transform: isMobile ? "translateZ(-1px)" : "translateZ(-2px)",
                     transformStyle: "preserve-3d",
                   }}
                 >
@@ -128,9 +128,9 @@ export default function LetterFormationText({
 
                 {/* 3D Front Face (bright holographic glass-metal surface) */}
                 <span
-                  className="relative inline-block hero-3d-text-front hero-3d-name-font cursor-text"
+                  className="relative inline-block hero-3d-text-front hero-3d-name-font font-orbitron font-black cursor-default select-none"
                   style={{
-                    transform: isMobile ? "translateZ(2px)" : "translateZ(6px)",
+                    transform: isMobile ? "translateZ(1px)" : "translateZ(2px)",
                     transformStyle: "preserve-3d",
                   }}
                 >
@@ -147,7 +147,7 @@ export default function LetterFormationText({
           className="pointer-events-none absolute -bottom-3 sm:-bottom-4 md:-bottom-5 left-0 right-0 h-3 sm:h-4 md:h-5 rounded-full blur-sm md:blur-md opacity-25"
           style={{
             background:
-              "radial-gradient(ellipse 65% 50% at 50% 50%, rgba(0, 180, 230, 0.12) 0%, rgba(0, 20, 40, 0.25) 50%, transparent 75%)",
+              "radial-gradient(ellipse 65% 50% at 50% 50%, rgba(var(--cyber-secondary-rgb, 0, 200, 255), 0.18) 0%, rgba(var(--cyber-primary-rgb, 0, 255, 157), 0.08) 45%, transparent 75%)",
           }}
         />
       </span>
@@ -170,7 +170,7 @@ export default function LetterFormationText({
         transformPerspective: 1200,
         transformStyle: "preserve-3d",
       }}
-      className={`relative inline-flex flex-wrap items-center gap-x-4 sm:gap-x-6 md:gap-x-8 py-1 select-text hero-3d-selectable ${className}`}
+      className={`relative inline-flex flex-wrap items-center gap-x-4 sm:gap-x-6 md:gap-x-8 py-1 select-none ${className}`}
     >
       {/* Ambient Levitation Stage (gentle realistic 3D floating after letters lock into formation) */}
       <motion.span
@@ -248,7 +248,7 @@ export default function LetterFormationText({
                     aria-hidden="true"
                     className="absolute inset-0 select-none pointer-events-none hero-3d-extrusion hero-3d-name-font"
                     style={{
-                      transform: isMobile ? "translateZ(-2px)" : "translateZ(-6px)",
+                      transform: isMobile ? "translateZ(-1px)" : "translateZ(-2px)",
                       transformStyle: "preserve-3d",
                     }}
                   >
@@ -257,9 +257,9 @@ export default function LetterFormationText({
 
                   {/* 3D Front Face (bright holographic cyan-metallic surface with top catchlight) */}
                   <span
-                    className="relative inline-block hero-3d-text-front hero-3d-name-font cursor-text"
+                    className="relative inline-block hero-3d-text-front hero-3d-name-font font-orbitron font-black cursor-default select-none"
                     style={{
-                      transform: isMobile ? "translateZ(2px)" : "translateZ(6px)",
+                      transform: isMobile ? "translateZ(1px)" : "translateZ(2px)",
                       transformStyle: "preserve-3d",
                     }}
                   >
@@ -278,7 +278,7 @@ export default function LetterFormationText({
         className="pointer-events-none absolute -bottom-3 sm:-bottom-4 md:-bottom-5 left-0 right-0 h-3 sm:h-4 md:h-5 rounded-full blur-sm md:blur-md"
         style={{
           background:
-            "radial-gradient(ellipse 65% 50% at 50% 50%, rgba(0, 180, 230, 0.12) 0%, rgba(0, 20, 40, 0.25) 50%, transparent 75%)",
+            "radial-gradient(ellipse 65% 50% at 50% 50%, rgba(var(--cyber-secondary-rgb, 0, 200, 255), 0.18) 0%, rgba(var(--cyber-primary-rgb, 0, 255, 157), 0.08) 45%, transparent 75%)",
         }}
         animate={
           isFormed

@@ -28,6 +28,7 @@ import SectionDivider from "@/components/SectionDivider";
 import GlobalClickRipple from "@/components/GlobalClickRipple";
 import MorphingGlassBlobs from "@/components/MorphingGlassBlobs";
 import SmoothScrollProvider, { smoothScrollTo } from "@/components/SmoothScrollProvider";
+import ThemeProvider from "@/components/ThemeProvider";
 import CyberSectionWrapper from "@/components/cyber/CyberSectionWrapper";
 import AboutFloatingCard3D from "@/components/cyber/AboutFloatingCard3D";
 import Cyber3DCard from "@/components/cyber/Cyber3DCard";
@@ -273,7 +274,7 @@ export default function PublicPortfolio() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#07111F] text-white">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--cyber-bg,#07111F)] text-white">
         <div className="scanlines"></div>
         <motion.div
           animate={{ rotate: 360 }}
@@ -289,7 +290,7 @@ export default function PublicPortfolio() {
 
   if (!data || data.error || !data.profile) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#07111F] text-white p-6 text-center font-mono">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--cyber-bg,#07111F)] text-white p-6 text-center font-mono">
         <div className="scanlines"></div>
         <div className="w-16 h-16 border-2 border-red-500 rounded-full flex items-center justify-center mb-6 text-red-500 font-bold text-xl shadow-[0_0_15px_#ef4444]">
           !
@@ -320,20 +321,27 @@ export default function PublicPortfolio() {
   })();
 
   return (
-    <SmoothScrollProvider>
-      <GlobalClickRipple />
-      <AntiGravityCanvas>
-        <BootLoader />
-        <div id="portal-root" className="min-h-screen relative overflow-hidden select-none">
-          {/* Morphing glass blobs for atmospheric depth */}
-          <MorphingGlassBlobs />
+    <ThemeProvider settings={settings}>
+      <SmoothScrollProvider>
+        <GlobalClickRipple />
+        <AntiGravityCanvas>
+          <BootLoader />
+          <div id="portal-root" className="min-h-screen relative overflow-hidden select-none bg-transparent">
+            {/* Morphing glass blobs for atmospheric depth */}
+            <MorphingGlassBlobs />
 
-          {/* Background elements */}
-          <div className="animated-bg"></div>
-        
-          {/* Aurora Background Glows */}
-          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#00FF9D]/5 rounded-full blur-[120px] pointer-events-none"></div>
-          <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#00C8FF]/5 rounded-full blur-[120px] pointer-events-none"></div>
+            {/* Background elements */}
+            <div className="animated-bg"></div>
+          
+            {/* Dynamic Cyber Aurora Background Glows */}
+            <div
+              className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] pointer-events-none"
+              style={{ background: "radial-gradient(circle, rgba(var(--cyber-primary-rgb), 0.08) 0%, transparent 70%)" }}
+            />
+            <div
+              className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] pointer-events-none"
+              style={{ background: "radial-gradient(circle, rgba(var(--cyber-secondary-rgb), 0.08) 0%, transparent 70%)" }}
+            />
 
           {/* HEADER NAVIGATION */}
           <Navbar
@@ -373,7 +381,7 @@ export default function PublicPortfolio() {
 
               <h1 
                 aria-label={profile.name || "Johnknox Kalle"}
-                className="text-3xl sm:text-5xl md:text-6xl lg:text-[3.75rem] xl:text-[4.25rem] leading-[1.15] select-text mb-5 sm:mb-6"
+                className="text-3xl sm:text-5xl md:text-6xl lg:text-[3.75rem] xl:text-[4.25rem] font-orbitron font-black leading-[1.15] select-none cursor-default mb-5 sm:mb-6"
               >
                 <LetterFormationText text={profile.name || "Johnknox Kalle"} />
               </h1>
@@ -964,5 +972,6 @@ export default function PublicPortfolio() {
       </div>
       </AntiGravityCanvas>
     </SmoothScrollProvider>
+    </ThemeProvider>
   );
 }

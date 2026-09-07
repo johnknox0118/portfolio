@@ -69,7 +69,7 @@ export default function IAm3DText({ className = "" }: IAm3DTextProps) {
     return (
       <span
         aria-label="I am"
-        className={`relative inline-flex items-center gap-x-2 py-0.5 select-text hero-3d-selectable ${className}`}
+        className={`relative inline-flex items-center gap-x-2 py-0.5 select-none cursor-default ${className}`}
         style={{ transformStyle: "preserve-3d" }}
       >
         {words.map((word, wIdx) => (
@@ -77,23 +77,23 @@ export default function IAm3DText({ className = "" }: IAm3DTextProps) {
             {Array.from(word).map((char, cIdx) => (
               <span
                 key={`c-${cIdx}`}
-                className="relative inline-block hero-iam-3d-font px-[1px] text-xl sm:text-2xl md:text-3xl"
+                className="relative inline-block hero-iam-3d-font font-orbitron font-extrabold px-[1px] text-xl sm:text-2xl md:text-3xl"
                 style={{ transformStyle: "preserve-3d" }}
               >
                 <span
                   aria-hidden="true"
-                  className="absolute inset-0 select-none pointer-events-none hero-iam-3d-extrusion hero-iam-3d-font"
+                  className="absolute inset-0 select-none pointer-events-none hero-iam-3d-extrusion hero-iam-3d-font font-orbitron font-extrabold"
                   style={{
-                    transform: isMobile ? "translateZ(-1.5px)" : "translateZ(-3.5px)",
+                    transform: isMobile ? "translateZ(-1px)" : "translateZ(-1.5px)",
                     transformStyle: "preserve-3d",
                   }}
                 >
                   {char}
                 </span>
                 <span
-                  className="relative inline-block hero-iam-3d-front hero-iam-3d-font cursor-text"
+                  className="relative inline-block hero-iam-3d-front hero-iam-3d-font font-orbitron font-extrabold cursor-default"
                   style={{
-                    transform: isMobile ? "translateZ(1.5px)" : "translateZ(3.5px)",
+                    transform: isMobile ? "translateZ(1px)" : "translateZ(1.5px)",
                     transformStyle: "preserve-3d",
                   }}
                 >
@@ -119,7 +119,7 @@ export default function IAm3DText({ className = "" }: IAm3DTextProps) {
         transformPerspective: 1000,
         transformStyle: "preserve-3d",
       }}
-      className={`relative inline-flex items-center py-1 select-text hero-3d-selectable ${className}`}
+      className={`relative inline-flex items-center py-1 select-none cursor-default ${className}`}
     >
       {/* Harmonic Organic Floating (decoupled phase for real physical anti-gravity feel) */}
       <motion.span
@@ -148,15 +148,15 @@ export default function IAm3DText({ className = "" }: IAm3DTextProps) {
                 initial={{ opacity: 0, y: -10, scale: 0.85 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.05 + cIdx * 0.04, ease: CUBIC_EASE }}
-                className="relative inline-block hero-iam-3d-font px-[1px] text-xl sm:text-2xl md:text-3xl"
+                className="relative inline-block hero-iam-3d-font font-orbitron font-extrabold px-[1px] text-xl sm:text-2xl md:text-3xl"
                 style={{ transformStyle: "preserve-3d" }}
               >
                 {/* 3D Extruded Depth Layer */}
                 <span
                   aria-hidden="true"
-                  className="absolute inset-0 select-none pointer-events-none hero-iam-3d-extrusion hero-iam-3d-font"
+                  className="absolute inset-0 select-none pointer-events-none hero-iam-3d-extrusion hero-iam-3d-font font-orbitron font-extrabold"
                   style={{
-                    transform: isMobile ? "translateZ(-1.5px)" : "translateZ(-3.5px)",
+                    transform: isMobile ? "translateZ(-1px)" : "translateZ(-1.5px)",
                     transformStyle: "preserve-3d",
                   }}
                 >
@@ -165,9 +165,9 @@ export default function IAm3DText({ className = "" }: IAm3DTextProps) {
 
                 {/* 3D Front Metallic Face */}
                 <span
-                  className="relative inline-block hero-iam-3d-front hero-iam-3d-font cursor-text"
+                  className="relative inline-block hero-iam-3d-front hero-iam-3d-font font-orbitron font-extrabold cursor-default"
                   style={{
-                    transform: isMobile ? "translateZ(1.5px)" : "translateZ(3.5px)",
+                    transform: isMobile ? "translateZ(1px)" : "translateZ(1.5px)",
                     transformStyle: "preserve-3d",
                   }}
                 >
@@ -185,7 +185,7 @@ export default function IAm3DText({ className = "" }: IAm3DTextProps) {
         className="pointer-events-none absolute -bottom-2 left-0 right-0 h-2.5 rounded-full blur-sm"
         style={{
           background:
-            "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0, 255, 157, 0.22) 0%, rgba(0, 25, 15, 0.35) 50%, transparent 80%)",
+            "radial-gradient(ellipse 60% 50% at 50% 50%, rgba(var(--cyber-primary-rgb), 0.22) 0%, rgba(0, 0, 0, 0.4) 60%, transparent 80%)",
         }}
         animate={{
           scaleX: [1, 0.92, 1],

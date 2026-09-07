@@ -6,8 +6,95 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, User, Code, Award, Folder, Settings, Mail,
   LogOut, Plus, Trash, Edit, Check, Loader2, FileText, Camera, X, Globe, ExternalLink, Key, Lock,
-  ShieldAlert, Trophy, Eye, Clock, Users, CheckCircle2, ChevronRight, HelpCircle
+  ShieldAlert, Trophy, Eye, Clock, Users, CheckCircle2, ChevronRight, HelpCircle,
+  Palette, Sparkles, RefreshCw, Layers
 } from "lucide-react";
+import { applyThemeToDocument, DEFAULT_THEME } from "@/components/ThemeProvider";
+
+export interface CyberPreset {
+  id: string;
+  name: string;
+  tag: string;
+  primary: string;
+  secondary: string;
+  accent: string;
+  background: string;
+}
+
+export const INITIAL_CYBER_PRESETS: CyberPreset[] = [
+  {
+    id: "matrix-neon",
+    name: "Matrix Neon",
+    tag: "DEFAULT",
+    primary: "#00FF9D",
+    secondary: "#00C8FF",
+    accent: "#00e5ff",
+    background: "#040a12",
+  },
+  {
+    id: "cyber-crimson",
+    name: "Cyber Crimson",
+    tag: "RED ALERT",
+    primary: "#FF003C",
+    secondary: "#E000FF",
+    accent: "#00FFCC",
+    background: "#0d0208",
+  },
+  {
+    id: "synthwave-sunset",
+    name: "Synthwave Sunset",
+    tag: "RETRO",
+    primary: "#FF007F",
+    secondary: "#7928CA",
+    accent: "#FF8000",
+    background: "#0f0214",
+  },
+  {
+    id: "toxic-amber",
+    name: "Toxic Amber",
+    tag: "BIOHAZARD",
+    primary: "#FFB800",
+    secondary: "#FF5500",
+    accent: "#FF0055",
+    background: "#0f0900",
+  },
+  {
+    id: "phantom-violet",
+    name: "Phantom Violet",
+    tag: "STEALTH",
+    primary: "#A855F7",
+    secondary: "#3B82F6",
+    accent: "#00FF9D",
+    background: "#080414",
+  },
+  {
+    id: "glacier-frost",
+    name: "Glacier Frost",
+    tag: "CRYOGENIC",
+    primary: "#00F0FF",
+    secondary: "#38BDF8",
+    accent: "#A855F7",
+    background: "#030914",
+  },
+  {
+    id: "deep-cyber-navy",
+    name: "Deep Cyber Navy",
+    tag: "CLASSIC",
+    primary: "#00FF9D",
+    secondary: "#00C8FF",
+    accent: "#00e5ff",
+    background: "#07111F",
+  },
+  {
+    id: "pure-oled-black",
+    name: "Pure OLED Black",
+    tag: "OLED",
+    primary: "#00FF9D",
+    secondary: "#00C8FF",
+    accent: "#00e5ff",
+    background: "#000000",
+  },
+];
 
 // Broadcast synchronization across browser tabs and public portfolio
 const broadcastSyncUpdate = (entity?: string) => {
@@ -85,6 +172,9 @@ export default function AdminDashboard() {
         console.warn("Could not load CTF submissions:", subErr);
       }
       
+      if (result?.settings) {
+        applyThemeToDocument(result.settings.primaryColor, result.settings.secondaryColor, result.settings.accentColor, result.settings.theme);
+      }
       setData({ ...result, messages, ctfQuestions, ctfSubmissions });
       setLoading(false);
     } catch (err) {
@@ -116,6 +206,20 @@ export default function AdminDashboard() {
   const [profileForm, setProfileForm] = useState<any>({});
   const [settingsForm, setSettingsForm] = useState<any>({});
 
+  // Preset Combinations CRUD State
+  const [presets, setPresets] = useState<CyberPreset[]>(INITIAL_CYBER_PRESETS);
+  const [isPresetModalOpen, setIsPresetModalOpen] = useState(false);
+  const [editingPreset, setEditingPreset] = useState<CyberPreset | null>(null);
+  const [presetFormData, setPresetFormData] = useState({
+    id: "",
+    name: "",
+    tag: "CUSTOM",
+    primary: "#00FF9D",
+    secondary: "#00C8FF",
+    accent: "#00e5ff",
+    background: "#040a12",
+  });
+
   // CRUD selection state
   const [editingItem, setEditingItem] = useState<any>(null); // For skills, projects, certs, internships, achievements, gallery
   const [showFormModal, setShowFormModal] = useState(false);
@@ -124,8 +228,171 @@ export default function AdminDashboard() {
     if (data) {
       setProfileForm(data.profile);
       setSettingsForm(data.settings);
+
+      // Load custom presets from database settings.loader or localStorage
+      let loaded = false;
+      if (data.settings?.loader && data.settings.loader.startsWith("[")) {
+        try {
+          const parsed = JSON.parse(data.settings.loader);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setPresets(parsed);
+            loaded = true;
+          }
+        } catch (e) {}
+      }
+      if (!loaded && typeof window !== "undefined") {
+        try {
+          const local = localStorage.getItem("cyber_presets_custom");
+          if (local) {
+            const parsed = JSON.parse(local);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setPresets(parsed);
+            }
+          }
+        } catch (e) {}
+      }
     }
   }, [data]);
+
+  const handleColorChange = (key: "primaryColor" | "secondaryColor" | "accentColor" | "theme", value: string) => {
+    const updated = { ...settingsForm, [key]: value };
+    setSettingsForm(updated);
+    applyThemeToDocument(
+      key === "primaryColor" ? value : (settingsForm?.primaryColor || DEFAULT_THEME.primaryColor),
+      key === "secondaryColor" ? value : (settingsForm?.secondaryColor || DEFAULT_THEME.secondaryColor),
+      key === "accentColor" ? value : (settingsForm?.accentColor || DEFAULT_THEME.accentColor),
+      key === "theme" ? value : (settingsForm?.theme || DEFAULT_THEME.backgroundColor)
+    );
+  };
+
+  const handleSelectPreset = (preset: CyberPreset) => {
+    const updated = {
+      ...settingsForm,
+      primaryColor: preset.primary,
+      secondaryColor: preset.secondary,
+      accentColor: preset.accent,
+      theme: preset.background,
+    };
+    setSettingsForm(updated);
+    applyThemeToDocument(preset.primary, preset.secondary, preset.accent, preset.background);
+  };
+
+  const persistPresets = async (updatedPresets: CyberPreset[]) => {
+    setPresets(updatedPresets);
+    try {
+      localStorage.setItem("cyber_presets_custom", JSON.stringify(updatedPresets));
+    } catch (e) {}
+
+    const serialized = JSON.stringify(updatedPresets);
+    const updatedSettings = { ...settingsForm, loader: serialized };
+    setSettingsForm(updatedSettings);
+
+    try {
+      await fetch("/api/admin/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedSettings),
+      });
+      broadcastSyncUpdate("settings");
+    } catch (e) {
+      console.error("Failed to persist presets:", e);
+    }
+  };
+
+  const handleOpenAddModal = () => {
+    setEditingPreset(null);
+    setPresetFormData({
+      id: "",
+      name: "",
+      tag: "CUSTOM",
+      primary: settingsForm.primaryColor || "#00FF9D",
+      secondary: settingsForm.secondaryColor || "#00C8FF",
+      accent: settingsForm.accentColor || "#00e5ff",
+      background: settingsForm.theme && settingsForm.theme.startsWith("#") ? settingsForm.theme : "#07111F",
+    });
+    setIsPresetModalOpen(true);
+  };
+
+  const handleSaveCurrentAsPreset = () => {
+    setEditingPreset(null);
+    setPresetFormData({
+      id: "",
+      name: `Preset ${presets.length + 1}`,
+      tag: "CUSTOM",
+      primary: settingsForm.primaryColor || "#00FF9D",
+      secondary: settingsForm.secondaryColor || "#00C8FF",
+      accent: settingsForm.accentColor || "#00e5ff",
+      background: settingsForm.theme && settingsForm.theme.startsWith("#") ? settingsForm.theme : "#07111F",
+    });
+    setIsPresetModalOpen(true);
+  };
+
+  const handleEditPreset = (preset: CyberPreset) => {
+    setEditingPreset(preset);
+    setPresetFormData({
+      id: preset.id,
+      name: preset.name,
+      tag: preset.tag,
+      primary: preset.primary,
+      secondary: preset.secondary,
+      accent: preset.accent,
+      background: preset.background,
+    });
+    setIsPresetModalOpen(true);
+  };
+
+  const handleSavePresetForm = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!presetFormData.name.trim()) return;
+
+    let updated: CyberPreset[];
+    if (editingPreset) {
+      updated = presets.map((p) =>
+        p.id === editingPreset.id
+          ? {
+              ...p,
+              name: presetFormData.name.trim(),
+              tag: (presetFormData.tag || "CUSTOM").toUpperCase().trim(),
+              primary: presetFormData.primary,
+              secondary: presetFormData.secondary,
+              accent: presetFormData.accent,
+              background: presetFormData.background,
+            }
+          : p
+      );
+    } else {
+      const newPreset: CyberPreset = {
+        id: `preset-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        name: presetFormData.name.trim(),
+        tag: (presetFormData.tag || "CUSTOM").toUpperCase().trim(),
+        primary: presetFormData.primary,
+        secondary: presetFormData.secondary,
+        accent: presetFormData.accent,
+        background: presetFormData.background,
+      };
+      updated = [...presets, newPreset];
+    }
+
+    persistPresets(updated);
+    setIsPresetModalOpen(false);
+    setEditingPreset(null);
+    setSuccessMsg(editingPreset ? `Preset "${presetFormData.name}" updated.` : `Preset "${presetFormData.name}" added.`);
+  };
+
+  const handleDeletePreset = (preset: CyberPreset) => {
+    if (confirm(`Are you sure you want to delete "${preset.name}"?`)) {
+      const updated = presets.filter((p) => p.id !== preset.id);
+      persistPresets(updated);
+      setSuccessMsg(`Preset "${preset.name}" deleted.`);
+    }
+  };
+
+  const handleResetToDefaults = () => {
+    if (confirm("Reset all combinations to the 8 original cyber presets?")) {
+      persistPresets(INITIAL_CYBER_PRESETS);
+      setSuccessMsg("Restored factory cyber presets.");
+    }
+  };
 
   // Password change state
   const [passwordForm, setPasswordForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
@@ -186,6 +453,17 @@ export default function AdminDashboard() {
       });
       if (res.ok) {
         setSuccessMsg("System configuration updated successfully.");
+        if (entity === "settings") {
+          applyThemeToDocument(formState.primaryColor, formState.secondaryColor, formState.accentColor, formState.theme);
+          try {
+            localStorage.setItem("portfolio_custom_theme", JSON.stringify(formState));
+            if (typeof BroadcastChannel !== "undefined") {
+              const bc = new BroadcastChannel("portfolio_sync");
+              bc.postMessage({ type: "THEME_UPDATED", theme: formState });
+              bc.close();
+            }
+          } catch (e) {}
+        }
         loadData();
         broadcastSyncUpdate(entity);
       }
@@ -1381,7 +1659,163 @@ export default function AdminDashboard() {
         {activeTab === "settings" && (
           <div className="space-y-8">
             <div className="space-y-6">
-              <h2 className="font-orbitron font-black text-xl text-white">SETTINGS_GRID // SYSTEM CONFIG</h2>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h2 className="font-orbitron font-black text-xl text-white flex items-center gap-3">
+                    <Palette className="w-6 h-6 text-cyber-green" />
+                    THEME_ENGINE // SYSTEM & DYNAMIC PALETTE CONFIG
+                  </h2>
+                  <p className="text-xs font-mono text-gray-400 mt-1">
+                    Configure real-time website themes. Dynamically updates buttons, card luminous borders, 3D particles, and glowing headers.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleSelectPreset(presets[0] || INITIAL_CYBER_PRESETS[0])}
+                  className="px-3 py-1.5 border border-white/20 hover:border-cyber-green/50 text-gray-300 hover:text-white text-xs font-mono rounded flex items-center gap-2 transition-all cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-cyber-green" />
+                  Reset to Matrix Default
+                </button>
+              </div>
+
+              {/* CYBER COLOR COMBINATIONS MANAGER (CRUD: ADD, MODIFY, DELETE) */}
+              <div className="glass-card p-6 space-y-4 border-cyber-green/20">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="w-4 h-4 text-cyber-green" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-mono uppercase tracking-wider text-white font-bold">
+                          Cyber Color Combinations
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-cyber-green/10 text-cyber-green border border-cyber-green/30 font-bold">
+                          {presets.length} Active
+                        </span>
+                      </div>
+                      <p className="text-[10px] font-mono text-gray-400 mt-0.5">
+                        Click any palette to activate. Hover to edit or delete combinations.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSaveCurrentAsPreset}
+                      className="px-2.5 py-1.5 text-[10px] font-mono rounded-lg border border-cyber-blue/40 bg-cyber-blue/10 text-cyber-blue hover:bg-cyber-blue/20 flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_0_10px_rgba(0,200,255,0.15)] font-bold uppercase"
+                      title="Save your current 4 color channels below as a new combination"
+                    >
+                      <Plus className="w-3 h-3" /> Save Current as Preset
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleOpenAddModal}
+                      className="px-2.5 py-1.5 text-[10px] font-mono rounded-lg border border-cyber-green/40 bg-cyber-green/10 text-cyber-green hover:bg-cyber-green/20 flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_0_10px_rgba(0,255,157,0.15)] font-bold uppercase"
+                    >
+                      <Plus className="w-3 h-3" /> Add Combination
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResetToDefaults}
+                      className="px-2.5 py-1.5 text-[10px] font-mono rounded-lg border border-white/15 text-gray-400 hover:text-white hover:border-white/30 flex items-center gap-1 transition-all cursor-pointer"
+                      title="Restore the 8 factory default cyber combinations"
+                    >
+                      <RefreshCw className="w-3 h-3" /> Factory Defaults
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {presets.map((preset) => {
+                    const currentBg = settingsForm.theme && settingsForm.theme.startsWith("#") ? settingsForm.theme : "#07111F";
+                    const isCurrent =
+                      (settingsForm.primaryColor || "").toLowerCase() === preset.primary.toLowerCase() &&
+                      (settingsForm.secondaryColor || "").toLowerCase() === preset.secondary.toLowerCase() &&
+                      currentBg.toLowerCase() === preset.background.toLowerCase();
+
+                    return (
+                      <div
+                        key={preset.id || preset.name}
+                        onClick={() => handleSelectPreset(preset)}
+                        className={`group relative p-3 rounded-xl border text-left transition-all overflow-hidden cursor-pointer ${
+                          isCurrent
+                            ? "border-cyber-green bg-cyber-green/10 shadow-[0_0_18px_rgba(0,255,157,0.22)] ring-1 ring-cyber-green/50"
+                            : "border-white/10 hover:border-white/30 bg-[#040a12]/80 hover:bg-[#071220]"
+                        }`}
+                      >
+                        {/* Hover Action Buttons: Modify & Delete */}
+                        <div className="absolute top-2 right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditPreset(preset);
+                            }}
+                            className="p-1 rounded bg-black/80 hover:bg-cyber-blue/30 text-gray-300 hover:text-cyber-blue border border-white/20 hover:border-cyber-blue transition-all cursor-pointer"
+                            title={`Modify "${preset.name}"`}
+                          >
+                            <Edit className="w-3 h-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeletePreset(preset);
+                            }}
+                            className="p-1 rounded bg-black/80 hover:bg-rose-500/30 text-gray-300 hover:text-rose-400 border border-white/20 hover:border-rose-500 transition-all cursor-pointer"
+                            title={`Delete "${preset.name}"`}
+                          >
+                            <Trash className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-widest font-semibold">{preset.tag}</span>
+                          {isCurrent && <Check className="w-3.5 h-3.5 text-cyber-green group-hover:hidden" />}
+                        </div>
+                        <p className="text-xs font-orbitron font-bold text-white mb-2 truncate pr-4">{preset.name}</p>
+                        
+                        {/* 4 Swatches */}
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className="w-4 h-4 rounded-full border border-black/40 shadow-sm"
+                            style={{ backgroundColor: preset.primary }}
+                            title={`Primary: ${preset.primary}`}
+                          />
+                          <span
+                            className="w-4 h-4 rounded-full border border-black/40 shadow-sm"
+                            style={{ backgroundColor: preset.secondary }}
+                            title={`Secondary: ${preset.secondary}`}
+                          />
+                          <span
+                            className="w-4 h-4 rounded-full border border-black/40 shadow-sm"
+                            style={{ backgroundColor: preset.accent }}
+                            title={`Accent: ${preset.accent}`}
+                          />
+                          <span
+                            className="w-4 h-4 rounded-full border border-white/40 shadow-sm"
+                            style={{ backgroundColor: preset.background }}
+                            title={`Background: ${preset.background}`}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Add New Combination Card */}
+                  <button
+                    type="button"
+                    onClick={handleOpenAddModal}
+                    className="p-3 rounded-xl border border-dashed border-white/20 hover:border-cyber-green/60 bg-black/20 hover:bg-cyber-green/5 text-gray-400 hover:text-cyber-green transition-all flex flex-col items-center justify-center min-h-[92px] gap-1.5 group cursor-pointer"
+                  >
+                    <Plus className="w-5 h-5 transition-transform group-hover:scale-125 text-cyber-green" />
+                    <span className="text-[10px] font-mono uppercase font-bold tracking-wider">+ Add Combination</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* MAIN FORM */}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -1389,28 +1823,277 @@ export default function AdminDashboard() {
                 }}
                 className="glass-card p-6 md:p-8 space-y-6"
               >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-mono text-gray-400 uppercase">Primary Custom Color</label>
-                    <input
-                      type="text"
-                      value={settingsForm.primaryColor || ""}
-                      onChange={(e) => setSettingsForm({ ...settingsForm, primaryColor: e.target.value })}
-                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
-                    />
+                {/* 4 DYNAMIC COLOR CHANNELS */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-mono uppercase tracking-wider text-white font-bold flex items-center gap-2">
+                      <Layers className="w-4 h-4 text-cyber-blue" />
+                      Dynamic Color Channels
+                    </label>
+                    <span className="text-[10px] font-mono text-gray-400">Use native picker or enter hex codes</span>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-mono text-gray-400 uppercase">Secondary Custom Color</label>
-                    <input
-                      type="text"
-                      value={settingsForm.secondaryColor || ""}
-                      onChange={(e) => setSettingsForm({ ...settingsForm, secondaryColor: e.target.value })}
-                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
-                    />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* PRIMARY COLOR */}
+                    <div className="p-4 rounded-xl bg-[#040a12] border border-white/10 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-mono text-gray-300 uppercase tracking-wider font-semibold">
+                          Primary Theme Color
+                        </label>
+                        <span className="text-[9px] font-mono text-cyber-green px-1.5 py-0.5 rounded bg-cyber-green/10">
+                          BRAND / LASERS
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={settingsForm.primaryColor || "#00FF9D"}
+                          onChange={(e) => handleColorChange("primaryColor", e.target.value)}
+                          className="w-12 h-10 rounded-lg cursor-pointer bg-transparent border border-white/20 p-1 shrink-0"
+                        />
+                        <input
+                          type="text"
+                          value={settingsForm.primaryColor || ""}
+                          onChange={(e) => handleColorChange("primaryColor", e.target.value)}
+                          placeholder="#00FF9D"
+                          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyber-green uppercase"
+                        />
+                      </div>
+                      <p className="text-[10px] font-mono text-gray-500 leading-tight">
+                        Controls neon lasers, buttons, 3D name face, card borders & particles.
+                      </p>
+                    </div>
+
+                    {/* SECONDARY COLOR */}
+                    <div className="p-4 rounded-xl bg-[#040a12] border border-white/10 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-mono text-gray-300 uppercase tracking-wider font-semibold">
+                          Secondary Theme Color
+                        </label>
+                        <span className="text-[9px] font-mono text-cyber-blue px-1.5 py-0.5 rounded bg-cyber-blue/10">
+                          3D TEXT / GLOWS
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={settingsForm.secondaryColor || "#00C8FF"}
+                          onChange={(e) => handleColorChange("secondaryColor", e.target.value)}
+                          className="w-12 h-10 rounded-lg cursor-pointer bg-transparent border border-white/20 p-1 shrink-0"
+                        />
+                        <input
+                          type="text"
+                          value={settingsForm.secondaryColor || ""}
+                          onChange={(e) => handleColorChange("secondaryColor", e.target.value)}
+                          placeholder="#00C8FF"
+                          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyber-blue uppercase"
+                        />
+                      </div>
+                      <p className="text-[10px] font-mono text-gray-500 leading-tight">
+                        Controls 3D name extrusion shadow, 3D globe network mesh & secondary badges.
+                      </p>
+                    </div>
+
+                    {/* ACCENT COLOR */}
+                    <div className="p-4 rounded-xl bg-[#040a12] border border-white/10 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-mono text-gray-300 uppercase tracking-wider font-semibold">
+                          Accent Theme Color
+                        </label>
+                        <span className="text-[9px] font-mono text-cyan-400 px-1.5 py-0.5 rounded bg-cyan-400/10">
+                          CYBER TAGS / HUD
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={settingsForm.accentColor || "#00e5ff"}
+                          onChange={(e) => handleColorChange("accentColor", e.target.value)}
+                          className="w-12 h-10 rounded-lg cursor-pointer bg-transparent border border-white/20 p-1 shrink-0"
+                        />
+                        <input
+                          type="text"
+                          value={settingsForm.accentColor || ""}
+                          onChange={(e) => handleColorChange("accentColor", e.target.value)}
+                          placeholder="#00E5FF"
+                          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 uppercase"
+                        />
+                      </div>
+                      <p className="text-[10px] font-mono text-gray-500 leading-tight">
+                        Controls tertiary security tags, terminal scanlines & qualification chips.
+                      </p>
+                    </div>
+
+                    {/* WEBSITE BACKGROUND COLOR */}
+                    <div className="p-4 rounded-xl bg-[#040a12] border border-white/10 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-mono text-gray-300 uppercase tracking-wider font-semibold">
+                          Website Background
+                        </label>
+                        <span className="text-[9px] font-mono text-fuchsia-400 px-1.5 py-0.5 rounded bg-fuchsia-400/10">
+                          CANVAS NOIR
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="color"
+                          value={settingsForm.theme && settingsForm.theme.startsWith("#") ? settingsForm.theme : "#07111F"}
+                          onChange={(e) => handleColorChange("theme", e.target.value)}
+                          className="w-12 h-10 rounded-lg cursor-pointer bg-transparent border border-white/20 p-1 shrink-0"
+                        />
+                        <input
+                          type="text"
+                          value={settingsForm.theme && settingsForm.theme.startsWith("#") ? settingsForm.theme : ""}
+                          onChange={(e) => handleColorChange("theme", e.target.value)}
+                          placeholder="#07111F"
+                          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-fuchsia-400 uppercase"
+                        />
+                      </div>
+                      <p className="text-[10px] font-mono text-gray-500 leading-tight">
+                        Controls whole website dark canvas tone (deep navy, obsidian, crimson noir, OLED black).
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* LIVE THEME PREVIEW SANDBOX */}
+                <div className="p-5 rounded-2xl bg-[#03070d] border border-white/15 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 font-bold flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: settingsForm.primaryColor || "#00FF9D" }} />
+                      Live Theme Sandbox Preview
+                    </span>
+                    <span className="text-[9px] font-mono text-gray-500">Live preview matches your public portfolio style</span>
+                  </div>
+
+                  <div
+                    className="p-6 rounded-xl border relative overflow-hidden transition-all duration-300 space-y-5"
+                    style={{
+                      borderColor: `${settingsForm.primaryColor || "#00FF9D"}40`,
+                      background: `radial-gradient(ellipse at top left, ${settingsForm.primaryColor || "#00FF9D"}18, transparent 60%), radial-gradient(ellipse at bottom right, ${settingsForm.secondaryColor || "#00C8FF"}18, transparent 60%), ${settingsForm.theme && settingsForm.theme.startsWith("#") ? settingsForm.theme : "#07111F"}`,
+                      boxShadow: `0 0 25px ${settingsForm.primaryColor || "#00FF9D"}1a`,
+                    }}
+                  >
+                    {/* Live 3D Name Typography Preview */}
+                    <div className="p-4 rounded-lg bg-black/30 border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div>
+                        <span className="text-[9px] font-mono uppercase text-gray-400 tracking-widest block mb-1">
+                          HERO SECTION // 3D NAME PREVIEW
+                        </span>
+                        <div className="relative inline-block hero-3d-name-font font-orbitron font-black py-1 select-none">
+                          <span
+                            aria-hidden="true"
+                            className="absolute inset-0 select-none pointer-events-none hero-3d-extrusion hero-3d-name-font font-orbitron text-2xl sm:text-3xl font-black"
+                            style={{ transform: "translateZ(-1.5px)" }}
+                          >
+                            Johnknox Kalle
+                          </span>
+                          <span
+                            className="relative inline-block hero-3d-text-front hero-3d-name-font font-orbitron text-2xl sm:text-3xl font-black"
+                            style={{ transform: "translateZ(1.5px)" }}
+                          >
+                            Johnknox Kalle
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest font-bold rounded"
+                          style={{
+                            backgroundColor: `${settingsForm.primaryColor || "#00FF9D"}20`,
+                            color: settingsForm.primaryColor || "#00FF9D",
+                            border: `1px solid ${settingsForm.primaryColor || "#00FF9D"}50`,
+                          }}
+                        >
+                          PRIMARY
+                        </span>
+                        <span
+                          className="px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest font-bold rounded"
+                          style={{
+                            backgroundColor: `${settingsForm.secondaryColor || "#00C8FF"}20`,
+                            color: settingsForm.secondaryColor || "#00C8FF",
+                            border: `1px solid ${settingsForm.secondaryColor || "#00C8FF"}50`,
+                          }}
+                        >
+                          SECONDARY
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-widest font-bold rounded"
+                            style={{
+                              backgroundColor: `${settingsForm.primaryColor || "#00FF9D"}20`,
+                              color: settingsForm.primaryColor || "#00FF9D",
+                              border: `1px solid ${settingsForm.primaryColor || "#00FF9D"}50`,
+                            }}
+                          >
+                            SECURITY_SYS // ACTIVE
+                          </span>
+                          <span
+                            className="px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-widest font-bold rounded"
+                            style={{
+                              backgroundColor: `${settingsForm.secondaryColor || "#00C8FF"}20`,
+                              color: settingsForm.secondaryColor || "#00C8FF",
+                              border: `1px solid ${settingsForm.secondaryColor || "#00C8FF"}50`,
+                            }}
+                          >
+                            DEFENSE_LAYER // 01
+                          </span>
+                          <span
+                            className="px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-widest font-bold rounded"
+                            style={{
+                              backgroundColor: `${settingsForm.accentColor || "#00e5ff"}20`,
+                              color: settingsForm.accentColor || "#00e5ff",
+                              border: `1px solid ${settingsForm.accentColor || "#00e5ff"}50`,
+                            }}
+                          >
+                            TAG // ACCENT
+                          </span>
+                        </div>
+                        <h3 className="font-orbitron font-bold text-lg text-white">
+                          Sample Cyber Component Header
+                        </h3>
+                        <p className="text-xs font-mono text-gray-300">
+                          This preview dynamically demonstrates how your 3D text, cards, background, glows, borders, and buttons respond to your palette.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3 shrink-0">
+                        <button
+                          type="button"
+                          className="px-4 py-2 text-xs font-orbitron font-bold uppercase rounded-lg transition-all"
+                          style={{
+                            backgroundColor: `${settingsForm.primaryColor || "#00FF9D"}20`,
+                            color: settingsForm.primaryColor || "#00FF9D",
+                            border: `1px solid ${settingsForm.primaryColor || "#00FF9D"}`,
+                            boxShadow: `0 0 15px ${settingsForm.primaryColor || "#00FF9D"}40`,
+                          }}
+                        >
+                          [ Primary Button ]
+                        </button>
+                        <button
+                          type="button"
+                          className="px-4 py-2 text-xs font-orbitron font-bold uppercase rounded-lg transition-all"
+                          style={{
+                            backgroundColor: `${settingsForm.secondaryColor || "#00C8FF"}20`,
+                            color: settingsForm.secondaryColor || "#00C8FF",
+                            border: `1px solid ${settingsForm.secondaryColor || "#00C8FF"}`,
+                            boxShadow: `0 0 15px ${settingsForm.secondaryColor || "#00C8FF"}40`,
+                          }}
+                        >
+                          [ Secondary Button ]
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* OTHER SYSTEM SETTINGS */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/10">
                   <div className="space-y-2">
                     <label className="text-[10px] font-mono text-gray-400 uppercase">Boot Loader Style</label>
                     <select
@@ -1428,6 +2111,7 @@ export default function AdminDashboard() {
                       type="text"
                       value={settingsForm.analyticsId || ""}
                       onChange={(e) => setSettingsForm({ ...settingsForm, analyticsId: e.target.value })}
+                      placeholder="G-XXXXXXXXXX"
                       className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
                     />
                   </div>
@@ -1439,19 +2123,23 @@ export default function AdminDashboard() {
                     type="text"
                     value={settingsForm.footerText || ""}
                     onChange={(e) => setSettingsForm({ ...settingsForm, footerText: e.target.value })}
+                    placeholder="e.g. All operations verified."
                     className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
                   />
                 </div>
 
                 {successMsg && (
-                  <div className="p-3 bg-cyber-green/10 border border-cyber-green/30 text-cyber-green text-xs font-mono rounded-lg">
-                    {successMsg}
+                  <div className="p-3 bg-cyber-green/10 border border-cyber-green/30 text-cyber-green text-xs font-mono rounded-lg flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 shrink-0 text-cyber-green" />
+                    <span>{successMsg}</span>
                   </div>
                 )}
 
-                <button type="submit" disabled={saving} className="btn-cyber flex items-center gap-2">
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} COMMIT SETTINGS
-                </button>
+                <div className="flex items-center gap-4 pt-2">
+                  <button type="submit" disabled={saving} className="btn-cyber flex items-center gap-2">
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />} COMMIT SETTINGS
+                  </button>
+                </div>
               </form>
             </div>
 
@@ -2360,6 +3048,187 @@ export default function AdminDashboard() {
                 CLOSE DOSSIER
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* PRESET MODAL: ADD OR MODIFY COLOR COMBINATION */}
+      {isPresetModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-md glass-card border-cyber-green/40 bg-[#07111F]/95 p-6 rounded-2xl relative space-y-5 shadow-[0_0_50px_rgba(0,255,157,0.15)] hud-box">
+            <div className="flex justify-between items-center border-b border-white/10 pb-3">
+              <h3 className="font-orbitron font-bold text-sm text-white flex items-center gap-2">
+                <Palette className="w-4 h-4 text-cyber-green" />
+                {editingPreset ? "MODIFY COLOR COMBINATION" : "ADD NEW COLOR COMBINATION"}
+              </h3>
+              <button
+                onClick={() => setIsPresetModalOpen(false)}
+                className="text-gray-400 hover:text-white cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePresetForm} className="space-y-4 font-mono text-xs">
+              <div>
+                <label className="block text-gray-400 mb-1 text-[11px] uppercase tracking-wider">
+                  Combination Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={presetFormData.name}
+                  onChange={(e) => setPresetFormData({ ...presetFormData, name: e.target.value })}
+                  placeholder="e.g. Cyberpunk Sunrise"
+                  className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-white font-orbitron text-xs focus:outline-none focus:border-cyber-green"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-400 mb-1 text-[11px] uppercase tracking-wider">
+                  Badge / Tag (e.g. CUSTOM, RETRO, VIBRANT)
+                </label>
+                <input
+                  type="text"
+                  value={presetFormData.tag}
+                  onChange={(e) => setPresetFormData({ ...presetFormData, tag: e.target.value })}
+                  placeholder="CUSTOM"
+                  className="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-white text-xs uppercase focus:outline-none focus:border-cyber-green"
+                />
+              </div>
+
+              {/* 4 COLOR CONTROLS */}
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                {/* PRIMARY */}
+                <div className="p-2.5 rounded-lg bg-black/40 border border-white/10 space-y-1.5">
+                  <span className="text-[10px] text-cyber-green block font-semibold">PRIMARY</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={presetFormData.primary}
+                      onChange={(e) => setPresetFormData({ ...presetFormData, primary: e.target.value })}
+                      className="w-8 h-8 rounded cursor-pointer bg-transparent border border-white/20 p-0.5 shrink-0"
+                    />
+                    <input
+                      type="text"
+                      value={presetFormData.primary}
+                      onChange={(e) => setPresetFormData({ ...presetFormData, primary: e.target.value })}
+                      className="w-full bg-black/60 border border-white/10 rounded px-2 py-1 text-[11px] text-white uppercase"
+                    />
+                  </div>
+                </div>
+
+                {/* SECONDARY */}
+                <div className="p-2.5 rounded-lg bg-black/40 border border-white/10 space-y-1.5">
+                  <span className="text-[10px] text-cyber-blue block font-semibold">SECONDARY</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={presetFormData.secondary}
+                      onChange={(e) => setPresetFormData({ ...presetFormData, secondary: e.target.value })}
+                      className="w-8 h-8 rounded cursor-pointer bg-transparent border border-white/20 p-0.5 shrink-0"
+                    />
+                    <input
+                      type="text"
+                      value={presetFormData.secondary}
+                      onChange={(e) => setPresetFormData({ ...presetFormData, secondary: e.target.value })}
+                      className="w-full bg-black/60 border border-white/10 rounded px-2 py-1 text-[11px] text-white uppercase"
+                    />
+                  </div>
+                </div>
+
+                {/* ACCENT */}
+                <div className="p-2.5 rounded-lg bg-black/40 border border-white/10 space-y-1.5">
+                  <span className="text-[10px] text-cyan-400 block font-semibold">ACCENT</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={presetFormData.accent}
+                      onChange={(e) => setPresetFormData({ ...presetFormData, accent: e.target.value })}
+                      className="w-8 h-8 rounded cursor-pointer bg-transparent border border-white/20 p-0.5 shrink-0"
+                    />
+                    <input
+                      type="text"
+                      value={presetFormData.accent}
+                      onChange={(e) => setPresetFormData({ ...presetFormData, accent: e.target.value })}
+                      className="w-full bg-black/60 border border-white/10 rounded px-2 py-1 text-[11px] text-white uppercase"
+                    />
+                  </div>
+                </div>
+
+                {/* BACKGROUND */}
+                <div className="p-2.5 rounded-lg bg-black/40 border border-white/10 space-y-1.5">
+                  <span className="text-[10px] text-fuchsia-400 block font-semibold">BACKGROUND</span>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={presetFormData.background}
+                      onChange={(e) => setPresetFormData({ ...presetFormData, background: e.target.value })}
+                      className="w-8 h-8 rounded cursor-pointer bg-transparent border border-white/20 p-0.5 shrink-0"
+                    />
+                    <input
+                      type="text"
+                      value={presetFormData.background}
+                      onChange={(e) => setPresetFormData({ ...presetFormData, background: e.target.value })}
+                      className="w-full bg-black/60 border border-white/10 rounded px-2 py-1 text-[11px] text-white uppercase"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* MINI LIVE PREVIEW SWATCH */}
+              <div
+                className="p-3 rounded-lg border flex items-center justify-between gap-2 transition-all"
+                style={{
+                  backgroundColor: presetFormData.background,
+                  borderColor: `${presetFormData.primary}50`,
+                }}
+              >
+                <span className="text-xs font-orbitron font-bold" style={{ color: presetFormData.primary }}>
+                  {presetFormData.name || "Combination Preview"}
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-4 h-4 rounded-full border border-black/40" style={{ backgroundColor: presetFormData.primary }} />
+                  <span className="w-4 h-4 rounded-full border border-black/40" style={{ backgroundColor: presetFormData.secondary }} />
+                  <span className="w-4 h-4 rounded-full border border-black/40" style={{ backgroundColor: presetFormData.accent }} />
+                  <span className="w-4 h-4 rounded-full border border-white/40" style={{ backgroundColor: presetFormData.background }} />
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPresetFormData({
+                      ...presetFormData,
+                      primary: settingsForm.primaryColor || "#00FF9D",
+                      secondary: settingsForm.secondaryColor || "#00C8FF",
+                      accent: settingsForm.accentColor || "#00e5ff",
+                      background: settingsForm.theme && settingsForm.theme.startsWith("#") ? settingsForm.theme : "#07111F",
+                    });
+                  }}
+                  className="text-[10px] text-cyber-blue hover:underline cursor-pointer"
+                >
+                  Load from current pickers
+                </button>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsPresetModalOpen(false)}
+                    className="px-3 py-1.5 rounded border border-white/15 text-gray-400 hover:text-white text-xs cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 rounded bg-cyber-green text-black font-bold text-xs hover:bg-cyber-green/90 shadow-[0_0_15px_rgba(0,255,157,0.3)] cursor-pointer"
+                  >
+                    {editingPreset ? "Update Combination" : "Save Combination"}
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}
