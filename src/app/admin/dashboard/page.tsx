@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, User, Code, Award, Folder, Settings, Mail,
   LogOut, Plus, Trash, Edit, Check, Loader2, FileText, Camera, X, Globe, ExternalLink, Key, Lock,
-  ShieldAlert, Trophy, Eye, Clock, Users, CheckCircle2, ChevronRight, HelpCircle,
+  ShieldAlert, Trophy, Eye, Clock, Users, CheckCircle2, ChevronRight, ChevronLeft, HelpCircle,
   Palette, Sparkles, RefreshCw, Layers,
-  Activity, Radio, MapPin, Server, Smartphone, Monitor, Download, Search, AlertTriangle, Play, Pause, Compass
+  Activity, Radio, MapPin, Server, Smartphone, Monitor, Download, Search, AlertTriangle, Play, Pause, Compass,
+  Maximize2, Minimize2
 } from "lucide-react";
 import { applyThemeToDocument, DEFAULT_THEME } from "@/components/ThemeProvider";
 
@@ -163,6 +164,17 @@ export default function AdminDashboard() {
   const [showClearLogsModal, setShowClearLogsModal] = useState(false);
   const [clearingLogs, setClearingLogs] = useState(false);
   const [copiedIp, setCopiedIp] = useState<string | null>(null);
+
+  // Visitor Table Horizontal & Vertical Scroll Controls
+  const visitorTableRef = useRef<HTMLDivElement>(null);
+  const visitorTopScrollRef = useRef<HTMLDivElement>(null);
+  const [tableScrollWidth, setTableScrollWidth] = useState(1650);
+  const [tableScrollLeft, setTableScrollLeft] = useState(0);
+  const [maxScrollLeft, setMaxScrollLeft] = useState(1000);
+  const [isTableMaximized, setIsTableMaximized] = useState(false);
+  const isDraggingVisitorTable = useRef(false);
+  const dragStartX = useRef(0);
+  const dragScrollLeft = useRef(0);
 
   // Load all aggregates
   const loadData = async () => {
@@ -392,6 +404,88 @@ export default function AdminDashboard() {
     } finally {
       setClearingLogs(false);
     }
+  };
+
+  // Measure table width for top synchronized scrollbar
+  useEffect(() => {
+    const updateScrollMetrics = () => {
+      if (visitorTableRef.current) {
+        const { scrollWidth, clientWidth, scrollLeft } = visitorTableRef.current;
+        setTableScrollWidth(scrollWidth);
+        setMaxScrollLeft(Math.max(0, scrollWidth - clientWidth));
+        setTableScrollLeft(scrollLeft);
+      }
+    };
+    updateScrollMetrics();
+    const timeout = setTimeout(updateScrollMetrics, 300);
+    window.addEventListener("resize", updateScrollMetrics);
+    return () => {
+      clearTimeout(timeout);
+      window.removeEventListener("resize", updateScrollMetrics);
+    };
+  }, [visitorLogs, visitorPageFilter]);
+
+  // Sync scroll from main table container to top scrollbar
+  const handleTableScroll = () => {
+    if (!visitorTableRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = visitorTableRef.current;
+    setTableScrollLeft(scrollLeft);
+    setMaxScrollLeft(Math.max(0, scrollWidth - clientWidth));
+    if (visitorTopScrollRef.current && Math.abs(visitorTopScrollRef.current.scrollLeft - scrollLeft) > 1) {
+      visitorTopScrollRef.current.scrollLeft = scrollLeft;
+    }
+  };
+
+  // Sync scroll from top scrollbar to main table container
+  const handleTopScroll = () => {
+    if (!visitorTopScrollRef.current || !visitorTableRef.current) return;
+    const { scrollLeft } = visitorTopScrollRef.current;
+    setTableScrollLeft(scrollLeft);
+    if (Math.abs(visitorTableRef.current.scrollLeft - scrollLeft) > 1) {
+      visitorTableRef.current.scrollLeft = scrollLeft;
+    }
+  };
+
+  // Quick Scroll Left / Right by offset
+  const scrollVisitorTable = (offset: number) => {
+    if (visitorTableRef.current) {
+      visitorTableRef.current.scrollBy({ left: offset, behavior: "smooth" });
+    }
+  };
+
+  // Jump to specific column groups
+  const scrollToVisitorColumn = (target: "start" | "middle" | "end") => {
+    if (!visitorTableRef.current) return;
+    if (target === "start") {
+      visitorTableRef.current.scrollTo({ left: 0, behavior: "smooth" });
+    } else if (target === "middle") {
+      visitorTableRef.current.scrollTo({ left: Math.floor(maxScrollLeft / 2), behavior: "smooth" });
+    } else {
+      visitorTableRef.current.scrollTo({ left: maxScrollLeft, behavior: "smooth" });
+    }
+  };
+
+  // Mouse Drag to Scroll Left/Right (Pan)
+  const handleTableMouseDown = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest("button") || target.closest("a") || target.closest("input") || target.closest("select")) {
+      return;
+    }
+    isDraggingVisitorTable.current = true;
+    dragStartX.current = e.pageX - (visitorTableRef.current?.offsetLeft || 0);
+    dragScrollLeft.current = visitorTableRef.current?.scrollLeft || 0;
+  };
+
+  const handleTableMouseMove = (e: React.MouseEvent) => {
+    if (!isDraggingVisitorTable.current || !visitorTableRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - (visitorTableRef.current.offsetLeft || 0);
+    const walk = (x - dragStartX.current) * 1.5;
+    visitorTableRef.current.scrollLeft = dragScrollLeft.current - walk;
+  };
+
+  const handleTableMouseUpOrLeave = () => {
+    isDraggingVisitorTable.current = false;
   };
 
   // State managers for editing/creating items
@@ -2095,21 +2189,140 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* The Main High-Precision Visitor Table */}
-            <div className="glass-card overflow-hidden border-cyber-green/20">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left font-mono text-xs">
-                  <thead className="bg-[#040a12] text-[10px] text-gray-400 uppercase tracking-widest border-b border-white/10">
+            {/* The Main High-Precision Visitor Table with Dual Scroll Navigation */}
+            <div className="glass-card overflow-hidden border-cyber-green/20 shadow-2xl">
+              {/* 1. Top Horizontal Scroll Navigation & Quick Jump Bar */}
+              <div className="bg-[#03070d] border-b border-white/10 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 select-none">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 flex items-center gap-1.5 font-bold">
+                    <Compass className="w-3.5 h-3.5 text-cyber-green" />
+                    <span>HORIZONTAL SCROLL:</span>
+                  </span>
+
+                  {/* Scroll Left Button */}
+                  <button
+                    type="button"
+                    onClick={() => scrollVisitorTable(-350)}
+                    disabled={tableScrollLeft <= 0}
+                    className="px-2.5 py-1 rounded bg-white/5 hover:bg-cyber-green/20 text-gray-300 hover:text-cyber-green border border-white/15 hover:border-cyber-green/50 text-[11px] font-mono flex items-center gap-1 transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                    title="Scroll table to the left"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span>LEFT</span>
+                  </button>
+
+                  {/* Quick Jump Buttons */}
+                  <div className="hidden sm:flex items-center gap-1 text-[10px] font-mono">
+                    <button
+                      type="button"
+                      onClick={() => scrollToVisitorColumn("start")}
+                      className={`px-2 py-0.5 rounded border transition-colors cursor-pointer ${
+                        tableScrollLeft < 150
+                          ? "bg-cyber-green/20 text-cyber-green border-cyber-green/50 font-bold shadow-[0_0_8px_rgba(0,255,157,0.3)]"
+                          : "bg-white/5 text-gray-400 border-white/10 hover:text-white"
+                      }`}
+                    >
+                      Status & IP
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollToVisitorColumn("middle")}
+                      className={`px-2 py-0.5 rounded border transition-colors cursor-pointer ${
+                        tableScrollLeft >= 150 && tableScrollLeft < maxScrollLeft - 150
+                          ? "bg-cyber-blue/20 text-cyber-blue border-cyber-blue/50 font-bold shadow-[0_0_8px_rgba(0,200,255,0.3)]"
+                          : "bg-white/5 text-gray-400 border-white/10 hover:text-white"
+                      }`}
+                    >
+                      Location & ISP
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => scrollToVisitorColumn("end")}
+                      className={`px-2 py-0.5 rounded border transition-colors cursor-pointer ${
+                        tableScrollLeft >= maxScrollLeft - 150
+                          ? "bg-amber-400/20 text-amber-300 border-amber-400/50 font-bold shadow-[0_0_8px_rgba(245,158,11,0.3)]"
+                          : "bg-white/5 text-gray-400 border-white/10 hover:text-white"
+                      }`}
+                    >
+                      Device, Page & Actions ➔
+                    </button>
+                  </div>
+
+                  {/* Scroll Right Button */}
+                  <button
+                    type="button"
+                    onClick={() => scrollVisitorTable(350)}
+                    disabled={tableScrollLeft >= maxScrollLeft - 5}
+                    className="px-2.5 py-1 rounded bg-white/5 hover:bg-cyber-green/20 text-gray-300 hover:text-cyber-green border border-white/15 hover:border-cyber-green/50 text-[11px] font-mono flex items-center gap-1 transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
+                    title="Scroll table to the right"
+                  >
+                    <span>RIGHT</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  {/* Position percentage indicator */}
+                  <span className="hidden md:inline-block text-[10px] font-mono text-gray-400 bg-white/5 px-2 py-0.5 rounded border border-white/10">
+                    Scroll: {Math.round((maxScrollLeft > 0 ? tableScrollLeft / maxScrollLeft : 0) * 100)}%
+                  </span>
+
+                  {/* Viewport Height Toggle Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsTableMaximized(!isTableMaximized)}
+                    className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white border border-white/15 text-[10px] font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+                    title={isTableMaximized ? "Switch to screen-contained viewport (bottom scrollbar always in view)" : "Expand table full height"}
+                  >
+                    {isTableMaximized ? (
+                      <>
+                        <Minimize2 className="w-3 h-3 text-cyber-blue" />
+                        <span>FIT SCREEN VIEW</span>
+                      </>
+                    ) : (
+                      <>
+                        <Maximize2 className="w-3 h-3 text-cyber-green" />
+                        <span>EXPAND ALL ROWS</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Synchronized Top Horizontal Scrollbar */}
+              <div
+                ref={visitorTopScrollRef}
+                onScroll={handleTopScroll}
+                className="overflow-x-auto cyber-scrollbar bg-[#020509] border-b border-white/10 h-3 cursor-ew-resize transition-all select-none"
+                title="Top Horizontal Scrollbar (drag left or right to scroll)"
+              >
+                <div style={{ width: `${Math.max(tableScrollWidth, 1600)}px`, height: "1px" }} />
+              </div>
+
+              {/* 3. The Interactive Table Container */}
+              <div
+                ref={visitorTableRef}
+                onScroll={handleTableScroll}
+                onMouseDown={handleTableMouseDown}
+                onMouseMove={handleTableMouseMove}
+                onMouseUp={handleTableMouseUpOrLeave}
+                onMouseLeave={handleTableMouseUpOrLeave}
+                className={`overflow-x-auto cyber-scrollbar transition-all ${
+                  isTableMaximized ? "overflow-y-visible" : "max-h-[62vh] overflow-y-auto"
+                }`}
+              >
+                <table className="w-full text-left font-mono text-xs min-w-[1450px]">
+                  <thead className="sticky top-0 z-20 bg-[#040a12] text-[10px] text-gray-400 uppercase tracking-widest border-b border-white/10 shadow-lg backdrop-blur-md">
                     <tr>
-                      <th className="p-3.5 whitespace-nowrap">Status & Time</th>
-                      <th className="p-3.5 whitespace-nowrap">IP Address</th>
-                      <th className="p-3.5 whitespace-nowrap">Location (Country / State / City)</th>
-                      <th className="p-3.5 whitespace-nowrap">Postal / Area</th>
-                      <th className="p-3.5 whitespace-nowrap">ISP / Network Provider</th>
-                      <th className="p-3.5 whitespace-nowrap">Device / OS</th>
-                      <th className="p-3.5 whitespace-nowrap">Target Page</th>
-                      <th className="p-3.5 whitespace-nowrap">Accuracy & Confidence</th>
-                      <th className="p-3.5 text-right whitespace-nowrap">Actions</th>
+                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">Status & Time</th>
+                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">IP Address</th>
+                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">Location (Country / State / City)</th>
+                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">Postal / Area</th>
+                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">ISP / Network Provider</th>
+                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">Device / OS</th>
+                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">Target Page</th>
+                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">Accuracy & Confidence</th>
+                      <th className="p-3.5 text-right whitespace-nowrap bg-[#040a12]">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 text-gray-300">
@@ -2340,6 +2553,32 @@ export default function AdminDashboard() {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* 4. Bottom Quick Nav & User Navigation Guide */}
+              <div className="bg-[#03070d] border-t border-white/10 px-4 py-2 flex flex-wrap items-center justify-between text-[11px] font-mono text-gray-400 select-none">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Quick Nav:</span>
+                  <button
+                    type="button"
+                    onClick={() => scrollVisitorTable(-300)}
+                    disabled={tableScrollLeft <= 0}
+                    className="px-2 py-0.5 rounded bg-white/5 hover:bg-cyber-green/20 hover:text-cyber-green border border-white/10 text-[10px] disabled:opacity-30 cursor-pointer transition-colors"
+                  >
+                    ◀ Scroll Left
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollVisitorTable(300)}
+                    disabled={tableScrollLeft >= maxScrollLeft - 5}
+                    className="px-2 py-0.5 rounded bg-white/5 hover:bg-cyber-green/20 hover:text-cyber-green border border-white/10 text-[10px] disabled:opacity-30 cursor-pointer transition-colors"
+                  >
+                    Scroll Right ▶
+                  </button>
+                </div>
+                <div className="text-[10px] text-gray-500 flex items-center gap-2">
+                  <span>💡 Tip: You can drag table horizontally or use <kbd className="px-1 py-0.5 bg-white/10 rounded text-gray-300">Shift</kbd> + MouseWheel</span>
+                </div>
               </div>
             </div>
 
