@@ -43,7 +43,7 @@ export async function GET(request: Request) {
       ];
     }
 
-    const [logs, totalVisits, tenMinutesAgo] = await Promise.all([
+    const [logs, totalVisits, tenMinutesAgo, deviceGroups, sumPageViews] = await Promise.all([
       prisma.visitorLog.findMany({
         where,
         orderBy: { updatedAt: 'desc' },
@@ -51,6 +51,13 @@ export async function GET(request: Request) {
       }),
       prisma.visitorLog.count(),
       new Date(Date.now() - 10 * 60 * 1000),
+      prisma.visitorLog.groupBy({
+        by: ['device'],
+        _count: { device: true },
+      }),
+      prisma.visitorLog.aggregate({
+        _sum: { visitCount: true },
+      }),
     ]);
 
     // Active in last 10 minutes
@@ -64,20 +71,26 @@ export async function GET(request: Request) {
       distinct: ['ipAddress'],
     });
 
-    // Aggregate stats from the fetched records
-    let totalPageViews = 0;
-    const countryCounts: Record<string, number> = {};
+    // Device breakdown across the database
     const deviceCounts: Record<string, number> = { Desktop: 0, Mobile: 0, Tablet: 0 };
+    for (const group of deviceGroups) {
+      const dev = group.device || 'Desktop';
+      if (dev in deviceCounts) {
+        deviceCounts[dev] = group._count.device;
+      } else if (dev.toLowerCase().includes('mobile')) {
+        deviceCounts.Mobile += group._count.device;
+      } else if (dev.toLowerCase().includes('tablet')) {
+        deviceCounts.Tablet += group._count.device;
+      } else {
+        deviceCounts.Desktop += group._count.device;
+      }
+    }
 
+    // Country counts from retrieved logs
+    const countryCounts: Record<string, number> = {};
     for (const log of logs) {
-      totalPageViews += log.visitCount || 1;
       const c = log.country || 'Unknown';
       countryCounts[c] = (countryCounts[c] || 0) + 1;
-      if (log.device in deviceCounts) {
-        deviceCounts[log.device]++;
-      } else {
-        deviceCounts.Desktop++;
-      }
     }
 
     const topCountries = Object.entries(countryCounts)
@@ -89,7 +102,7 @@ export async function GET(request: Request) {
       logs,
       stats: {
         totalVisits,
-        totalPageViews,
+        totalPageViews: sumPageViews._sum.visitCount || totalVisits,
         uniqueIps: distinctIps.length,
         activeNow: activeNowCount,
         topCountries,

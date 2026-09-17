@@ -6,12 +6,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Shield, User, Code, Award, Folder, Settings, Mail,
   LogOut, Plus, Trash, Edit, Check, Loader2, FileText, Camera, X, Globe, ExternalLink, Key, Lock,
-  ShieldAlert, Trophy, Eye, Clock, Users, CheckCircle2, ChevronRight, ChevronLeft, HelpCircle,
+  ShieldAlert, Trophy, Eye, Clock, Users, CheckCircle2, ChevronRight, HelpCircle,
   Palette, Sparkles, RefreshCw, Layers,
-  Activity, Radio, MapPin, Server, Smartphone, Monitor, Download, Search, AlertTriangle, Play, Pause, Compass,
-  Maximize2, Minimize2
+  Activity, Radio, MapPin, Server, Smartphone, Monitor, Download, Search, AlertTriangle, Play, Pause, Compass, Cpu
 } from "lucide-react";
 import { applyThemeToDocument, DEFAULT_THEME } from "@/components/ThemeProvider";
+import BootLoader from "@/components/BootLoader";
 
 export interface CyberPreset {
   id: string;
@@ -164,14 +164,10 @@ export default function AdminDashboard() {
   const [showClearLogsModal, setShowClearLogsModal] = useState(false);
   const [clearingLogs, setClearingLogs] = useState(false);
   const [copiedIp, setCopiedIp] = useState<string | null>(null);
+  const [previewLoaderStyle, setPreviewLoaderStyle] = useState<string | null>(null);
 
   // Visitor Table Horizontal & Vertical Scroll Controls
   const visitorTableRef = useRef<HTMLDivElement>(null);
-  const visitorTopScrollRef = useRef<HTMLDivElement>(null);
-  const [tableScrollWidth, setTableScrollWidth] = useState(1650);
-  const [tableScrollLeft, setTableScrollLeft] = useState(0);
-  const [maxScrollLeft, setMaxScrollLeft] = useState(1000);
-  const [isTableMaximized, setIsTableMaximized] = useState(false);
   const isDraggingVisitorTable = useRef(false);
   const dragStartX = useRef(0);
   const dragScrollLeft = useRef(0);
@@ -224,12 +220,15 @@ export default function AdminDashboard() {
         console.warn("Could not load CTF submissions:", subErr);
       }
 
-      // Load Visitor Intelligence Stats for badge
+      // Load Visitor Intelligence Stats & Real-Time Logs for Overview & Badge
       try {
-        const vRes = await fetch("/api/admin/visitors?limit=1&t=" + Date.now());
+        const vRes = await fetch("/api/admin/visitors?limit=150&t=" + Date.now());
         if (vRes.ok) {
           const vData = await vRes.json();
           setVisitorStats(vData.stats || null);
+          if (Array.isArray(vData.logs)) {
+            setVisitorLogs(vData.logs);
+          }
         }
       } catch (vErr) {
         console.warn("Could not load visitor stats:", vErr);
@@ -284,7 +283,7 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (activeTab === "visitors") {
+    if (activeTab === "visitors" || activeTab === "overview") {
       loadVisitorLogs();
       if (isLiveStreaming) {
         const interval = setInterval(() => {
@@ -407,64 +406,6 @@ export default function AdminDashboard() {
   };
 
   // Measure table width for top synchronized scrollbar
-  useEffect(() => {
-    const updateScrollMetrics = () => {
-      if (visitorTableRef.current) {
-        const { scrollWidth, clientWidth, scrollLeft } = visitorTableRef.current;
-        setTableScrollWidth(scrollWidth);
-        setMaxScrollLeft(Math.max(0, scrollWidth - clientWidth));
-        setTableScrollLeft(scrollLeft);
-      }
-    };
-    updateScrollMetrics();
-    const timeout = setTimeout(updateScrollMetrics, 300);
-    window.addEventListener("resize", updateScrollMetrics);
-    return () => {
-      clearTimeout(timeout);
-      window.removeEventListener("resize", updateScrollMetrics);
-    };
-  }, [visitorLogs, visitorPageFilter]);
-
-  // Sync scroll from main table container to top scrollbar
-  const handleTableScroll = () => {
-    if (!visitorTableRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = visitorTableRef.current;
-    setTableScrollLeft(scrollLeft);
-    setMaxScrollLeft(Math.max(0, scrollWidth - clientWidth));
-    if (visitorTopScrollRef.current && Math.abs(visitorTopScrollRef.current.scrollLeft - scrollLeft) > 1) {
-      visitorTopScrollRef.current.scrollLeft = scrollLeft;
-    }
-  };
-
-  // Sync scroll from top scrollbar to main table container
-  const handleTopScroll = () => {
-    if (!visitorTopScrollRef.current || !visitorTableRef.current) return;
-    const { scrollLeft } = visitorTopScrollRef.current;
-    setTableScrollLeft(scrollLeft);
-    if (Math.abs(visitorTableRef.current.scrollLeft - scrollLeft) > 1) {
-      visitorTableRef.current.scrollLeft = scrollLeft;
-    }
-  };
-
-  // Quick Scroll Left / Right by offset
-  const scrollVisitorTable = (offset: number) => {
-    if (visitorTableRef.current) {
-      visitorTableRef.current.scrollBy({ left: offset, behavior: "smooth" });
-    }
-  };
-
-  // Jump to specific column groups
-  const scrollToVisitorColumn = (target: "start" | "middle" | "end") => {
-    if (!visitorTableRef.current) return;
-    if (target === "start") {
-      visitorTableRef.current.scrollTo({ left: 0, behavior: "smooth" });
-    } else if (target === "middle") {
-      visitorTableRef.current.scrollTo({ left: Math.floor(maxScrollLeft / 2), behavior: "smooth" });
-    } else {
-      visitorTableRef.current.scrollTo({ left: maxScrollLeft, behavior: "smooth" });
-    }
-  };
-
   // Mouse Drag to Scroll Left/Right (Pan)
   const handleTableMouseDown = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -519,27 +460,36 @@ export default function AdminDashboard() {
       setProfileForm(data.profile);
       setSettingsForm(data.settings);
 
-      // Load custom presets from database settings.loader or localStorage
+      // Load custom presets from localStorage or legacy settings
       let loaded = false;
-      if (data.settings?.loader && data.settings.loader.startsWith("[")) {
-        try {
-          const parsed = JSON.parse(data.settings.loader);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setPresets(parsed);
-            loaded = true;
-          }
-        } catch (e) {}
-      }
-      if (!loaded && typeof window !== "undefined") {
+      if (typeof window !== "undefined") {
         try {
           const local = localStorage.getItem("cyber_presets_custom");
           if (local) {
             const parsed = JSON.parse(local);
             if (Array.isArray(parsed) && parsed.length > 0) {
               setPresets(parsed);
+              loaded = true;
             }
           }
         } catch (e) {}
+      }
+
+      if (!loaded && data.settings?.loader && data.settings.loader.startsWith("[")) {
+        try {
+          const parsed = JSON.parse(data.settings.loader);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setPresets(parsed);
+            try {
+              localStorage.setItem("cyber_presets_custom", JSON.stringify(parsed));
+            } catch (e) {}
+          }
+        } catch (e) {}
+      }
+
+      // If settings.loader was mistakenly stored as JSON array, sanitize to "cyber"
+      if (data.settings?.loader && data.settings.loader.startsWith("[")) {
+        setSettingsForm((prev: any) => ({ ...prev, loader: "cyber" }));
       }
     }
   }, [data]);
@@ -569,23 +519,10 @@ export default function AdminDashboard() {
 
   const persistPresets = async (updatedPresets: CyberPreset[]) => {
     setPresets(updatedPresets);
-    try {
-      localStorage.setItem("cyber_presets_custom", JSON.stringify(updatedPresets));
-    } catch (e) {}
-
-    const serialized = JSON.stringify(updatedPresets);
-    const updatedSettings = { ...settingsForm, loader: serialized };
-    setSettingsForm(updatedSettings);
-
-    try {
-      await fetch("/api/admin/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updatedSettings),
-      });
-      broadcastSyncUpdate("settings");
-    } catch (e) {
-      console.error("Failed to persist presets:", e);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("cyber_presets_custom", JSON.stringify(updatedPresets));
+      } catch (e) {}
     }
   };
 
@@ -841,13 +778,48 @@ export default function AdminDashboard() {
     );
   }
 
+  // Real-Time Telemetry & Traffic Breakdown for Overview Tab
+  const overviewDesktopCount =
+    visitorStats?.deviceCounts?.Desktop ??
+    visitorLogs.filter((v: any) => v.device === "Desktop" || (!v.device && !v.isMobile)).length;
+
+  const overviewMobileCount =
+    visitorStats?.deviceCounts?.Mobile ??
+    visitorLogs.filter((v: any) => v.device === "Mobile").length;
+
+  const overviewTabletCount =
+    visitorStats?.deviceCounts?.Tablet ??
+    visitorLogs.filter((v: any) => v.device === "Tablet").length;
+
+  const overviewMobileTabletCount = overviewMobileCount + overviewTabletCount;
+
+  const overviewTotalTraffic =
+    visitorStats?.totalVisits && visitorStats.totalVisits > 0
+      ? visitorStats.totalVisits
+      : overviewDesktopCount + overviewMobileTabletCount > 0
+      ? overviewDesktopCount + overviewMobileTabletCount
+      : visitorLogs.length;
+
+  const overviewDesktopPct =
+    overviewTotalTraffic > 0
+      ? Math.round((overviewDesktopCount / overviewTotalTraffic) * 100)
+      : 0;
+
+  const overviewMobileTabletPct =
+    overviewTotalTraffic > 0
+      ? Math.max(0, 100 - overviewDesktopPct)
+      : 0;
+
   return (
     <div className="min-h-screen text-white flex flex-col md:flex-row relative">
       <div className="scanlines"></div>
       <div className="animated-bg"></div>
 
-      {/* SIDEBAR NAVIGATION - Responsive Mobile Drawer / Desktop Sidebar */}
-      <aside className="w-full md:w-64 bg-[#040a12] border-b md:border-b-0 md:border-r border-white/5 flex flex-col p-4 sm:p-6 gap-4 sm:gap-6 z-10 shrink-0">
+      {/* SIDEBAR NAVIGATION - Fixed Stable Desktop Sidebar / Mobile Top Nav */}
+      <aside
+        data-lenis-prevent="true"
+        className="w-full md:w-64 md:fixed md:left-0 md:top-0 md:bottom-0 md:h-screen bg-[#040a12] border-b md:border-b-0 md:border-r border-white/10 flex flex-col p-4 sm:p-6 gap-4 sm:gap-6 z-30 shrink-0 md:overflow-y-auto cyber-scrollbar"
+      >
         <div className="flex items-center justify-between pb-3 md:pb-6 border-b border-white/5">
           <div className="flex items-center gap-2">
             <Shield className="text-cyber-green w-5 h-5 animate-pulse" />
@@ -973,14 +945,16 @@ export default function AdminDashboard() {
 
         <button
           onClick={handleLogout}
-          className="hidden md:flex items-center justify-center gap-2 btn-cyber border-rose-500/40 text-rose-500 hover:shadow-[0_0_15px_rgba(244,63,94,0.3)] mt-auto"
+          className="hidden md:flex items-center justify-center gap-2 btn-cyber border-rose-500/40 text-rose-500 hover:shadow-[0_0_15px_rgba(244,63,94,0.3)] mt-auto shrink-0"
         >
           LOGOUT <LogOut className="w-4 h-4" />
         </button>
       </aside>
 
       {/* DASHBOARD CONTENT BODY */}
-      <main className="flex-grow p-6 md:p-8 max-w-5xl mx-auto space-y-8 z-10 w-full overflow-y-auto">
+      <main className={`flex-grow w-full md:w-[calc(100%-16rem)] md:ml-64 p-6 md:p-8 mx-auto space-y-8 z-10 overflow-y-auto transition-all duration-300 ${
+        activeTab === "visitors" ? "max-w-[98%] 2xl:max-w-[1780px]" : "max-w-5xl"
+      }`}>
         {/* TAB OVERVIEW */}
         {activeTab === "overview" && (
           <div className="space-y-6">
@@ -1012,27 +986,94 @@ export default function AdminDashboard() {
 
             {/* Analytics Breakdown Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="glass-card p-6 space-y-4">
-                <h3 className="font-orbitron font-bold text-xs text-white tracking-widest uppercase">System Analytics // Traffic Breakdown</h3>
-                <div className="space-y-3 font-mono text-xs">
+              <div className="glass-card p-6 space-y-4 border border-white/5 relative overflow-hidden group">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-orbitron font-bold text-xs text-white tracking-widest uppercase flex items-center gap-2">
+                    <Activity className="w-3.5 h-3.5 text-cyber-green animate-pulse" />
+                    System Analytics // Traffic Breakdown
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[9px] font-mono bg-cyber-green/10 text-cyber-green border border-cyber-green/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyber-green animate-ping inline-block" />
+                      LIVE FEED
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => loadVisitorLogs()}
+                      disabled={loadingVisitors}
+                      className="p-1 rounded text-gray-400 hover:text-cyber-green hover:bg-cyber-green/10 transition-colors cursor-pointer"
+                      title="Refresh real-time visitor statistics"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${loadingVisitors ? "animate-spin text-cyber-green" : ""}`} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3.5 font-mono text-xs">
                   <div>
-                    <div className="flex justify-between text-[10px] text-gray-400 mb-1">
-                      <span>DESKTOP / LAPTOP VISITORS</span>
-                      <span className="text-cyber-green font-bold">78%</span>
+                    <div className="flex justify-between text-[10px] text-gray-400 mb-1.5">
+                      <span className="flex items-center gap-1.5">
+                        <Monitor className="w-3 h-3 text-cyber-green" />
+                        <span>DESKTOP / LAPTOP VISITORS</span>
+                        <span className="text-gray-500 font-normal">({overviewDesktopCount} sessions)</span>
+                      </span>
+                      <span className="text-cyber-green font-bold font-orbitron">{overviewDesktopPct}%</span>
                     </div>
-                    <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
-                      <div className="h-full bg-cyber-green w-[78%]" />
+                    <div className="h-2 w-full bg-black/50 rounded-full overflow-hidden border border-white/5 p-0.5">
+                      <div
+                        className="h-full bg-gradient-to-r from-cyber-green/70 to-cyber-green rounded-full transition-all duration-700 shadow-[0_0_10px_rgba(0,255,157,0.4)]"
+                        style={{ width: `${overviewDesktopPct}%` }}
+                      />
                     </div>
                   </div>
+
                   <div>
-                    <div className="flex justify-between text-[10px] text-gray-400 mb-1">
-                      <span>MOBILE / TABLET VISITORS</span>
-                      <span className="text-cyber-blue font-bold">22%</span>
+                    <div className="flex justify-between text-[10px] text-gray-400 mb-1.5">
+                      <span className="flex items-center gap-1.5">
+                        <Smartphone className="w-3 h-3 text-cyber-blue" />
+                        <span>MOBILE / TABLET VISITORS</span>
+                        <span className="text-gray-500 font-normal">({overviewMobileTabletCount} sessions)</span>
+                      </span>
+                      <span className="text-cyber-blue font-bold font-orbitron">{overviewMobileTabletPct}%</span>
                     </div>
-                    <div className="h-1.5 w-full bg-black/40 rounded-full overflow-hidden">
-                      <div className="h-full bg-cyber-blue w-[22%]" />
+                    <div className="h-2 w-full bg-black/50 rounded-full overflow-hidden border border-white/5 p-0.5">
+                      <div
+                        className="h-full bg-gradient-to-r from-cyber-blue/70 to-cyber-blue rounded-full transition-all duration-700 shadow-[0_0_10px_rgba(0,200,255,0.4)]"
+                        style={{ width: `${overviewMobileTabletPct}%` }}
+                      />
                     </div>
                   </div>
+                </div>
+
+                {/* Real-Time Telemetry Quick Strip */}
+                <div className="pt-3 border-t border-white/5 grid grid-cols-3 gap-2 text-center font-mono">
+                  <div className="bg-black/30 rounded p-2 border border-white/5">
+                    <div className="text-[8px] text-gray-500 uppercase tracking-wider">Total Traffic</div>
+                    <div className="text-xs font-bold text-white font-orbitron mt-0.5">{overviewTotalTraffic}</div>
+                  </div>
+                  <div className="bg-black/30 rounded p-2 border border-white/5">
+                    <div className="text-[8px] text-gray-500 uppercase tracking-wider">Active (10m)</div>
+                    <div className="text-xs font-bold text-cyber-green font-orbitron mt-0.5 flex items-center justify-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-cyber-green animate-pulse" />
+                      {visitorStats?.activeNow ?? 0}
+                    </div>
+                  </div>
+                  <div className="bg-black/30 rounded p-2 border border-white/5">
+                    <div className="text-[8px] text-gray-500 uppercase tracking-wider">Unique IPs</div>
+                    <div className="text-xs font-bold text-cyber-blue font-orbitron mt-0.5">{visitorStats?.uniqueIps ?? 0}</div>
+                  </div>
+                </div>
+
+                <div className="pt-1 flex items-center justify-between text-[10px] font-mono">
+                  <span className="text-gray-500">Engine: Supabase Telemetry</span>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("visitors")}
+                    className="text-cyber-green hover:text-white transition-colors flex items-center gap-1 cursor-pointer font-bold"
+                  >
+                    Inspect Radar Logs
+                    <ChevronRight className="w-3 h-3" />
+                  </button>
                 </div>
               </div>
 
@@ -1062,6 +1103,7 @@ export default function AdminDashboard() {
                 <div>[OK] Grid initialized successfully. Databases mounted via Supabase Pooler.</div>
                 <div>[SEC] Admin Session validated. JWT Cookie Encryption Active.</div>
                 <div>[SYS] Listening for remote packet transmission queries & file uploads...</div>
+                <div>[TEL] Active telemetry stream: {overviewTotalTraffic} packets logged ({overviewDesktopCount} Desktop / {overviewMobileTabletCount} Mobile & Tablet).</div>
               </div>
             </div>
           </div>
@@ -2189,140 +2231,29 @@ export default function AdminDashboard() {
               </div>
             </div>
 
-            {/* The Main High-Precision Visitor Table with Dual Scroll Navigation */}
+            {/* The Main High-Precision Visitor Table */}
             <div className="glass-card overflow-hidden border-cyber-green/20 shadow-2xl">
-              {/* 1. Top Horizontal Scroll Navigation & Quick Jump Bar */}
-              <div className="bg-[#03070d] border-b border-white/10 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3 select-none">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400 flex items-center gap-1.5 font-bold">
-                    <Compass className="w-3.5 h-3.5 text-cyber-green" />
-                    <span>HORIZONTAL SCROLL:</span>
-                  </span>
-
-                  {/* Scroll Left Button */}
-                  <button
-                    type="button"
-                    onClick={() => scrollVisitorTable(-350)}
-                    disabled={tableScrollLeft <= 0}
-                    className="px-2.5 py-1 rounded bg-white/5 hover:bg-cyber-green/20 text-gray-300 hover:text-cyber-green border border-white/15 hover:border-cyber-green/50 text-[11px] font-mono flex items-center gap-1 transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-                    title="Scroll table to the left"
-                  >
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                    <span>LEFT</span>
-                  </button>
-
-                  {/* Quick Jump Buttons */}
-                  <div className="hidden sm:flex items-center gap-1 text-[10px] font-mono">
-                    <button
-                      type="button"
-                      onClick={() => scrollToVisitorColumn("start")}
-                      className={`px-2 py-0.5 rounded border transition-colors cursor-pointer ${
-                        tableScrollLeft < 150
-                          ? "bg-cyber-green/20 text-cyber-green border-cyber-green/50 font-bold shadow-[0_0_8px_rgba(0,255,157,0.3)]"
-                          : "bg-white/5 text-gray-400 border-white/10 hover:text-white"
-                      }`}
-                    >
-                      Status & IP
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => scrollToVisitorColumn("middle")}
-                      className={`px-2 py-0.5 rounded border transition-colors cursor-pointer ${
-                        tableScrollLeft >= 150 && tableScrollLeft < maxScrollLeft - 150
-                          ? "bg-cyber-blue/20 text-cyber-blue border-cyber-blue/50 font-bold shadow-[0_0_8px_rgba(0,200,255,0.3)]"
-                          : "bg-white/5 text-gray-400 border-white/10 hover:text-white"
-                      }`}
-                    >
-                      Location & ISP
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => scrollToVisitorColumn("end")}
-                      className={`px-2 py-0.5 rounded border transition-colors cursor-pointer ${
-                        tableScrollLeft >= maxScrollLeft - 150
-                          ? "bg-amber-400/20 text-amber-300 border-amber-400/50 font-bold shadow-[0_0_8px_rgba(245,158,11,0.3)]"
-                          : "bg-white/5 text-gray-400 border-white/10 hover:text-white"
-                      }`}
-                    >
-                      Device, Page & Actions ➔
-                    </button>
-                  </div>
-
-                  {/* Scroll Right Button */}
-                  <button
-                    type="button"
-                    onClick={() => scrollVisitorTable(350)}
-                    disabled={tableScrollLeft >= maxScrollLeft - 5}
-                    className="px-2.5 py-1 rounded bg-white/5 hover:bg-cyber-green/20 text-gray-300 hover:text-cyber-green border border-white/15 hover:border-cyber-green/50 text-[11px] font-mono flex items-center gap-1 transition-all disabled:opacity-30 disabled:pointer-events-none cursor-pointer"
-                    title="Scroll table to the right"
-                  >
-                    <span>RIGHT</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  {/* Position percentage indicator */}
-                  <span className="hidden md:inline-block text-[10px] font-mono text-gray-400 bg-white/5 px-2 py-0.5 rounded border border-white/10">
-                    Scroll: {Math.round((maxScrollLeft > 0 ? tableScrollLeft / maxScrollLeft : 0) * 100)}%
-                  </span>
-
-                  {/* Viewport Height Toggle Button */}
-                  <button
-                    type="button"
-                    onClick={() => setIsTableMaximized(!isTableMaximized)}
-                    className="px-2.5 py-1 rounded bg-white/5 hover:bg-white/15 text-gray-300 hover:text-white border border-white/15 text-[10px] font-mono flex items-center gap-1.5 transition-all cursor-pointer"
-                    title={isTableMaximized ? "Switch to screen-contained viewport (bottom scrollbar always in view)" : "Expand table full height"}
-                  >
-                    {isTableMaximized ? (
-                      <>
-                        <Minimize2 className="w-3 h-3 text-cyber-blue" />
-                        <span>FIT SCREEN VIEW</span>
-                      </>
-                    ) : (
-                      <>
-                        <Maximize2 className="w-3 h-3 text-cyber-green" />
-                        <span>EXPAND ALL ROWS</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* 2. Synchronized Top Horizontal Scrollbar */}
-              <div
-                ref={visitorTopScrollRef}
-                onScroll={handleTopScroll}
-                className="overflow-x-auto cyber-scrollbar bg-[#020509] border-b border-white/10 h-3 cursor-ew-resize transition-all select-none"
-                title="Top Horizontal Scrollbar (drag left or right to scroll)"
-              >
-                <div style={{ width: `${Math.max(tableScrollWidth, 1600)}px`, height: "1px" }} />
-              </div>
-
-              {/* 3. The Interactive Table Container */}
+              {/* Interactive Large Table Container */}
               <div
                 ref={visitorTableRef}
-                onScroll={handleTableScroll}
                 onMouseDown={handleTableMouseDown}
                 onMouseMove={handleTableMouseMove}
                 onMouseUp={handleTableMouseUpOrLeave}
                 onMouseLeave={handleTableMouseUpOrLeave}
-                className={`overflow-x-auto cyber-scrollbar transition-all ${
-                  isTableMaximized ? "overflow-y-visible" : "max-h-[62vh] overflow-y-auto"
-                }`}
+                className="overflow-x-auto cyber-scrollbar max-h-[80vh] min-h-[550px] overflow-y-auto cursor-grab active:cursor-grabbing"
               >
-                <table className="w-full text-left font-mono text-xs min-w-[1450px]">
-                  <thead className="sticky top-0 z-20 bg-[#040a12] text-[10px] text-gray-400 uppercase tracking-widest border-b border-white/10 shadow-lg backdrop-blur-md">
+                <table className="w-full text-left font-mono text-sm min-w-[1450px]">
+                  <thead className="sticky top-0 z-20 bg-[#040a12] text-xs text-gray-300 uppercase tracking-wider border-b border-white/10 shadow-lg backdrop-blur-md">
                     <tr>
-                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">Status & Time</th>
-                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">IP Address</th>
-                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">Location (Country / State / City)</th>
-                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">Postal / Area</th>
-                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">ISP / Network Provider</th>
-                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">Device / OS</th>
-                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">Target Page</th>
-                      <th className="p-3.5 whitespace-nowrap bg-[#040a12]">Accuracy & Confidence</th>
-                      <th className="p-3.5 text-right whitespace-nowrap bg-[#040a12]">Actions</th>
+                      <th className="px-5 py-4 whitespace-nowrap bg-[#040a12]">Status & Time</th>
+                      <th className="px-5 py-4 whitespace-nowrap bg-[#040a12]">IP Address</th>
+                      <th className="px-5 py-4 whitespace-nowrap bg-[#040a12]">Location (Country / State / City)</th>
+                      <th className="px-5 py-4 whitespace-nowrap bg-[#040a12]">Postal / Area</th>
+                      <th className="px-5 py-4 whitespace-nowrap bg-[#040a12]">ISP / Network Provider</th>
+                      <th className="px-5 py-4 whitespace-nowrap bg-[#040a12]">Device / OS</th>
+                      <th className="px-5 py-4 whitespace-nowrap bg-[#040a12]">Target Page</th>
+                      <th className="px-5 py-4 whitespace-nowrap bg-[#040a12]">Accuracy & Confidence</th>
+                      <th className="px-5 py-4 text-right whitespace-nowrap bg-[#040a12]">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5 text-gray-300">
@@ -2336,10 +2267,10 @@ export default function AdminDashboard() {
                         const isRecent = new Date(log.updatedAt).getTime() > Date.now() - 10 * 60 * 1000;
                         const isPortfolioPage = log.page === "/" || !log.page?.startsWith("/admin");
                         return (
-                          <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
+                          <tr key={log.id} className="hover:bg-white/[0.03] transition-colors">
                             {/* Status & Time */}
-                            <td className="p-3.5 whitespace-nowrap">
-                              <div className="flex items-center gap-2">
+                            <td className="px-5 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-2.5">
                                 <span
                                   className={`w-2.5 h-2.5 rounded-full shrink-0 ${
                                     isRecent
@@ -2349,10 +2280,10 @@ export default function AdminDashboard() {
                                   title={isRecent ? "Active session (<10m)" : "Past session"}
                                 />
                                 <div>
-                                  <div className="text-white font-semibold">
+                                  <div className="text-white font-semibold text-sm">
                                     {formatTimeAgo(log.updatedAt || log.createdAt)}
                                   </div>
-                                  <div className="text-[10px] text-gray-500">
+                                  <div className="text-xs text-gray-500 font-mono mt-0.5">
                                     {new Date(log.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                                   </div>
                                 </div>
@@ -2360,9 +2291,9 @@ export default function AdminDashboard() {
                             </td>
 
                             {/* IP Address */}
-                            <td className="p-3.5 whitespace-nowrap">
-                              <div className="flex items-center gap-2">
-                                <span className="font-mono text-cyber-blue font-bold text-xs select-all">
+                            <td className="px-5 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-2.5">
+                                <span className="font-mono text-cyber-blue font-bold text-sm select-all">
                                   {log.ipAddress}
                                 </span>
                                 <button
@@ -2372,102 +2303,102 @@ export default function AdminDashboard() {
                                   title="Copy IP"
                                 >
                                   {copiedIp === log.ipAddress ? (
-                                    <Check className="w-3 h-3 text-cyber-green" />
+                                    <Check className="w-3.5 h-3.5 text-cyber-green" />
                                   ) : (
-                                    <span className="text-[10px] px-1.5 py-0.5 rounded border border-white/15 hover:border-white/40 font-mono">
+                                    <span className="text-[10px] px-2 py-0.5 rounded border border-white/15 hover:border-white/40 font-mono">
                                       COPY
                                     </span>
                                   )}
                                 </button>
                               </div>
                               {log.isLocalhost && (
-                                <span className="text-[9px] text-yellow-400/90 font-mono block mt-0.5">
+                                <span className="text-[10px] text-yellow-400/90 font-mono block mt-1">
                                   [Dev Localhost WAN]
                                 </span>
                               )}
                               {log.isVpn && (
-                                <span className="text-[9px] text-rose-400 font-mono block mt-0.5">
+                                <span className="text-[10px] text-rose-400 font-mono block mt-1">
                                   ⚠️ [VPN / Proxy]
                                 </span>
                               )}
                             </td>
 
                             {/* Location */}
-                            <td className="p-3.5">
-                              <div className="whitespace-nowrap flex items-center gap-1.5">
-                                <span className="text-base" role="img" aria-label={log.country}>
+                            <td className="px-5 py-4">
+                              <div className="whitespace-nowrap flex items-center gap-2">
+                                <span className="text-xl" role="img" aria-label={log.country}>
                                   {getCountryFlagEmoji(log.countryCode)}
                                 </span>
-                                <span className="text-white font-bold">{log.country || "Unknown"}</span>
+                                <span className="text-white font-bold text-sm">{log.country || "Unknown"}</span>
                               </div>
-                              <div className="text-[11px] text-gray-400 truncate max-w-[200px] mt-0.5">
+                              <div className="text-xs text-gray-400 truncate max-w-[240px] mt-1">
                                 {[log.city, log.region].filter(Boolean).join(", ") || "Area not specified"}
                               </div>
                             </td>
 
                             {/* Postal / Area Code */}
-                            <td className="p-3.5 whitespace-nowrap">
+                            <td className="px-5 py-4 whitespace-nowrap">
                               {log.postalCode ? (
-                                <span className="px-2 py-0.5 rounded bg-white/5 border border-white/15 text-cyber-green font-mono text-[11px] font-bold">
+                                <span className="px-2.5 py-1 rounded bg-white/5 border border-white/15 text-cyber-green font-mono text-xs font-bold">
                                   {log.postalCode}
                                 </span>
                               ) : (
-                                <span className="text-gray-600 font-mono text-[11px]">—</span>
+                                <span className="text-gray-600 font-mono text-xs">—</span>
                               )}
                             </td>
 
                             {/* ISP / Network */}
-                            <td className="p-3.5">
-                              <div className="text-white font-medium text-xs truncate max-w-[200px]">
+                            <td className="px-5 py-4">
+                              <div className="text-white font-medium text-sm truncate max-w-[240px]">
                                 {log.isp || "Unknown Carrier"}
                               </div>
                               {log.org && log.org !== log.isp && (
-                                <div className="text-[10px] text-gray-500 truncate max-w-[200px]">
+                                <div className="text-xs text-gray-500 truncate max-w-[240px] mt-0.5">
                                   {log.org}
                                 </div>
                               )}
                             </td>
 
                             {/* Device / OS */}
-                            <td className="p-3.5 whitespace-nowrap">
-                              <div className="flex items-center gap-1.5 text-xs text-white">
+                            <td className="px-5 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-2 text-sm text-white">
                                 {log.device === "Mobile" ? (
-                                  <Smartphone className="w-3.5 h-3.5 text-cyber-blue shrink-0" />
+                                  <Smartphone className="w-4 h-4 text-cyber-blue shrink-0" />
                                 ) : log.device === "Tablet" ? (
-                                  <Smartphone className="w-3.5 h-3.5 text-cyber-cyan shrink-0" />
+                                  <Smartphone className="w-4 h-4 text-cyber-cyan shrink-0" />
                                 ) : (
-                                  <Monitor className="w-3.5 h-3.5 text-cyber-green shrink-0" />
+                                  <Monitor className="w-4 h-4 text-cyber-green shrink-0" />
                                 )}
-                                <span>{log.device || "Desktop"}</span>
+                                <span className="font-semibold">{log.device || "Desktop"}</span>
                               </div>
-                              <div className="text-[10px] text-gray-400 mt-0.5">
+                              <div className="text-xs text-gray-400 mt-1">
                                 {[log.os, log.browser].filter(Boolean).join(" // ") || "Unknown"}
                               </div>
                             </td>
 
                             {/* Target Page Viewed */}
-                            <td className="p-3.5 whitespace-nowrap">
+                            <td className="px-5 py-4 whitespace-nowrap">
                               {isPortfolioPage ? (
-                                <span className="px-2.5 py-1 rounded bg-cyber-green/15 border border-cyber-green/40 text-cyber-green text-[10px] font-bold font-mono tracking-wide">
+                                <span className="px-3 py-1.5 rounded bg-cyber-green/15 border border-cyber-green/40 text-cyber-green text-xs font-bold font-mono tracking-wide">
                                   PORTFOLIO MAIN ( / )
                                 </span>
                               ) : (
-                                <span className="px-2.5 py-1 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[10px] font-bold font-mono tracking-wide">
+                                <span className="px-3 py-1.5 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300 text-xs font-bold font-mono tracking-wide">
                                   🔒 ADMIN LOGIN
                                 </span>
                               )}
                               {log.visitCount > 1 && (
-                                <span className="text-[10px] text-gray-400 ml-1.5 font-mono">
+                                <span className="text-xs text-gray-400 ml-2 font-mono">
                                   ({log.visitCount}x views)
                                 </span>
                               )}
                             </td>
 
                             {/* Accuracy & Confidence */}
-                            <td className="p-3.5">
-                              <div className="flex items-center gap-1.5 whitespace-nowrap">
+                            <td className="px-5 py-4">
+                              <div className="flex items-center gap-2 whitespace-nowrap">
                                 <span
-                                  className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                                  className={`text-xs font-bold px-2.5 py-1 rounded border ${
                                     log.postalCode
                                       ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
                                       : log.city
@@ -2483,18 +2414,18 @@ export default function AdminDashboard() {
                                   href={`https://www.google.com/maps?q=${log.latitude},${log.longitude}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[10px] text-gray-400 hover:text-cyber-green mt-1 transition-colors"
+                                  className="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-cyber-green mt-1.5 transition-colors"
                                   title="View coordinates on Google Maps"
                                 >
-                                  <Compass className="w-3 h-3 text-cyber-green" />
+                                  <Compass className="w-3.5 h-3.5 text-cyber-green" />
                                   {log.latitude.toFixed(3)}, {log.longitude.toFixed(3)}
-                                  <ExternalLink className="w-2.5 h-2.5 ml-0.5" />
+                                  <ExternalLink className="w-3 h-3 ml-0.5" />
                                 </a>
                               )}
                             </td>
 
                             {/* Actions */}
-                            <td className="p-3.5 text-right whitespace-nowrap">
+                            <td className="px-5 py-4 text-right whitespace-nowrap">
                               <button
                                 type="button"
                                 onClick={async () => {
@@ -2509,10 +2440,10 @@ export default function AdminDashboard() {
                                     console.error("Failed to delete log:", e);
                                   }
                                 }}
-                                className="p-1.5 rounded border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 cursor-pointer transition-colors"
+                                className="p-2 rounded border border-rose-500/30 text-rose-400 hover:bg-rose-500/15 cursor-pointer transition-colors"
                                 title="Delete this record"
                               >
-                                <Trash className="w-3 h-3" />
+                                <Trash className="w-3.5 h-3.5" />
                               </button>
                             </td>
                           </tr>
@@ -2553,32 +2484,6 @@ export default function AdminDashboard() {
                     )}
                   </tbody>
                 </table>
-              </div>
-
-              {/* 4. Bottom Quick Nav & User Navigation Guide */}
-              <div className="bg-[#03070d] border-t border-white/10 px-4 py-2 flex flex-wrap items-center justify-between text-[11px] font-mono text-gray-400 select-none">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-gray-500 uppercase tracking-wider">Quick Nav:</span>
-                  <button
-                    type="button"
-                    onClick={() => scrollVisitorTable(-300)}
-                    disabled={tableScrollLeft <= 0}
-                    className="px-2 py-0.5 rounded bg-white/5 hover:bg-cyber-green/20 hover:text-cyber-green border border-white/10 text-[10px] disabled:opacity-30 cursor-pointer transition-colors"
-                  >
-                    ◀ Scroll Left
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => scrollVisitorTable(300)}
-                    disabled={tableScrollLeft >= maxScrollLeft - 5}
-                    className="px-2 py-0.5 rounded bg-white/5 hover:bg-cyber-green/20 hover:text-cyber-green border border-white/10 text-[10px] disabled:opacity-30 cursor-pointer transition-colors"
-                  >
-                    Scroll Right ▶
-                  </button>
-                </div>
-                <div className="text-[10px] text-gray-500 flex items-center gap-2">
-                  <span>💡 Tip: You can drag table horizontally or use <kbd className="px-1 py-0.5 bg-white/10 rounded text-gray-300">Shift</kbd> + MouseWheel</span>
-                </div>
               </div>
             </div>
 
@@ -3070,40 +2975,170 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                {/* OTHER SYSTEM SETTINGS */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/10">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-mono text-gray-400 uppercase">Boot Loader Style</label>
-                    <select
-                      value={settingsForm.loader || "default"}
-                      onChange={(e) => setSettingsForm({ ...settingsForm, loader: e.target.value })}
-                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
-                    >
-                      <option value="default">Default</option>
-                      <option value="cyber">Cyber Diagnostics</option>
-                    </select>
+                {/* SYSTEM RUNTIME, TELEMETRY & BRANDING SETTINGS */}
+                <div className="space-y-6 pt-6 border-t border-white/10">
+                  <h3 className="font-orbitron font-bold text-xs text-white tracking-widest uppercase flex items-center gap-2">
+                    <Settings className="w-4 h-4 text-cyber-green" />
+                    CLIENT ENVIRONMENT, TELEMETRY & FOOTER CONFIGURATION
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* 1. BOOT LOADER STYLE */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-mono text-gray-300 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                          <Cpu className="w-3.5 h-3.5 text-cyber-green" />
+                          Boot Loader Style
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setPreviewLoaderStyle(settingsForm.loader || "cyber")}
+                          className="px-2.5 py-1 rounded bg-cyber-green/15 border border-cyber-green/40 hover:bg-cyber-green/25 text-cyber-green text-[10px] font-mono font-bold flex items-center gap-1.5 cursor-pointer transition-all shadow-[0_0_10px_rgba(0,255,157,0.15)]"
+                          title="Test how this loader looks for visitors"
+                        >
+                          <Play className="w-3 h-3 text-cyber-green" />
+                          PREVIEW LOADER
+                        </button>
+                      </div>
+
+                      <select
+                        value={settingsForm.loader || "cyber"}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, loader: e.target.value })}
+                        className="w-full bg-[#040a12] border border-white/15 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-cyber-green transition-colors cursor-pointer"
+                      >
+                        <option value="cyber">Cyber Diagnostics (Kernel Decryption & Terminal Steps)</option>
+                        <option value="matrix">Matrix Data Stream (Falling Green Rain & Cipher Stream)</option>
+                        <option value="minimal">Minimal Biometric (Sleek Radar Pulse & Rapid Clearance)</option>
+                        <option value="disabled">Disabled / Instant Load (0ms Wait - Direct Access)</option>
+                      </select>
+
+                      <div className="text-[10px] font-mono text-gray-400 bg-black/40 p-2.5 rounded-lg border border-white/5 leading-relaxed">
+                        {settingsForm.loader === "matrix" && (
+                          <span className="text-cyber-green">⚡ Matrix Rain: Falling digital code matrix with real-time decryption HUD.</span>
+                        )}
+                        {settingsForm.loader === "minimal" && (
+                          <span className="text-cyber-blue">⚡ Biometric Pulse: Fast ~1.2s concentric scanner with verified authorization badge.</span>
+                        )}
+                        {settingsForm.loader === "disabled" && (
+                          <span className="text-amber-400">⚠️ Instant Load: Skips boot animation completely on client devices.</span>
+                        )}
+                        {(!settingsForm.loader || settingsForm.loader === "cyber" || settingsForm.loader === "default") && (
+                          <span className="text-cyber-green">⚡ Cyber Diagnostics: Step-by-step security kernel initialization & decryption logs.</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 2. ANALYTICS TRACKING ID */}
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-mono text-gray-300 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                        <Activity className="w-3.5 h-3.5 text-cyber-blue" />
+                        Analytics Tracking ID (Google Analytics 4)
+                      </label>
+                      <input
+                        type="text"
+                        value={settingsForm.analyticsId || ""}
+                        onChange={(e) => setSettingsForm({ ...settingsForm, analyticsId: e.target.value })}
+                        placeholder="G-XXXXXXXXXX (e.g. G-7K9WXYZ123)"
+                        className="w-full bg-[#040a12] border border-white/15 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-cyber-blue transition-colors"
+                      />
+
+                      {/* Dynamic Validation Status */}
+                      <div className="bg-black/40 p-2.5 rounded-lg border border-white/5 text-[10px] font-mono leading-relaxed">
+                        {!settingsForm.analyticsId?.trim() ? (
+                          <div className="text-gray-400 flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-gray-500" />
+                            <span>Standby: No GA ID configured. Internal Supabase network radar is handling all telemetry.</span>
+                          </div>
+                        ) : settingsForm.analyticsId.toUpperCase().includes("XXXX") ? (
+                          <div className="text-amber-400 flex items-center gap-1.5">
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span>Placeholder ID: Replace with your real GA4 ID to stream live events to Google Analytics.</span>
+                          </div>
+                        ) : /^(G-[A-Z0-9]+|UA-[0-9]+-[0-9]+)$/i.test(settingsForm.analyticsId.trim()) ? (
+                          <div className="text-cyber-green flex items-center gap-1.5">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-cyber-green shrink-0" />
+                            <span>Active: Valid Google Analytics 4 Measurement ID. gtag.js injected automatically on client visits.</span>
+                          </div>
+                        ) : (
+                          <div className="text-rose-400 flex items-center gap-1.5">
+                            <AlertTriangle className="w-3.5 h-3.5 text-rose-400 shrink-0" />
+                            <span>Format Warning: Standard GA4 IDs start with &apos;G-&apos; followed by alphanumeric characters.</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-mono text-gray-400 uppercase">Analytics tracking ID</label>
+
+                  {/* 3. CUSTOM FOOTER TEXT */}
+                  <div className="space-y-3 pt-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                      <label className="text-[10px] font-mono text-gray-300 uppercase tracking-wider font-semibold flex items-center gap-1.5">
+                        <Shield className="w-3.5 h-3.5 text-cyber-green" />
+                        Custom Footer Motto & Security Badge
+                      </label>
+                      <span className="text-[10px] font-mono text-gray-500">Rendered in the main portfolio footer banner</span>
+                    </div>
+
                     <input
                       type="text"
-                      value={settingsForm.analyticsId || ""}
-                      onChange={(e) => setSettingsForm({ ...settingsForm, analyticsId: e.target.value })}
-                      placeholder="G-XXXXXXXXXX"
-                      className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
+                      value={settingsForm.footerText || ""}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, footerText: e.target.value })}
+                      placeholder="e.g. Secure Systems & Resilient Infrastructure"
+                      className="w-full bg-[#040a12] border border-white/15 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none focus:border-cyber-green transition-colors"
                     />
-                  </div>
-                </div>
 
-                <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-gray-400 uppercase">Custom Footer Text</label>
-                  <input
-                    type="text"
-                    value={settingsForm.footerText || ""}
-                    onChange={(e) => setSettingsForm({ ...settingsForm, footerText: e.target.value })}
-                    placeholder="e.g. All operations verified."
-                    className="w-full bg-[#040a12] border border-white/10 rounded-lg px-4 py-3 text-xs font-mono text-white focus:outline-none"
-                  />
+                    {/* Quick Preset Motto Pills */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[9px] font-mono text-gray-500 uppercase tracking-wider">Quick Suggestions:</span>
+                      {[
+                        "Secure Systems & Resilient Infrastructure",
+                        "Zero-Trust Architecture // Active Defense",
+                        "Grid Security Matrix // Encrypted Node",
+                        "Offensive Security & Threat Intelligence",
+                      ].map((motto, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setSettingsForm({ ...settingsForm, footerText: motto })}
+                          className={`text-[9px] font-mono px-2.5 py-1 rounded border transition-all cursor-pointer ${
+                            settingsForm.footerText === motto
+                              ? "bg-cyber-green/20 border-cyber-green text-cyber-green font-bold shadow-[0_0_8px_rgba(0,255,157,0.3)]"
+                              : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:border-white/30"
+                          }`}
+                        >
+                          {motto}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Real-time Footer Live Preview Box */}
+                    <div className="p-3.5 rounded-xl bg-black/60 border border-white/10 space-y-2">
+                      <div className="text-[9px] font-mono text-gray-500 uppercase tracking-widest flex items-center justify-between">
+                        <span>LIVE FOOTER PREVIEW (AS SEEN BY VISITORS):</span>
+                        <span className="text-cyber-green font-bold">● LIVE RENDER</span>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-t border-white/5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-cyber-green/10 border border-cyber-green/30 flex items-center justify-center shadow-[0_0_10px_rgba(0,255,157,0.2)]">
+                            <Shield className="text-cyber-green w-4 h-4 animate-pulse" />
+                          </div>
+                          <div>
+                            <div className="font-orbitron font-bold text-xs tracking-wider text-white uppercase">
+                              {settingsForm.footerText || "Secure Systems & Resilient Infrastructure"}
+                            </div>
+                            <div className="font-mono text-[9px] text-gray-500 flex items-center gap-1.5 mt-0.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-cyber-green animate-ping" />
+                              <span>GRID INTEGRITY // ACTIVE SURVEILLANCE</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-[10px] font-mono text-gray-500">
+                          © {new Date().getFullYear()} {data?.profile?.name || "John Knox"}. All operations verified.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {successMsg && (
@@ -4209,6 +4244,15 @@ export default function AdminDashboard() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* BOOT LOADER PREVIEW MODAL */}
+      {previewLoaderStyle && (
+        <BootLoader
+          style={previewLoaderStyle}
+          preview={true}
+          onClose={() => setPreviewLoaderStyle(null)}
+        />
       )}
     </div>
   );

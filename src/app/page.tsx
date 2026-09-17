@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import AntiGravityCanvas from "@/components/AntiGravityCanvas";
 import BootLoader from "@/components/BootLoader";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 import CommandPalette from "@/components/CommandPalette";
 import TerminalModal from "@/components/TerminalModal";
 import AIAssistantWidget from "@/components/AIAssistantWidget";
@@ -325,7 +326,8 @@ export default function PublicPortfolio() {
       <SmoothScrollProvider>
         <GlobalClickRipple />
         <AntiGravityCanvas>
-          <BootLoader />
+          <BootLoader style={settings?.loader || "cyber"} />
+          <GoogleAnalytics trackingId={settings?.analyticsId} />
           <div id="portal-root" className="min-h-screen relative overflow-hidden select-none bg-transparent">
             {/* Morphing glass blobs for atmospheric depth */}
             <MorphingGlassBlobs />
@@ -694,13 +696,21 @@ export default function PublicPortfolio() {
       </main>
 
       {/* FOOTER */}
-      <footer className="relative z-20 border-t border-white/5 bg-[#040a12]/80 py-12 px-6">
+      <footer className="relative z-20 border-t border-white/10 bg-[#040a12]/90 backdrop-blur-md py-12 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <Shield className="text-cyber-green w-5 h-5" />
-            <span className="font-orbitron font-bold text-xs tracking-wider text-gray-400">
-              {settings.footerText || "Grid Security Matrix"}
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-cyber-green/10 border border-cyber-green/30 flex items-center justify-center shrink-0 shadow-[0_0_12px_rgba(0,255,157,0.2)]">
+              <Shield className="text-cyber-green w-4 h-4 animate-pulse" />
+            </div>
+            <div>
+              <div className="font-orbitron font-bold text-xs tracking-wider text-white uppercase">
+                {settings.footerText || "Secure Systems & Resilient Infrastructure"}
+              </div>
+              <div className="font-mono text-[9px] text-gray-500 flex items-center gap-1.5 mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyber-green animate-ping" />
+                <span>GRID INTEGRITY // ACTIVE SURVEILLANCE</span>
+              </div>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-4 font-mono text-[11px] text-gray-400 relative z-30 pointer-events-auto">
             <a

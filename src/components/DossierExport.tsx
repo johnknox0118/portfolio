@@ -886,27 +886,35 @@ export default function DossierExport({ data: initialData }: DossierExportProps)
       <FloatingResumeCard>
         {/* CONTROL DECK (Category Presets + JD Scanner + Export Controls) */}
         <div className="glass-card p-4 sm:p-6 md:p-8 space-y-6 print:hidden rounded-2xl border border-cyber-green/30 bg-[#07111F]/95 relative z-20 pointer-events-auto">
-          {/* Top Control Header */}
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5 border-b border-white/10 pb-5">
-            <div className="space-y-1.5 max-w-2xl">
-              <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-cyber-green animate-pulse" />
-                <h3 className="font-orbitron font-bold text-sm text-white uppercase tracking-wider">
-                  DYNAMIC RESUME & TAILORED DOSSIER GENERATOR
-                </h3>
+          {/* Top Control Header - Neatly Arranged & Cohesive */}
+          <div className="space-y-4 border-b border-white/10 pb-6">
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-1.5 rounded-lg bg-cyber-green/10 border border-cyber-green/30">
+                    <Shield className="w-4 h-4 text-cyber-green animate-pulse" />
+                  </div>
+                  <h3 className="font-orbitron font-bold text-sm sm:text-base text-white uppercase tracking-wider">
+                    DYNAMIC RESUME & TAILORED DOSSIER GENERATOR
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono text-cyber-green px-2.5 py-1 rounded-full bg-cyber-green/10 border border-cyber-green/30 font-bold uppercase tracking-widest flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyber-green animate-pulse" />
+                  Live Synthesis Active
+                </span>
               </div>
-              <p className="font-mono text-xs text-gray-300 leading-relaxed">
+              <p className="font-mono text-xs text-gray-300 leading-relaxed max-w-4xl">
                 Generates a live, single-page executive resume synthesized from all sections of your portfolio. 
                 Paste any target Job Description (JD) to automatically match competencies and download an instant tailored PDF.
               </p>
             </div>
 
-            {/* Main Export & View Action Buttons */}
-            <div className="flex flex-wrap items-center gap-3 shrink-0 relative z-20 pointer-events-auto">
+            {/* Main Export & View Action Buttons - Arranged Near & Proper */}
+            <div className="flex flex-wrap items-center gap-2.5 pt-1 relative z-20 pointer-events-auto">
               <button
                 type="button"
                 onClick={() => setIsModalOpen(true)}
-                className="btn-cyber flex items-center gap-2 px-5 py-2.5 text-xs text-black bg-cyber-green border-cyber-green font-bold cursor-pointer shadow-[0_0_22px_rgba(0,255,157,0.45)] hover:scale-105 transition-all relative z-20 pointer-events-auto"
+                className="btn-cyber flex items-center gap-2 px-5 py-2.5 text-xs text-black bg-cyber-green border-cyber-green font-bold cursor-pointer shadow-[0_0_20px_rgba(0,255,157,0.4)] hover:shadow-[0_0_28px_rgba(0,255,157,0.7)] hover:scale-[1.02] transition-all relative z-20 pointer-events-auto rounded-lg"
               >
                 <Eye className="w-4 h-4 pointer-events-none" /> 
                 <span className="pointer-events-none">VIEW RESUME / CV</span>
@@ -915,7 +923,7 @@ export default function DossierExport({ data: initialData }: DossierExportProps)
               <button
                 type="button"
                 onClick={handlePrint}
-                className="btn-cyber flex items-center gap-2 px-4 py-2.5 text-xs text-cyber-green font-bold cursor-pointer hover:scale-105 transition-all relative z-20 pointer-events-auto"
+                className="btn-cyber flex items-center gap-2 px-4 py-2.5 text-xs text-cyber-green border-cyber-green/40 hover:border-cyber-green hover:bg-cyber-green/15 font-bold cursor-pointer hover:scale-[1.02] transition-all relative z-20 pointer-events-auto rounded-lg"
               >
                 <Download className="w-4 h-4 pointer-events-none" /> 
                 <span className="pointer-events-none">DOWNLOAD (PDF)</span>
@@ -924,7 +932,7 @@ export default function DossierExport({ data: initialData }: DossierExportProps)
               <button
                 type="button"
                 onClick={handlePrint}
-                className="btn-cyber btn-cyber-blue flex items-center gap-2 px-4 py-2.5 text-xs font-bold cursor-pointer hover:scale-105 transition-all relative z-20 pointer-events-auto"
+                className="btn-cyber btn-cyber-blue flex items-center gap-2 px-4 py-2.5 text-xs font-bold cursor-pointer hover:scale-[1.02] transition-all relative z-20 pointer-events-auto rounded-lg"
               >
                 <Printer className="w-4 h-4 pointer-events-none" /> 
                 <span className="pointer-events-none">PRINT</span>
@@ -933,7 +941,7 @@ export default function DossierExport({ data: initialData }: DossierExportProps)
               <button
                 type="button"
                 onClick={handleCopyPlainText}
-                className="btn-cyber flex items-center gap-2 px-4 py-2.5 text-xs font-mono text-gray-300 hover:text-white border-white/20 hover:border-white/50 transition-all cursor-pointer relative z-20 pointer-events-auto"
+                className="btn-cyber flex items-center gap-2 px-4 py-2.5 text-xs font-mono text-gray-300 hover:text-white border-white/20 hover:border-white/50 hover:bg-white/5 transition-all cursor-pointer relative z-20 pointer-events-auto rounded-lg"
               >
                 {copiedText ? (
                   <Check className="w-4 h-4 text-cyber-green pointer-events-none" />
@@ -946,7 +954,7 @@ export default function DossierExport({ data: initialData }: DossierExportProps)
               <button
                 type="button"
                 onClick={handleDownloadOriginalCV}
-                className="btn-cyber flex items-center gap-2 px-4 py-2.5 text-xs font-mono font-bold text-cyber-blue hover:text-white border-cyber-blue/40 hover:border-cyber-blue hover:scale-105 transition-all cursor-pointer shadow-[0_0_15px_rgba(0,200,255,0.2)] relative z-20 pointer-events-auto"
+                className="btn-cyber flex items-center gap-2 px-4 py-2.5 text-xs font-mono font-bold text-cyber-blue hover:text-white border-cyber-blue/40 hover:border-cyber-blue hover:bg-cyber-blue/15 hover:scale-[1.02] transition-all cursor-pointer shadow-[0_0_15px_rgba(0,200,255,0.2)] relative z-20 pointer-events-auto rounded-lg"
                 title="Download original uploaded static resume PDF"
               >
                 <FileText className="w-4 h-4 text-cyber-blue pointer-events-none" />
