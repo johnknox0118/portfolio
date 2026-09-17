@@ -19,6 +19,7 @@ const modelMapping: { [key: string]: string } = {
   articles: 'article',
   ctfQuestions: 'ctfQuestion',
   ctfSubmissions: 'ctfSubmission',
+  visitorLogs: 'visitorLog',
 };
 
 const jsonFieldsMapping: { [key: string]: string[] } = {

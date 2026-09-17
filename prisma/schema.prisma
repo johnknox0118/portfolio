@@ -197,3 +197,32 @@ model CtfSubmission {
   updatedAt       DateTime @updatedAt
 }
 
+model VisitorLog {
+  id           Int      @id @default(autoincrement())
+  ipAddress    String
+  country      String   @default("Unknown")
+  countryCode  String   @default("")
+  region       String   @default("") // State / Province
+  city         String   @default("") // City / District
+  postalCode   String   @default("") // PIN / Zip / Area Code
+  latitude     Float?
+  longitude    Float?
+  isp          String   @default("") // e.g. Reliance Jio, Airtel
+  org          String   @default("") // Organization / ASN
+  userAgent    String   @default("")
+  device       String   @default("Desktop") // Desktop, Mobile, Tablet
+  os           String   @default("Unknown") // Windows, Android, iOS, etc.
+  browser      String   @default("Unknown") // Chrome, Safari, etc.
+  page         String   @default("/")
+  referer      String   @default("")
+  accuracy     String   @default("City/District Level")
+  isVpn        Boolean  @default(false)
+  isLocalhost  Boolean  @default(false)
+  visitCount   Int      @default(1)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([ipAddress])
+}
+

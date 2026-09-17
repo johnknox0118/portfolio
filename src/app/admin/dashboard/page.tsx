@@ -7,7 +7,8 @@ import {
   Shield, User, Code, Award, Folder, Settings, Mail,
   LogOut, Plus, Trash, Edit, Check, Loader2, FileText, Camera, X, Globe, ExternalLink, Key, Lock,
   ShieldAlert, Trophy, Eye, Clock, Users, CheckCircle2, ChevronRight, HelpCircle,
-  Palette, Sparkles, RefreshCw, Layers
+  Palette, Sparkles, RefreshCw, Layers,
+  Activity, Radio, MapPin, Server, Smartphone, Monitor, Download, Search, AlertTriangle, Play, Pause, Compass
 } from "lucide-react";
 import { applyThemeToDocument, DEFAULT_THEME } from "@/components/ThemeProvider";
 
@@ -112,6 +113,32 @@ const broadcastSyncUpdate = (entity?: string) => {
   } catch (e) {}
 };
 
+function formatTimeAgo(dateString: string | Date): string {
+  if (!dateString) return "Just now";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHours = Math.floor(diffMin / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffSec < 45) return "Just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return "Yesterday";
+  return `${diffDays}d ago`;
+}
+
+function getCountryFlagEmoji(countryCode?: string): string {
+  if (!countryCode || countryCode.length !== 2) return "🌐";
+  const codePoints = countryCode
+    .toUpperCase()
+    .split("")
+    .map((char) => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [data, setData] = useState<any>(null);
@@ -123,6 +150,19 @@ export default function AdminDashboard() {
   const [viewingSubmission, setViewingSubmission] = useState<any>(null);
   const [ctfSearchQuery, setCtfSearchQuery] = useState("");
   const [ctfStatusFilter, setCtfStatusFilter] = useState<"all" | "completed" | "in_progress">("all");
+
+  // Visitor Logs & Real-Time Intelligence State
+  const [visitorLogs, setVisitorLogs] = useState<any[]>([]);
+  const [visitorStats, setVisitorStats] = useState<any>(null);
+  const [loadingVisitors, setLoadingVisitors] = useState(false);
+  const [visitorSearch, setVisitorSearch] = useState("");
+  const [visitorDeviceFilter, setVisitorDeviceFilter] = useState("all");
+  const [visitorTimeframe, setVisitorTimeframe] = useState("all");
+  const [visitorPageFilter, setVisitorPageFilter] = useState<"all" | "portfolio" | "admin">("all");
+  const [isLiveStreaming, setIsLiveStreaming] = useState(true);
+  const [showClearLogsModal, setShowClearLogsModal] = useState(false);
+  const [clearingLogs, setClearingLogs] = useState(false);
+  const [copiedIp, setCopiedIp] = useState<string | null>(null);
 
   // Load all aggregates
   const loadData = async () => {
@@ -171,6 +211,17 @@ export default function AdminDashboard() {
       } catch (subErr) {
         console.warn("Could not load CTF submissions:", subErr);
       }
+
+      // Load Visitor Intelligence Stats for badge
+      try {
+        const vRes = await fetch("/api/admin/visitors?limit=1&t=" + Date.now());
+        if (vRes.ok) {
+          const vData = await vRes.json();
+          setVisitorStats(vData.stats || null);
+        }
+      } catch (vErr) {
+        console.warn("Could not load visitor stats:", vErr);
+      }
       
       if (result?.settings) {
         applyThemeToDocument(result.settings.primaryColor, result.settings.secondaryColor, result.settings.accentColor, result.settings.theme);
@@ -195,6 +246,151 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       console.error("Logout failed:", err);
+    }
+  };
+
+  const loadVisitorLogs = async () => {
+    try {
+      setLoadingVisitors(true);
+      const params = new URLSearchParams();
+      if (visitorSearch) params.set("search", visitorSearch);
+      if (visitorDeviceFilter !== "all") params.set("device", visitorDeviceFilter);
+      if (visitorTimeframe !== "all") params.set("timeframe", visitorTimeframe);
+      params.set("t", Date.now().toString());
+
+      const res = await fetch(`/api/admin/visitors?${params.toString()}`);
+      if (res.ok) {
+        const result = await res.json();
+        setVisitorLogs(result.logs || []);
+        setVisitorStats(result.stats || null);
+      }
+    } catch (err) {
+      console.error("Failed to load visitor logs:", err);
+    } finally {
+      setLoadingVisitors(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "visitors") {
+      loadVisitorLogs();
+      if (isLiveStreaming) {
+        const interval = setInterval(() => {
+          loadVisitorLogs();
+        }, 5000);
+        return () => clearInterval(interval);
+      }
+    }
+  }, [activeTab, visitorSearch, visitorDeviceFilter, visitorTimeframe, isLiveStreaming]);
+
+  const handleCopyIp = (ip: string) => {
+    if (!ip) return;
+    navigator.clipboard.writeText(ip);
+    setCopiedIp(ip);
+    setTimeout(() => setCopiedIp(null), 2000);
+  };
+
+  const handleExportVisitorsCsv = () => {
+    const headers = [
+      "Timestamp",
+      "IP Address",
+      "Country",
+      "Country Code",
+      "Region / State",
+      "City / District",
+      "Postal Code",
+      "ISP / Network",
+      "Device",
+      "OS",
+      "Browser",
+      "Page Viewed",
+      "Accuracy",
+      "Visit Count",
+      "Latitude",
+      "Longitude",
+    ];
+
+    const targetList = visitorLogs.filter((v) => {
+      if (visitorPageFilter === "portfolio") return v.page === "/" || !v.page?.startsWith("/admin");
+      if (visitorPageFilter === "admin") return v.page?.startsWith("/admin");
+      return true;
+    });
+
+    const rows = (targetList.length > 0 ? targetList : visitorLogs).map((v) => [
+      `"${new Date(v.createdAt).toISOString()}"`,
+      `"${v.ipAddress || ""}"`,
+      `"${v.country || ""}"`,
+      `"${v.countryCode || ""}"`,
+      `"${v.region || ""}"`,
+      `"${v.city || ""}"`,
+      `"${v.postalCode || ""}"`,
+      `"${(v.isp || "").replace(/"/g, '""')}"`,
+      `"${v.device || ""}"`,
+      `"${v.os || ""}"`,
+      `"${v.browser || ""}"`,
+      `"${v.page || ""}"`,
+      `"${v.accuracy || ""}"`,
+      v.visitCount || 1,
+      v.latitude ?? "",
+      v.longitude ?? "",
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `visitor_telemetry_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const handleTestVisitorPing = async (type: "portfolio" | "admin" = "portfolio") => {
+    try {
+      await fetch("/api/public/track-visitor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          page: type === "portfolio" ? "/" : "/admin/login",
+          referer: "http://localhost:3000/manual-test",
+        }),
+      });
+      loadVisitorLogs();
+    } catch (e) {
+      console.error("Test ping error:", e);
+    }
+  };
+
+  const handleClearAllLogs = async () => {
+    setClearingLogs(true);
+    try {
+      const res = await fetch("/api/admin/visitors", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "clear_all" }),
+      });
+      if (res.ok) {
+        setVisitorLogs([]);
+        setVisitorStats((prev: any) =>
+          prev
+            ? {
+                ...prev,
+                totalVisits: 0,
+                uniqueIps: 0,
+                activeNow: 0,
+                totalPageViews: 0,
+                topCountries: [],
+              }
+            : null
+        );
+        setShowClearLogsModal(false);
+      }
+    } catch (e) {
+      console.error("Failed to clear logs:", e);
+    } finally {
+      setClearingLogs(false);
     }
   };
 
@@ -650,6 +846,26 @@ export default function AdminDashboard() {
             }`}
           >
             <Mail className="w-4 h-4" /> MESSAGES
+          </button>
+          <button
+            onClick={() => setActiveTab("visitors")}
+            className={`flex items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-lg text-left transition-all shrink-0 whitespace-nowrap ${
+              activeTab === "visitors" ? "bg-cyber-green/10 text-cyber-green border-l-2 border-cyber-green" : "text-gray-400 hover:text-white"
+            }`}
+          >
+            <span className="flex items-center gap-2.5">
+              <Activity className="w-4 h-4 text-cyber-green" /> VISITOR LOGS
+            </span>
+            {visitorStats?.activeNow > 0 ? (
+              <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-cyber-green/20 text-cyber-green font-mono font-bold animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyber-green inline-block" />
+                {visitorStats.activeNow}
+              </span>
+            ) : visitorStats?.totalVisits > 0 ? (
+              <span className="text-[9px] px-1.5 py-0.5 rounded bg-white/10 text-gray-400 font-mono font-bold">
+                {visitorStats.totalVisits}
+              </span>
+            ) : null}
           </button>
           <button
             onClick={() => setActiveTab("settings")}
@@ -1652,6 +1868,529 @@ export default function AdminDashboard() {
                 ))
               )}
             </div>
+          </div>
+        )}
+
+        {/* TAB VISITOR LOGS (REAL-TIME INTELLIGENCE RADAR) */}
+        {activeTab === "visitors" && (
+          <div className="space-y-6">
+            {/* Header with Title & Action Controls */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="font-orbitron font-black text-xl text-white flex items-center gap-2.5">
+                  <Activity className="w-5 h-5 text-cyber-green animate-pulse" />
+                  VISITOR_INTEL // REAL-TIME NETWORK & GEOLOCATION RADAR
+                </h2>
+                <p className="text-xs font-mono text-gray-400 mt-1">
+                  Live session telemetry, IP geolocation resolution, telecom carriers, and precision confidence index.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                {/* 1. Live Polling Toggle */}
+                <button
+                  type="button"
+                  onClick={() => setIsLiveStreaming(!isLiveStreaming)}
+                  className={`px-3.5 py-2 rounded-lg border text-xs font-mono font-bold flex items-center gap-2 transition-all cursor-pointer select-none ${
+                    isLiveStreaming
+                      ? "border-cyber-green bg-cyber-green/15 text-cyber-green shadow-[0_0_15px_rgba(0,255,157,0.25)] hover:bg-cyber-green/25"
+                      : "border-amber-500/60 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 shadow-[0_0_12px_rgba(245,158,11,0.2)]"
+                  }`}
+                  title={isLiveStreaming ? "Live auto-update every 5s. Click to pause." : "Stream is paused. Click to resume auto-polling."}
+                >
+                  {isLiveStreaming ? (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-cyber-green animate-ping inline-block" />
+                      <Pause className="w-3.5 h-3.5" /> LIVE (5s)
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />
+                      <Play className="w-3.5 h-3.5 text-amber-400" /> RESUME LIVE
+                    </>
+                  )}
+                </button>
+
+                {/* 2. Manual Refresh Button */}
+                <button
+                  type="button"
+                  onClick={() => loadVisitorLogs()}
+                  disabled={loadingVisitors}
+                  className="px-3.5 py-2 rounded-lg border border-cyber-blue/60 bg-cyber-blue/15 text-cyber-blue hover:bg-cyber-blue/25 hover:border-cyber-blue text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_0_12px_rgba(0,200,255,0.15)]"
+                  title="Click to immediately pull latest visitor telemetry"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingVisitors ? "animate-spin" : ""}`} />
+                  REFRESH
+                </button>
+
+                {/* 3. Export CSV Button */}
+                <button
+                  type="button"
+                  onClick={handleExportVisitorsCsv}
+                  className="px-3.5 py-2 rounded-lg border border-white/30 bg-white/10 text-white hover:bg-white/20 hover:border-white/50 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_0_10px_rgba(255,255,255,0.08)]"
+                  title="Export all visitor logs to CSV / Excel spreadsheet"
+                >
+                  <Download className="w-3.5 h-3.5 text-cyber-green" />
+                  EXPORT CSV
+                </button>
+
+                {/* 4. Clear Logs Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowClearLogsModal(true)}
+                  className="px-3.5 py-2 rounded-lg border border-rose-500/60 bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 hover:border-rose-500 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-[0_0_12px_rgba(244,63,94,0.15)]"
+                  title="Purge visitor logs from database"
+                >
+                  <Trash className="w-3.5 h-3.5" />
+                  CLEAR
+                </button>
+
+                {/* 5. Quick Test Ping (Simulate Visit) */}
+                <button
+                  type="button"
+                  onClick={() => handleTestVisitorPing("portfolio")}
+                  className="px-3 py-2 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 text-xs font-mono flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="Simulate a live visitor to verify real-time table logging"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                  + TEST VISIT
+                </button>
+              </div>
+            </div>
+
+            {/* 4 KPI Summary Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="glass-card p-4 border-cyber-green/30 flex flex-col justify-between">
+                <span className="font-mono text-[9px] text-gray-400 uppercase tracking-wider">Total Logged Visits</span>
+                <div className="font-orbitron font-bold text-2xl text-white my-1">
+                  {visitorStats?.totalVisits ?? visitorLogs.length}
+                </div>
+                <span className="text-[10px] font-mono text-gray-500">
+                  {visitorStats?.totalPageViews ? `${visitorStats.totalPageViews} Total Pageviews` : "Recorded Impressions"}
+                </span>
+              </div>
+
+              <div className="glass-card p-4 border-cyber-blue/30 flex flex-col justify-between">
+                <span className="font-mono text-[9px] text-gray-400 uppercase tracking-wider">Unique IP Nodes</span>
+                <div className="font-orbitron font-bold text-2xl text-cyber-blue my-1">
+                  {visitorStats?.uniqueIps ?? new Set(visitorLogs.map((l) => l.ipAddress)).size}
+                </div>
+                <span className="text-[10px] font-mono text-cyber-blue">DISTINCT CLIENT NODES</span>
+              </div>
+
+              <div className="glass-card p-4 border-cyber-cyan/30 flex flex-col justify-between">
+                <span className="font-mono text-[9px] text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-cyber-green animate-pulse" />
+                  Active Right Now
+                </span>
+                <div className="font-orbitron font-bold text-2xl text-cyber-green my-1">
+                  {visitorStats?.activeNow ?? 0}
+                </div>
+                <span className="text-[10px] font-mono text-gray-500">LAST 10 MINUTES TELEMETRY</span>
+              </div>
+
+              <div className="glass-card p-4 border-cyber-green/30 flex flex-col justify-between">
+                <span className="font-mono text-[9px] text-gray-400 uppercase tracking-wider">Top Detected Territories</span>
+                <div className="font-orbitron font-bold text-sm text-white my-1 truncate">
+                  {visitorStats?.topCountries && visitorStats.topCountries.length > 0 ? (
+                    visitorStats.topCountries
+                      .slice(0, 2)
+                      .map((c: any) => `${c.country} (${c.count})`)
+                      .join(", ")
+                  ) : (
+                    "No Geo Data Yet"
+                  )}
+                </div>
+                <span className="text-[10px] font-mono text-gray-500">RESOLVED REGIONS</span>
+              </div>
+            </div>
+
+            {/* Traffic Type Segment Filter (Portfolio Main Page vs Admin Logins vs All) */}
+            <div className="flex flex-wrap items-center gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setVisitorPageFilter("all")}
+                className={`px-3.5 py-1.5 rounded-lg font-orbitron text-[11px] font-bold tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
+                  visitorPageFilter === "all"
+                    ? "bg-cyber-green text-black shadow-[0_0_15px_rgba(0,255,157,0.4)]"
+                    : "bg-[#040a12] text-gray-400 border border-white/10 hover:text-white"
+                }`}
+              >
+                <Globe className="w-3.5 h-3.5" />
+                ALL TRAFFIC ({visitorLogs.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setVisitorPageFilter("portfolio")}
+                className={`px-3.5 py-1.5 rounded-lg font-orbitron text-[11px] font-bold tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
+                  visitorPageFilter === "portfolio"
+                    ? "bg-cyber-blue text-black shadow-[0_0_15px_rgba(0,200,255,0.4)]"
+                    : "bg-[#040a12] text-gray-400 border border-white/10 hover:text-white"
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                PORTFOLIO MAIN PAGE ONLY ({visitorLogs.filter((v) => v.page === "/" || !v.page?.startsWith("/admin")).length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setVisitorPageFilter("admin")}
+                className={`px-3.5 py-1.5 rounded-lg font-orbitron text-[11px] font-bold tracking-wider transition-all cursor-pointer flex items-center gap-2 ${
+                  visitorPageFilter === "admin"
+                    ? "bg-amber-400 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)]"
+                    : "bg-[#040a12] text-gray-400 border border-white/10 hover:text-white"
+                }`}
+              >
+                <Lock className="w-3.5 h-3.5" />
+                ADMIN LOGINS ({visitorLogs.filter((v) => v.page?.startsWith("/admin")).length})
+              </button>
+            </div>
+
+            {/* Filter, Search & Timeframe Bar */}
+            <div className="glass-card p-4 flex flex-col md:flex-row gap-3 items-center justify-between">
+              <div className="relative w-full md:w-80">
+                <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search IP, city, state, country, ISP, device..."
+                  value={visitorSearch}
+                  onChange={(e) => setVisitorSearch(e.target.value)}
+                  className="w-full bg-[#040a12] border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs font-mono text-white placeholder-gray-500 focus:outline-none focus:border-cyber-green transition-colors"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                <select
+                  value={visitorDeviceFilter}
+                  onChange={(e) => setVisitorDeviceFilter(e.target.value)}
+                  aria-label="Filter by device"
+                  className="bg-[#040a12] border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-gray-300 focus:outline-none focus:border-cyber-green"
+                >
+                  <option value="all">All Devices</option>
+                  <option value="Desktop">Desktop</option>
+                  <option value="Mobile">Mobile</option>
+                  <option value="Tablet">Tablet</option>
+                </select>
+
+                <select
+                  value={visitorTimeframe}
+                  onChange={(e) => setVisitorTimeframe(e.target.value)}
+                  aria-label="Filter by timeframe"
+                  className="bg-[#040a12] border border-white/10 rounded-lg px-3 py-2 text-xs font-mono text-gray-300 focus:outline-none focus:border-cyber-green"
+                >
+                  <option value="all">All Time</option>
+                  <option value="today">Today</option>
+                  <option value="24h">Last 24 Hours</option>
+                  <option value="7d">Last 7 Days</option>
+                </select>
+
+                <span className="text-[11px] font-mono text-gray-400 whitespace-nowrap">
+                  Showing {
+                    visitorLogs.filter((v) => {
+                      if (visitorPageFilter === "portfolio") return v.page === "/" || !v.page?.startsWith("/admin");
+                      if (visitorPageFilter === "admin") return v.page?.startsWith("/admin");
+                      return true;
+                    }).length
+                  } of {visitorLogs.length} records
+                </span>
+              </div>
+            </div>
+
+            {/* The Main High-Precision Visitor Table */}
+            <div className="glass-card overflow-hidden border-cyber-green/20">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left font-mono text-xs">
+                  <thead className="bg-[#040a12] text-[10px] text-gray-400 uppercase tracking-widest border-b border-white/10">
+                    <tr>
+                      <th className="p-3.5 whitespace-nowrap">Status & Time</th>
+                      <th className="p-3.5 whitespace-nowrap">IP Address</th>
+                      <th className="p-3.5 whitespace-nowrap">Location (Country / State / City)</th>
+                      <th className="p-3.5 whitespace-nowrap">Postal / Area</th>
+                      <th className="p-3.5 whitespace-nowrap">ISP / Network Provider</th>
+                      <th className="p-3.5 whitespace-nowrap">Device / OS</th>
+                      <th className="p-3.5 whitespace-nowrap">Target Page</th>
+                      <th className="p-3.5 whitespace-nowrap">Accuracy & Confidence</th>
+                      <th className="p-3.5 text-right whitespace-nowrap">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-gray-300">
+                    {visitorLogs
+                      .filter((v) => {
+                        if (visitorPageFilter === "portfolio") return v.page === "/" || !v.page?.startsWith("/admin");
+                        if (visitorPageFilter === "admin") return v.page?.startsWith("/admin");
+                        return true;
+                      })
+                      .map((log: any) => {
+                        const isRecent = new Date(log.updatedAt).getTime() > Date.now() - 10 * 60 * 1000;
+                        const isPortfolioPage = log.page === "/" || !log.page?.startsWith("/admin");
+                        return (
+                          <tr key={log.id} className="hover:bg-white/[0.02] transition-colors">
+                            {/* Status & Time */}
+                            <td className="p-3.5 whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                                    isRecent
+                                      ? "bg-cyber-green shadow-[0_0_8px_rgba(0,255,157,0.8)] animate-pulse"
+                                      : "bg-gray-600"
+                                  }`}
+                                  title={isRecent ? "Active session (<10m)" : "Past session"}
+                                />
+                                <div>
+                                  <div className="text-white font-semibold">
+                                    {formatTimeAgo(log.updatedAt || log.createdAt)}
+                                  </div>
+                                  <div className="text-[10px] text-gray-500">
+                                    {new Date(log.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+
+                            {/* IP Address */}
+                            <td className="p-3.5 whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-cyber-blue font-bold text-xs select-all">
+                                  {log.ipAddress}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyIp(log.ipAddress)}
+                                  className="text-gray-400 hover:text-white transition-colors cursor-pointer"
+                                  title="Copy IP"
+                                >
+                                  {copiedIp === log.ipAddress ? (
+                                    <Check className="w-3 h-3 text-cyber-green" />
+                                  ) : (
+                                    <span className="text-[10px] px-1.5 py-0.5 rounded border border-white/15 hover:border-white/40 font-mono">
+                                      COPY
+                                    </span>
+                                  )}
+                                </button>
+                              </div>
+                              {log.isLocalhost && (
+                                <span className="text-[9px] text-yellow-400/90 font-mono block mt-0.5">
+                                  [Dev Localhost WAN]
+                                </span>
+                              )}
+                              {log.isVpn && (
+                                <span className="text-[9px] text-rose-400 font-mono block mt-0.5">
+                                  ⚠️ [VPN / Proxy]
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Location */}
+                            <td className="p-3.5">
+                              <div className="whitespace-nowrap flex items-center gap-1.5">
+                                <span className="text-base" role="img" aria-label={log.country}>
+                                  {getCountryFlagEmoji(log.countryCode)}
+                                </span>
+                                <span className="text-white font-bold">{log.country || "Unknown"}</span>
+                              </div>
+                              <div className="text-[11px] text-gray-400 truncate max-w-[200px] mt-0.5">
+                                {[log.city, log.region].filter(Boolean).join(", ") || "Area not specified"}
+                              </div>
+                            </td>
+
+                            {/* Postal / Area Code */}
+                            <td className="p-3.5 whitespace-nowrap">
+                              {log.postalCode ? (
+                                <span className="px-2 py-0.5 rounded bg-white/5 border border-white/15 text-cyber-green font-mono text-[11px] font-bold">
+                                  {log.postalCode}
+                                </span>
+                              ) : (
+                                <span className="text-gray-600 font-mono text-[11px]">—</span>
+                              )}
+                            </td>
+
+                            {/* ISP / Network */}
+                            <td className="p-3.5">
+                              <div className="text-white font-medium text-xs truncate max-w-[200px]">
+                                {log.isp || "Unknown Carrier"}
+                              </div>
+                              {log.org && log.org !== log.isp && (
+                                <div className="text-[10px] text-gray-500 truncate max-w-[200px]">
+                                  {log.org}
+                                </div>
+                              )}
+                            </td>
+
+                            {/* Device / OS */}
+                            <td className="p-3.5 whitespace-nowrap">
+                              <div className="flex items-center gap-1.5 text-xs text-white">
+                                {log.device === "Mobile" ? (
+                                  <Smartphone className="w-3.5 h-3.5 text-cyber-blue shrink-0" />
+                                ) : log.device === "Tablet" ? (
+                                  <Smartphone className="w-3.5 h-3.5 text-cyber-cyan shrink-0" />
+                                ) : (
+                                  <Monitor className="w-3.5 h-3.5 text-cyber-green shrink-0" />
+                                )}
+                                <span>{log.device || "Desktop"}</span>
+                              </div>
+                              <div className="text-[10px] text-gray-400 mt-0.5">
+                                {[log.os, log.browser].filter(Boolean).join(" // ") || "Unknown"}
+                              </div>
+                            </td>
+
+                            {/* Target Page Viewed */}
+                            <td className="p-3.5 whitespace-nowrap">
+                              {isPortfolioPage ? (
+                                <span className="px-2.5 py-1 rounded bg-cyber-green/15 border border-cyber-green/40 text-cyber-green text-[10px] font-bold font-mono tracking-wide">
+                                  PORTFOLIO MAIN ( / )
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-1 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[10px] font-bold font-mono tracking-wide">
+                                  🔒 ADMIN LOGIN
+                                </span>
+                              )}
+                              {log.visitCount > 1 && (
+                                <span className="text-[10px] text-gray-400 ml-1.5 font-mono">
+                                  ({log.visitCount}x views)
+                                </span>
+                              )}
+                            </td>
+
+                            {/* Accuracy & Confidence */}
+                            <td className="p-3.5">
+                              <div className="flex items-center gap-1.5 whitespace-nowrap">
+                                <span
+                                  className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
+                                    log.postalCode
+                                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                                      : log.city
+                                      ? "bg-cyber-blue/10 text-cyber-blue border-cyber-blue/30"
+                                      : "bg-yellow-500/10 text-yellow-400 border-yellow-500/30"
+                                  }`}
+                                >
+                                  {log.accuracy || "City/District Level"}
+                                </span>
+                              </div>
+                              {log.latitude && log.longitude && (
+                                <a
+                                  href={`https://www.google.com/maps?q=${log.latitude},${log.longitude}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[10px] text-gray-400 hover:text-cyber-green mt-1 transition-colors"
+                                  title="View coordinates on Google Maps"
+                                >
+                                  <Compass className="w-3 h-3 text-cyber-green" />
+                                  {log.latitude.toFixed(3)}, {log.longitude.toFixed(3)}
+                                  <ExternalLink className="w-2.5 h-2.5 ml-0.5" />
+                                </a>
+                              )}
+                            </td>
+
+                            {/* Actions */}
+                            <td className="p-3.5 text-right whitespace-nowrap">
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  try {
+                                    await fetch("/api/admin/visitors", {
+                                      method: "DELETE",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ id: log.id }),
+                                    });
+                                    setVisitorLogs((prev) => prev.filter((item) => item.id !== log.id));
+                                  } catch (e) {
+                                    console.error("Failed to delete log:", e);
+                                  }
+                                }}
+                                className="p-1.5 rounded border border-rose-500/30 text-rose-500 hover:bg-rose-500/10 cursor-pointer transition-colors"
+                                title="Delete this record"
+                              >
+                                <Trash className="w-3 h-3" />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+
+                    {visitorLogs.filter((v) => {
+                      if (visitorPageFilter === "portfolio") return v.page === "/" || !v.page?.startsWith("/admin");
+                      if (visitorPageFilter === "admin") return v.page?.startsWith("/admin");
+                      return true;
+                    }).length === 0 && (
+                      <tr>
+                        <td colSpan={9} className="p-12 text-center text-gray-500 font-mono text-xs">
+                          {loadingVisitors ? (
+                            <div className="flex items-center justify-center gap-2">
+                              <Loader2 className="w-4 h-4 animate-spin text-cyber-green" />
+                              <span>Scanning visitor telemetry...</span>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              <div className="text-gray-300 font-bold text-sm">
+                                [!] No visitor records found for this view
+                              </div>
+                              <div className="text-[11px] text-gray-500 max-w-md mx-auto">
+                                Open the portfolio homepage in a new tab or click <strong className="text-purple-300">+ TEST VISIT</strong> above to generate simulated real-time telemetry instantly!
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => handleTestVisitorPing(visitorPageFilter === "admin" ? "admin" : "portfolio")}
+                                className="px-4 py-2 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 text-xs font-mono font-bold inline-flex items-center gap-2 cursor-pointer"
+                              >
+                                <Sparkles className="w-4 h-4" /> GENERATE TEST VISIT RECORD
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Clear All Logs Modal */}
+            <AnimatePresence>
+              {showClearLogsModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+                  <motion.div
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.95, opacity: 0 }}
+                    className="glass-card max-w-md w-full p-6 border-rose-500/40 space-y-4"
+                  >
+                    <div className="flex items-center gap-3 text-rose-500">
+                      <AlertTriangle className="w-6 h-6 shrink-0" />
+                      <h3 className="font-orbitron font-bold text-base text-white">PURGE_VISITOR_LOGS // CONFIRM</h3>
+                    </div>
+
+                    <p className="text-xs font-mono text-gray-300 leading-relaxed">
+                      Are you sure you want to delete all recorded visitor logs? This action will wipe all IP, location, and telemetry data from the database and cannot be undone.
+                    </p>
+
+                    <div className="flex justify-end gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowClearLogsModal(false)}
+                        className="px-4 py-2 rounded-lg border border-white/20 text-xs font-mono text-gray-300 hover:text-white"
+                      >
+                        CANCEL
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleClearAllLogs}
+                        disabled={clearingLogs}
+                        className="px-4 py-2 rounded-lg border border-rose-500 bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 text-xs font-mono font-bold flex items-center gap-2"
+                      >
+                        {clearingLogs ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" /> PURGING...
+                          </>
+                        ) : (
+                          <>
+                            <Trash className="w-3.5 h-3.5" /> CONFIRM PURGE
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
           </div>
         )}
 

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import ContentProtection from "@/components/ContentProtection";
+import VisitorTracker from "@/components/VisitorTracker";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -55,6 +56,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased bg-[var(--cyber-bg,#07111F)] text-white transition-colors duration-400 min-h-screen">
         <ContentProtection />
+        <VisitorTracker />
         {children}
       </body>
     </html>
