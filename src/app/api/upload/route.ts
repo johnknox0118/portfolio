@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
+import { verifyAdminSession } from '@/lib/auth';
+import { consumeRateLimit, getClientIp } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
@@ -12,6 +14,23 @@ const ALLOWED_TYPES = [
 const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.pdf'];
 
 export async function POST(request: Request) {
+  // 1. Defense-in-depth: Verify admin session
+  const auth = await verifyAdminSession(request);
+  if (!auth.authenticated) {
+    return NextResponse.json({ error: auth.error || 'Authentication required' }, { status: 401 });
+  }
+
+  // 2. Rate limiting: Max 20 uploads per 10 minutes per IP
+  const clientIp = getClientIp(request);
+  const rateLimitKey = `upload:${clientIp}`;
+  const rateCheck = consumeRateLimit(rateLimitKey, 20, 10 * 60 * 1000);
+  if (rateCheck.isLocked) {
+    return NextResponse.json(
+      { error: `Upload rate limit reached. Access throttled for ${rateCheck.retryAfterSeconds}s.` },
+      { status: 429 }
+    );
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;

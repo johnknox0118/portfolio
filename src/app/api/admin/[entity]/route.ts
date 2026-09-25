@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import fallbackData from '@/data/fallbackData.json';
+import { verifyAdminSession } from '@/lib/auth';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +38,11 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ entity: string }> }
 ) {
+  const auth = await verifyAdminSession(request);
+  if (!auth.authenticated) {
+    return NextResponse.json({ error: auth.error || 'Authentication required' }, { status: 401 });
+  }
+
   let requestedEntity = '';
   try {
     const { entity } = await params;
@@ -96,6 +103,11 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ entity: string }> }
 ) {
+  const auth = await verifyAdminSession(request);
+  if (!auth.authenticated) {
+    return NextResponse.json({ error: auth.error || 'Authentication required' }, { status: 401 });
+  }
+
   try {
     const { entity } = await params;
     const modelName = modelMapping[entity];
@@ -133,6 +145,11 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ entity: string }> }
 ) {
+  const auth = await verifyAdminSession(request);
+  if (!auth.authenticated) {
+    return NextResponse.json({ error: auth.error || 'Authentication required' }, { status: 401 });
+  }
+
   try {
     const { entity } = await params;
     const modelName = modelMapping[entity];
@@ -202,6 +219,11 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ entity: string }> }
 ) {
+  const auth = await verifyAdminSession(request);
+  if (!auth.authenticated) {
+    return NextResponse.json({ error: auth.error || 'Authentication required' }, { status: 401 });
+  }
+
   try {
     const { entity } = await params;
     const modelName = modelMapping[entity];

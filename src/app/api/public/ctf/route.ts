@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import fallbackData from '@/data/fallbackData.json';
+import { checkRateLimit, recordFailedAttempt, getClientIp } from '@/lib/rateLimit';
+import { sanitizeString } from '@/lib/auth';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -73,9 +76,12 @@ export async function POST(request: Request) {
 
     // 1. START: Register participant and begin session
     if (action === 'start') {
-      const { userName, email, role } = body;
-      if (!userName || !userName.trim()) {
-        return NextResponse.json({ error: 'Participant name / callsign is required.' }, { status: 400 });
+      const userName = sanitizeString(body?.userName, 50);
+      const email = sanitizeString(body?.email, 100);
+      const role = sanitizeString(body?.role, 50);
+
+      if (!userName || userName.length < 2) {
+        return NextResponse.json({ error: 'Participant name / callsign is required (min 2 characters).' }, { status: 400 });
       }
 
       const questions = await getQuestionsFromDb();
@@ -85,17 +91,17 @@ export async function POST(request: Request) {
       try {
         const newSubmission = await prisma.ctfSubmission.create({
           data: {
-            userName: userName.trim(),
-            email: (email || '').trim(),
-            role: (role || 'Recruiter / Visitor').trim(),
+            userName,
+            email,
+            role: role || 'Recruiter / Visitor',
             score: 0,
             totalStages,
             stagesCompleted: 0,
             status: 'in_progress',
             details: '[]',
             timeSpentSec: 0,
-            ipAddress: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1',
-            userAgent: request.headers.get('user-agent') || 'Browser Client',
+            ipAddress: getClientIp(request),
+            userAgent: request.headers.get('user-agent')?.slice(0, 200) || 'Browser Client',
           },
         });
         submissionId = newSubmission.id;
@@ -106,13 +112,30 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         submissionId,
-        userName: userName.trim(),
+        userName,
         totalStages,
       });
     }
 
-    // 2. VERIFY: Server-side validation of a stage answer
+    // 2. VERIFY: Server-side validation of a stage answer with brute-force defense
     if (action === 'verify') {
+      const clientIp = getClientIp(request);
+      const verifyRateKey = `ctf_verify:${clientIp}`;
+
+      // Anti-brute-force: Max 20 verification attempts per 5 minutes per IP
+      const rateCheck = checkRateLimit(verifyRateKey, 20, 5 * 60 * 1000);
+      if (rateCheck.isLocked) {
+        return NextResponse.json(
+          {
+            error: `ANTI-BRUTE-FORCE: Excessive verification attempts. Protocol locked for ${rateCheck.retryAfterSeconds}s.`,
+            correct: false,
+            locked: true,
+            retryAfter: rateCheck.retryAfterSeconds,
+          },
+          { status: 429 }
+        );
+      }
+
       const { questionId, answer, submissionId } = body;
       if (!questionId || answer === undefined) {
         return NextResponse.json({ error: 'Missing question ID or answer.' }, { status: 400 });
@@ -125,15 +148,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Challenge stage not found.' }, { status: 404 });
       }
 
-      const submittedStr = String(answer).trim().toLowerCase();
+      const submittedStr = sanitizeString(String(answer), 200).toLowerCase();
       const expectedStr = String(question.answer || '').trim().toLowerCase();
 
       const isCorrect = submittedStr === expectedStr;
 
       if (!isCorrect) {
+        const failStatus = recordFailedAttempt(verifyRateKey, 20, 5 * 60 * 1000);
         return NextResponse.json({
           correct: false,
           hint: question.hint || 'Incorrect answer or payload mismatch. Inspect clue and try again.',
+          remainingAttempts: failStatus.remainingAttempts,
         });
       }
 

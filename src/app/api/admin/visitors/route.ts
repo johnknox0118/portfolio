@@ -1,9 +1,15 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { verifyAdminSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+  const auth = await verifyAdminSession(request);
+  if (!auth.authenticated) {
+    return NextResponse.json({ error: auth.error || 'Authentication required' }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search')?.trim().toLowerCase() || '';
@@ -116,6 +122,11 @@ export async function GET(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const auth = await verifyAdminSession(request);
+  if (!auth.authenticated) {
+    return NextResponse.json({ error: auth.error || 'Authentication required' }, { status: 401 });
+  }
+
   try {
     const body = await request.json().catch(() => ({}));
     const { action, id } = body;

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import fallbackData from '@/data/fallbackData.json';
+import { consumeRateLimit, getClientIp } from '@/lib/rateLimit';
+import { sanitizeString } from '@/lib/auth';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -248,13 +251,34 @@ function executeLocalGroundingEngine(query: string, context: any): { reply: stri
 }
 
 export async function POST(request: Request) {
+  const clientIp = getClientIp(request);
+  const rateLimitKey = `ai_chat:${clientIp}`;
+
   try {
-    const body = await request.json();
-    const message = body?.message?.trim();
-    const history = Array.isArray(body?.history) ? body.history : [];
+    // 1. Sliding window rate limiting: max 25 AI queries per 5 minutes per IP
+    const rateCheck = consumeRateLimit(rateLimitKey, 25, 5 * 60 * 1000);
+    if (rateCheck.isLocked) {
+      return NextResponse.json(
+        {
+          reply: `⚠️ Matrix rate limiter engaged. Excessive queries detected from IP ${clientIp}. Access suspended for ${rateCheck.retryAfterSeconds}s.`,
+          actions: [],
+          provider: 'rate-limited',
+        },
+        { status: 429 }
+      );
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const message = typeof body?.message === 'string' ? sanitizeString(body.message, 1000) : '';
+    const history = Array.isArray(body?.history)
+      ? body.history.slice(-8).map((h: any) => ({
+          sender: h.sender === 'user' ? 'user' : 'assistant',
+          text: sanitizeString(h.text || '', 1000),
+        }))
+      : [];
 
     if (!message) {
-      return NextResponse.json({ error: 'Message payload required' }, { status: 400 });
+      return NextResponse.json({ error: 'Message payload required (up to 1000 characters)' }, { status: 400 });
     }
 
     // 1. Fetch live PostgreSQL portfolio records via Prisma
